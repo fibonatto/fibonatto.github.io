@@ -1,14 +1,14 @@
 # EHS: Executable Hypermedia System
 
-A high-performance, minimalist web engine for personal publishing. Compiles Markdown content into a WebAssembly binary at build time, creating a **zero-allocation, heapless runtime** that executes hypermedia without external dependencies.
+A high-performance, minimalist web engine for personal publishing. Compiles Markdown content into a WebAssembly binary at build time, creating a **zero-allocation, heapless runtime** that executes hypertext with deterministic memory usage.
 
 **[Live Demo →](https://fibonatto.github.io/)**
 
 ---
 
-## 🎯 Architecture Overview
+## Architecture Overview
 
-EHS is fundamentally different from traditional web architectures. Rather than treating the browser as a runtime platform, it treats the WASM binary as an **embedded system**—analogous to firmware rendering hypermedia directly to the client.
+EHS is fundamentally different from traditional web architectures. Rather than treating the browser as a runtime platform, it treats the WASM binary as an **embedded system**—analogous to firmware running on a microcontroller.
 
 ```
 Markdown Files (contents/)
@@ -34,7 +34,7 @@ DOM Hydration (atomic via JS HAL)
 
 ---
 
-## 📊 Current Metrics
+## Current Metrics
 
 | Metric | Value |
 |--------|-------|
@@ -48,7 +48,7 @@ DOM Hydration (atomic via JS HAL)
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ### 1. **Build Pipeline** (`build.sh`)
 
@@ -244,16 +244,25 @@ page_render_home() {
 
 #### **Theme System** (`src/config.c`)
 
-Nord-inspired color palette with light/dark variants:
+Custom color palette with light/dark variants:
 
 ```c
 const struct theme theme_dark = {
-    .bg = 0,              // Nord 0 (#2e3440)
-    .text = 4,            // Nord 4 (#eceff4)
-    .dim_text = 3,        // Nord 3 (#4c566a)
-    .accent = 8,          // Nord 8 (#88c0d0)
-    .code_bg = 1,         // Nord 1 (#3b4252)
-    .code_border = 2      // Nord 2 (#434c5e)
+    .bg = 0,              // Dark background (#2f3238)
+    .text = 6,            // Dark text (#cfd3d8)
+    .dim_text = 7,        // Dark dim text (#7a8088)
+    .accent = 10,         // Dark accent (#78a4c4)
+    .code_bg = 0,         // Dark code background
+    .code_border = 1      // Dark code border (#44484f)
+};
+
+const struct theme theme_light = {
+    .bg = 3,              // Light background (#F2F1EE)
+    .text = 8,            // Light text (#1c3d72)
+    .dim_text = 9,        // Light dim text (#767A80)
+    .accent = 14,         // Light accent (#c0392b)
+    .code_bg = 3,         // Light code background
+    .code_border = 4      // Light code border (#e4e0d7)
 };
 ```
 
@@ -265,7 +274,7 @@ CSS variables injected at runtime:
 --accent-color
 --code-bg-color
 --code-border-color
---nord0 through --nord15
+--palette0 through --palette15
 ```
 
 ---
@@ -323,7 +332,7 @@ el.querySelectorAll('.img-placeholder').forEach(ph => {
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 .
@@ -383,7 +392,7 @@ el.querySelectorAll('.img-placeholder').forEach(ph => {
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -468,7 +477,7 @@ git push origin main:gh-pages
 
 ---
 
-## 🔍 Architecture Patterns
+## Architecture Patterns
 
 ### 1. **Arena Allocator Pattern**
 Global buffer with overflow flag:
@@ -524,7 +533,7 @@ int idx = find_post_index_by_slug("article_b");  // → 1
 
 ---
 
-## 🛠️ Development
+## Development
 
 ### Editing Code
 
@@ -567,7 +576,7 @@ console.log(performance.getEntriesByName('route')[0].duration);
 
 ---
 
-## 📈 Performance Characteristics
+## Performance Characteristics
 
 ### Memory Profile
 - **Heap**: 0 bytes (post-bootstrap)
@@ -588,7 +597,7 @@ console.log(performance.getEntriesByName('route')[0].duration);
 
 ---
 
-## 🎨 Customization
+## Customization
 
 ### Changing Colors
 
@@ -596,15 +605,15 @@ Edit `src/config.c`:
 
 ```c
 const struct theme theme_dark = {
-    .bg = 0,              // Change to Nord palette index
-    .text = 4,
+    .bg = 0,              // Change to palette index
+    .text = 6,
     // ... etc
 };
 
 // Update palette mapping if needed
 const char *palette[16] = {
-    "#2e3440",  // 0: Nord 0
-    "#3b4252",  // 1: Nord 1
+    "#2f3238",  // 0: Dark background
+    "#44484f",  // 1: Dark guide
     // ... etc
 };
 ```
@@ -638,20 +647,20 @@ Syntax: `[[graph:h,w;pct,color,opacity,style;...]]`
 
 Example:
 ```markdown
-[[graph:100,200;0.5,--nord8,1.0,s;0.3,--nord9,0.8,h;0.2,--nord10,0.6]]
+[[graph:100,200;0.5,--palette10,1.0,s;0.3,--palette12,0.8,h;0.2,--palette13,0.6]]
 ```
 
 Renders a segmented bar graph (height 100px, width 200px) with three segments.
 
 ---
 
-## 🔧 Known Limitations & Future Work
+## Known Limitations & Future Work
 
 ### Current Limitations
-- ✓ **No dynamic content loading** (all content must be in `contents/` at build time)
-- ✓ **Limited Markdown support** (CommonMark not 100% compliant)
-- ✓ **No search** (would require full-text index in binary)
-- ✓ **No comments** (static deployment model)
+- No dynamic content loading (all content must be in `contents/` at build time)
+- Limited Markdown support (CommonMark not 100% compliant)
+- No search (would require full-text index in binary)
+- No comments (static deployment model)
 
 ### Future Enhancements
 - [ ] Full CommonMark compliance
@@ -664,7 +673,7 @@ Renders a segmented bar graph (height 100px, width 200px) with three segments.
 
 ---
 
-## 📚 References & Learning
+## References & Learning
 
 ### Papers & Articles
 - **Embedded Systems Design**: Patterns used here mirror firmware UI systems
@@ -678,13 +687,13 @@ Renders a segmented bar graph (height 100px, width 200px) with three segments.
 
 ---
 
-## 📝 License
+## License
 
 MIT (implied, no LICENSE file currently present)
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Found a bug or have an idea? Open an issue or submit a PR.
 
@@ -695,9 +704,9 @@ Current areas for contribution:
 
 ---
 
-**Questions?** Check the architecture documentation or open a discussion.
+Questions? Check the architecture documentation or open a discussion.
 
-**Live Site**: [fibonatto.github.io](https://fibonatto.github.io/)
+Live Site: [fibonatto.github.io](https://fibonatto.github.io/)
 
 ---
 
@@ -706,4 +715,4 @@ Current areas for contribution:
 Built with:
 - [Emscripten](https://emscripten.org/) — C to WASM compiler
 - [Binaryen](https://github.com/WebAssembly/binaryen) — WASM optimizer
-- [Nord Theme](https://www.nordtheme.com/) — Color palette
+- Custom color palette inspired by minimalist design principles
