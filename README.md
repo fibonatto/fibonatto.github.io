@@ -2,6 +2,18 @@
 
 A high-performance, minimalist web engine for personal publishing. Compiles Markdown content into a WebAssembly binary at build time, creating a **zero-allocation, heapless runtime** that executes hypertext with deterministic memory usage.
 
+## Why "Executable Hypermedia"?
+
+Traditional publishing systems execute code that loads content.
+
+EHS inverts this model.
+
+Pages, routes, UI components, article metadata, graphs, and documents are embedded directly into the executable artifact at build time. At runtime, the system reconstructs the application from its own binary image rather than loading content from a filesystem, database, or network source.
+
+In this sense, EHS treats hypermedia as an executable artifact.
+
+The final WebAssembly module is not merely a program that displays content. It is the content, the application, and the runtime packaged as a single deployable unit.
+
 **[Live Demo →](https://fibonatto.github.io/)**
 
 ---
@@ -715,4 +727,3 @@ Live Site: [fibonatto.github.io](https://fibonatto.github.io/)
 Built with:
 - [Emscripten](https://emscripten.org/) — C to WASM compiler
 - [Binaryen](https://github.com/WebAssembly/binaryen) — WASM optimizer
-- Custom color palette inspired by minimalist design principles
