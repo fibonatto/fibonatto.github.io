@@ -57,7 +57,8 @@ const struct header_config header = {
     .item_style = "font-size:18px;user-select:none;cursor:pointer;"
                   "color:var(--text-color);text-decoration:none;",
     .title_style = "font-size:20px;font-weight:bold;user-select:none;cursor:pointer;"
-                   "color:var(--text-color);text-decoration:none;"
+               "color:var(--accent-color);text-decoration:none;"
+               "letter-spacing:0.5px;text-transform:uppercase;"
 
 };
 
