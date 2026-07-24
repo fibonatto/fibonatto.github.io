@@ -42,12 +42,12 @@ const struct theme theme_light = {.bg	       = 3,
 
 const struct header_config header = {
     .title = "Bonatto",
-    .home_label = "home",
+    // .home_label = "home",
     .blog_label = "blog",
     .light_label = "light",
     .dark_label = "dark",
     .container_id = "header-nav",
-    .home_id = "nav-home",
+    // .home_id = "nav-home",
     .blog_id = "nav-blog",
     .theme_id = "theme-toggle",
     .container_style =
