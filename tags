@@ -99,7 +99,7 @@
 !_TAG_PARSER_VERSION!Sh	0.0	/current.age/
 !_TAG_PARSER_VERSION!XML	0.0	/current.age/
 !_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
-!_TAG_PROC_CWD	/Users/bonatto/Work/Projects/sergiobonatto.github.io/	//
+!_TAG_PROC_CWD	/Users/bonatto/Work/Projects/fibonatto.github.io/	//
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
@@ -123,26 +123,26 @@
 !_TAG_ROLE_DESCRIPTION!JavaScript!function	foreigndecl	/declared in foreign languages/
 !_TAG_ROLE_DESCRIPTION!Sh!heredoc	endmarker	/end marker/
 !_TAG_ROLE_DESCRIPTION!Sh!script	loaded	/loaded/
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	o
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	o
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+0	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 1	compile_commands.json	/^,$/;"	z
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+1	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 1 Coríntios 15:21-22 - "Por um homem veio a morte"	contents/Criacionismo-Evolutivo-1.md	/^##### 1 Coríntios 15:21-22 - "Por um homem veio a morte"$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""I. FUNDAMENTOS EXEGÉTICOS E TEOLÓGICOS""B. Exegese de Passagens Paralelas
 1. Build-time Asset Pipeline	index.md	/^### 1. Build-time Asset Pipeline$/;"	S	section:Project: Blog WASM Engine""System Architecture
 1. Campo Semântico de θάνατος em Romanos 5:12	contents/Criacionismo-Evolutivo-1.md	/^##### 1. Campo Semântico de θάνατος em Romanos 5:12$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""I. FUNDAMENTOS EXEGÉTICOS E TEOLÓGICOS""A. Análise Semântica de "Morte" na Escritura
@@ -152,113 +152,113 @@
 1. Morte como Processo Natural (Pré-Queda)	contents/Criacionismo-Evolutivo-1.md	/^##### 1. Morte como Processo Natural (Pré-Queda)$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""II. MODELO TEOLÓGICO: MORTE NATURAL VS MORTE PENAL""B. Distinção Fundamental: Ordem Natural vs Ordem Penal
 1. Perspectiva Reformada Tradicional	contents/Criacionismo-Evolutivo-1.md	/^##### 1. Perspectiva Reformada Tradicional$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""III. HARMONIZAÇÃO COM EVIDÊNCIAS CIENTÍFICAS""B. O Problema do Sofrimento Animal
 1. Registro Fóssil	contents/Criacionismo-Evolutivo-1.md	/^##### 1. Registro Fóssil$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""III. HARMONIZAÇÃO COM EVIDÊNCIAS CIENTÍFICAS""A. Compatibilidade Paleontológica
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	o
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	o
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+10	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 11	compile_commands.json	/^,$/;"	z
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	o
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+11	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	o
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+12	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 13	compile_commands.json	/^,$/;"	z
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	o
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+13	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	o
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+14	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 15	compile_commands.json	/^,$/;"	z
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	o
-16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	o
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+15	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	o
+16	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+17	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+18	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+19	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	o
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+2	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 2. Abraham Kuyper (*Principles of Sacred Theology*, p. 341)	contents/Criacionismo-Evolutivo-1.md	/^##### 2. Abraham Kuyper (*Principles of Sacred Theology*, p. 341)$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""IV. APOIO CONFESSIONAL E TEOLÓGICO""B. Tradição Teológica Reformada
 2. Consequências da Queda	contents/Criacionismo-Evolutivo-1.md	/^##### 2. Consequências da Queda$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""II. MODELO TEOLÓGICO: MORTE NATURAL VS MORTE PENAL""C. A Posição Especial de Adão
 2. Distinção Teológica Reformada Clássica	contents/Criacionismo-Evolutivo-1.md	/^##### 2. Distinção Teológica Reformada Clássica$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""I. FUNDAMENTOS EXEGÉTICOS E TEOLÓGICOS""A. Análise Semântica de "Morte" na Escritura
@@ -267,141 +267,141 @@
 2. Morte como Penalidade Espiritual (Pós-Queda)	contents/Criacionismo-Evolutivo-1.md	/^##### 2. Morte como Penalidade Espiritual (Pós-Queda)$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""II. MODELO TEOLÓGICO: MORTE NATURAL VS MORTE PENAL""B. Distinção Fundamental: Ordem Natural vs Ordem Penal
 2. Precedente Agostiniano	contents/Criacionismo-Evolutivo-1.md	/^##### 2. Precedente Agostiniano$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""II. MODELO TEOLÓGICO: MORTE NATURAL VS MORTE PENAL""A. A Doutrina Reformada da Criação "Muito Boa"
 2. Refinamento Evolucionista Teísta	contents/Criacionismo-Evolutivo-1.md	/^##### 2. Refinamento Evolucionista Teísta$/;"	T	subsubsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""III. HARMONIZAÇÃO COM EVIDÊNCIAS CIENTÍFICAS""B. O Problema do Sofrimento Animal
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+20	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+21	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+22	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+23	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+24	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+25	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+26	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 3	compile_commands.json	/^,$/;"	z
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+3	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 3. Rendering Engine	index.md	/^### 3. Rendering Engine$/;"	S	section:Project: Blog WASM Engine""System Architecture
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	o
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	o
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+4	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 4. Platform Abstraction Layer	index.md	/^### 4. Platform Abstraction Layer$/;"	S	section:Project: Blog WASM Engine""System Architecture
 5	compile_commands.json	/^,$/;"	z
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	o
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+5	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	o
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+6	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 7	compile_commands.json	/^,$/;"	z
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	o
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+7	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	o
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+8	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 9	compile_commands.json	/^,$/;"	z
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
-9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	array:0.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	array:2.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	array:4.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	array:6.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	array:8.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	array:10.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	array:12.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	array:14.arguments
+9	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	array:16.arguments
 A. A Doutrina Reformada da Criação "Muito Boa"	contents/Criacionismo-Evolutivo-1.md	/^#### A. A Doutrina Reformada da Criação "Muito Boa"$/;"	t	subsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""II. MODELO TEOLÓGICO: MORTE NATURAL VS MORTE PENAL
 A. Análise Semântica de "Morte" na Escritura	contents/Criacionismo-Evolutivo-1.md	/^#### A. Análise Semântica de "Morte" na Escritura$/;"	t	subsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""I. FUNDAMENTOS EXEGÉTICOS E TEOLÓGICOS
 A. Compatibilidade Paleontológica	contents/Criacionismo-Evolutivo-1.md	/^#### A. Compatibilidade Paleontológica$/;"	t	subsection:QUESTÃO 1: Como entender a existência da morte antes do pecado de Adão?""III. HARMONIZAÇÃO COM EVIDÊNCIAS CIENTÍFICAS
@@ -549,15 +549,15 @@ anonymousObjecte287981a0205	build/app.1d950a08.js	/^var Module=void 0!==Module?M
 anonymousObjecte287981a0405	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	v
 apply_style	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	f
 arg	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	p	variable:MainLoop
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	a	object:0
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	a	object:2
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	a	object:4
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	a	object:6
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	a	object:8
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	a	object:10
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	a	object:12
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	a	object:14
-arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	a	object:16
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	a	object:0
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	a	object:2
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	a	object:4
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	a	object:6
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	a	object:8
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	a	object:10
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	a	object:12
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	a	object:14
+arguments	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	a	object:16
 arguments_	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	v
 array	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	m	variable:ccall.i
 assignWasmExports	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	f
@@ -618,15 +618,15 @@ diagnostics	buffer.plist	/^ <key>diagnostics<\/key>$/;"	k
 diagnostics	config.plist	/^ <key>diagnostics<\/key>$/;"	k
 die	.git/hooks/push-to-checkout.sample	/^die () {$/;"	f
 dim_text	include/config.h	/^	int dim_text;$/;"	m	struct:theme	typeref:typename:int
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	object:0
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	object:2
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	object:4
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	object:6
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	object:8
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	object:10
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	object:12
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	object:14
-directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	object:16
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	object:0
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	object:2
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	object:4
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	object:6
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	object:8
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	object:10
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	object:12
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	object:14
+directory	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	object:16
 draw_frame	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	f
 dump_hex	tools/packer.c	/^static void dump_hex(const char *slug, const char *buf, size_t len){$/;"	f	typeref:typename:void	file:
 e	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	f	function:createWasm
@@ -642,15 +642,15 @@ f	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WE
 fakeRequestAnimationFrame	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	m	variable:MainLoop
 fast_atof	src/markdown.c	/^static float fast_atof(const char **s) {$/;"	f	typeref:typename:float	file:
 fast_atoi	src/markdown.c	/^static int fast_atoi(const char **s) {$/;"	f	typeref:typename:int	file:
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	object:0
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	object:2
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	object:4
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	object:6
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	object:8
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	object:10
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	object:12
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	object:14
-file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	object:16
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	object:0
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	object:2
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	object:4
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	object:6
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	object:8
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	object:10
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	object:12
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	object:14
+file	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	object:16
 files	buffer.plist	/^ <key>files<\/key>$/;"	k
 files	config.plist	/^ <key>files<\/key>$/;"	k
 findStringEnd	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	f
@@ -712,7 +712,7 @@ maybeExit	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONME
 msg_404_body	src/config.c	/^const char *msg_404_body = "The page you are looking for does not exist or has been moved.";$/;"	v	typeref:typename:const char *
 msg_404_title	src/config.c	/^const char *msg_404_title = "404 - NOT FOUND";$/;"	v	typeref:typename:const char *
 msg_bio	src/config.c	/^const char *msg_bio =$/;"	v	typeref:typename:const char *
-msg_github_url	src/config.c	/^const char *msg_github_url = "https:\/\/github.com\/SergioBonatto";$/;"	v	typeref:typename:const char *
+msg_github_url	src/config.c	/^const char *msg_github_url = "https:\/\/github.com\/fibonatto";$/;"	v	typeref:typename:const char *
 msg_header	src/config.c	/^const char *msg_header = "BONATTO";$/;"	v	typeref:typename:const char *
 msg_seo	src/config.c	/^const char *msg_seo =$/;"	v	typeref:typename:const char *
 msg_whoami	src/config.c	/^const char *msg_whoami = "whoami";$/;"	v	typeref:typename:const char *
@@ -733,15 +733,15 @@ opacity	include/config.h	/^	float opacity;$/;"	m	struct:bar_segment	typeref:type
 open_article	src/router.c	/^void open_article(int index)$/;"	f	typeref:typename:EMSCRIPTEN_KEEPALIVE void
 open_article_by_slug	src/router.c	/^int open_article_by_slug(const char *slug)$/;"	f	typeref:typename:int
 out	build/app.1d950a08.js	/^var Module=void 0!==Module?Module:{},ENVIRONMENT_IS_WEB=!!globalThis.window,ENVIRONMENT_IS_WORKE/;"	v
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/buffer/;"	s	object:0
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/config/;"	s	object:2
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/js_api/;"	s	object:4
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/main.c/;"	s	object:6
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/markdo/;"	s	object:8
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/math.c/;"	s	object:10
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/pages./;"	s	object:12
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/router/;"	s	object:14
-output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/sergiobonatto.github.io", "file": "src\/ui.c",/;"	s	object:16
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/buffer/;"	s	object:0
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/config/;"	s	object:2
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/js_api/;"	s	object:4
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/main.c/;"	s	object:6
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/markdo/;"	s	object:8
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/math.c/;"	s	object:10
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/pages./;"	s	object:12
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/router/;"	s	object:14
+output	compile_commands.json	/^{ "directory": "\/Users\/bonatto\/Work\/Projects\/fibonatto.github.io", "file": "src\/ui.c",/;"	s	object:16
 output	src/math.c	/^	const char *output;$/;"	m	struct:__anon6a9cd0170208	typeref:typename:const char *	file:
 output_result	.git/hooks/fsmonitor-watchman.sample	/^sub output_result {$/;"	s
 overflow	include/buffer.h	/^    bool overflow;$/;"	m	struct:__anon559a7c480108	typeref:typename:bool

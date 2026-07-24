@@ -8,4 +8,4 @@ Disallow: /build/*.o
 Disallow: /build/*.json
 Disallow: /contents/
 
-Sitemap: https://sergiobonatto.github.io/sitemap.xml
+Sitemap: https://fibonatto.github.io/sitemap.xml

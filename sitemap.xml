@@ -2,49 +2,49 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Home -->
   <url>
-    <loc>https://sergiobonatto.github.io/#/</loc>
+    <loc>https://fibonatto.github.io/#/</loc>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   
   <!-- Blog Index -->
   <url>
-    <loc>https://sergiobonatto.github.io/#/blog</loc>
+    <loc>https://fibonatto.github.io/#/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Articles -->
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/a-bíblia-e-o-argumento-circular</loc>
+    <loc>https://fibonatto.github.io/#/post/a-bíblia-e-o-argumento-circular</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/a-tirania-e-sua-mascara-de-bondade</loc>
+    <loc>https://fibonatto.github.io/#/post/a-tirania-e-sua-mascara-de-bondade</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/agorismo</loc>
+    <loc>https://fibonatto.github.io/#/post/agorismo</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/ceticismo-tecnologico</loc>
+    <loc>https://fibonatto.github.io/#/post/ceticismo-tecnologico</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/Criacionismo-Evolutivo-1</loc>
+    <loc>https://fibonatto.github.io/#/post/Criacionismo-Evolutivo-1</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/deepfake-e-a-desmanização</loc>
+    <loc>https://fibonatto.github.io/#/post/deepfake-e-a-desmanização</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/minha-noite-estrelada</loc>
+    <loc>https://fibonatto.github.io/#/post/minha-noite-estrelada</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://sergiobonatto.github.io/#/post/O-Estado-Como-Motor-da-Economia</loc>
+    <loc>https://fibonatto.github.io/#/post/O-Estado-Como-Motor-da-Economia</loc>
     <priority>0.6</priority>
   </url>
 </urlset>

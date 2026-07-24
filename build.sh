@@ -10,7 +10,7 @@ gcc tools/packer.c -O2 -o tools/packer
 ./tools/packer contents > generated/contents_data.h
 
 # 1. Static Assets Hashing
-PFP_SRC="public/pfp.avif"
+PFP_SRC="public/pfp2.avif"
 PFP_HASH=$(shasum -a 256 "$PFP_SRC" | cut -c 1-8)
 PFP_DIST="public/pfp.$PFP_HASH.avif"
 

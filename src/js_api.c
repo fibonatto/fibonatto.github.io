@@ -131,9 +131,9 @@ EM_JS(void, sys_set_meta,
 		      el.setAttribute('content', content);
 	      };
 
-	      const fullUrl = "https://sergiobonatto.github.io" +
+	      const fullUrl = "https://fibonatto.github.io" +
 			      (url.startsWith('/') ? url : '/' + url);
-	      const imgUrl  = "https://sergiobonatto.github.io/public/SEO.png";
+	      const imgUrl  = "https://fibonatto.github.io/public/SEO.png";
 
 	      setMeta('name', 'description', desc);
 	      setMeta('property', 'og:title', title);
