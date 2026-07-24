@@ -6,7 +6,7 @@
 // From sys.c
 EM_JS(int, sys_load_theme, (void), {
 	const val = localStorage.getItem('site-theme');
-	return (val == = 'dark') ? 1 : 0;
+	return (val === 'dark') ? 1 : 0;
 });
 
 EM_JS(void, sys_save_theme, (int is_dark),
@@ -24,8 +24,8 @@ EM_JS(void, sys_set_html, (const char *sel_ptr, const char *html_ptr), {
 	const fragment = range.createContextualFragment(html);
 	el.replaceChildren(fragment);
 
-	if (sel == = '#feed') {
-		el.querySelectorAll('.img-placeholder').forEach(ph = > {
+	if (sel === '#feed') {
+		el.querySelectorAll('.img-placeholder').forEach(ph => {
 			const src = ph.dataset.src;
 			const img = new Image();
 			img.src	  = src;
@@ -74,7 +74,7 @@ EM_JS(void, sys_set_style, (const char *sel_ptr, const char *css_ptr), {
 	const sel = UTF8ToString(sel_ptr);
 	const css = UTF8ToString(css_ptr);
 	const els = document.querySelectorAll(sel);
-	els.forEach(el = > el.style.cssText = css);
+	els.forEach(el => el.style.cssText = css);
 });
 
 EM_JS(void, sys_scroll_to_bottom, (const char *sel_ptr), {
@@ -86,14 +86,14 @@ EM_JS(void, sys_scroll_to_bottom, (const char *sel_ptr), {
 
 EM_JS(void, sys_init_router, (void), {
 	window.addEventListener(
-	    'popstate', () = > {
+	    'popstate', () => {
 		    if (Module._handle_current_route) {
 			    Module._handle_current_route();
 		    }
 	    });
 
 	window.addEventListener(
-	    'hashchange', () = > {
+	    'hashchange', () => {
 		    if (Module._handle_current_route) {
 			    Module._handle_current_route();
 		    }
@@ -210,8 +210,8 @@ EM_JS(void, update_theme_colors,
 		      return;
 
 	      const rootStyle  = document.documentElement.style;
-	      const getPalette = (idx) =
-		  > UTF8ToString(HEAP32[(palette >> 2) + idx]);
+	      const getPalette = (idx) =>
+		  UTF8ToString(HEAP32[(palette >> 2) + idx]);
 
 	      /* t layout: bg(0), text(4), dim(8), accent(12), code_bg(16),
 	       * code_border(20) */
@@ -240,7 +240,7 @@ EM_JS(void, update_theme_colors,
 	      Module.gfx.bg	   = bg;
 	      Module.gfx.textColor = text;
 
-	      if (bg_idx == = 0) {
+	      if (bg_idx === 0) {
 		      document.documentElement.classList.add('dark-theme');
 		      localStorage.setItem('site-theme', 'dark');
 	      } else {
@@ -283,7 +283,7 @@ EM_JS(void, init_graphics, (const struct theme *t, int header_h), {
 
 	// Ensure font is loaded then redraw
 	if (document.fonts) {
-		document.fonts.load("bold 60px 'Virgil'").then(() = > {
+		document.fonts.load("700 60px 'Latin Modern Roman'").then(() => {
 			if (Module._draw_frame)
 				Module._draw_frame();
 		});
@@ -294,8 +294,8 @@ EM_JS(void, render_update_strings,
       (const char *label_ptr, int text_color_idx, const char *const *palette), {
 	      if (!Module.gfx)
 		      return;
-	      const getPalette = (idx) =
-		  > UTF8ToString(HEAP32[(palette >> 2) + idx]);
+	      const getPalette = (idx) =>
+		  UTF8ToString(HEAP32[(palette >> 2) + idx]);
 
 	      Module.gfx.label	   = UTF8ToString(label_ptr);
 	      Module.gfx.textColor = getPalette(text_color_idx);
@@ -308,7 +308,7 @@ EM_JS(void, apply_style, (const char *selector_cstr, const char *style_cstr), {
 	const selector = UTF8ToString(selector_cstr);
 	const style    = UTF8ToString(style_cstr);
 	const elements = document.querySelectorAll(selector);
-	elements.forEach(el = > el.style.cssText = style);
+	elements.forEach(el => el.style.cssText = style);
 });
 
 EM_JS(void, draw_frame, (void), {
@@ -322,7 +322,7 @@ EM_JS(void, draw_frame, (void), {
 
 	ctx.clearRect(0, 0, W, H);
 
-	ctx.font      = "bold 60px 'Virgil', cursive";
+	ctx.font      = "700 60px 'Latin Modern Roman', serif";
 	ctx.fillStyle = textColor;
 	ctx.textAlign = "center";
 	ctx.fillText(label, W / 2, header_h / 2);
@@ -338,10 +338,6 @@ EM_JS(void, add_theme_toggle, (const char *label_cstr, const char *style_cstr),
 	      btn.id		= "theme-toggle";
 	      btn.textContent	= label;
 	      btn.style.cssText = style;
-
-	      const underline	  = document.createElement("div");
-	      underline.className = "nav-underline";
-	      btn.appendChild(underline);
 
 	      btn.onclick = () => {
 		      if (Module._ui_toggle_theme) {
@@ -372,13 +368,9 @@ EM_JS(void, add_nav_link,
 	      btn.textContent	= label;
 	      btn.style.cssText = style;
 
-	      const underline	  = document.createElement("div");
-	      underline.className = "nav-underline";
-	      btn.appendChild(underline);
-
 	      btn.onclick = () => {
 		      if (Module._switch_page) {
-			      const isBlog = btn.id == = "nav-blog";
+			      const isBlog = btn.id === "nav-blog";
 			      Module._switch_page(isBlog);
 		      }
 	      };

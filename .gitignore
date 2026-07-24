@@ -3,6 +3,7 @@
 
 # Explicitly include the build directory even if global rules ignore it
 !build/
+build/emcache/
 
 .cache/
 .vscode

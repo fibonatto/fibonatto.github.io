@@ -30,8 +30,34 @@
 
     <style>
         @font-face {
-            font-family: 'Virgil';
-            src: url('{{FONT}}') format('woff2');
+            font-family: 'Latin Modern Roman';
+            src: url('{{FONT_REGULAR}}') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Latin Modern Roman';
+            src: url('{{FONT_BOLD}}') format('opentype');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Latin Modern Roman';
+            src: url('{{FONT_ITALIC}}') format('opentype');
+            font-weight: 400;
+            font-style: italic;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Latin Modern Roman';
+            src: url('{{FONT_BOLDITALIC}}') format('opentype');
+            font-weight: 700;
+            font-style: italic;
             font-display: swap;
         }
 
@@ -53,17 +79,13 @@
 
         html {
             background-color: var(--bg-color);
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 20px 20px;
         }
 
         body {
             margin: 0;
             background-color: transparent;
             color: var(--text-color);
-            font-family: 'Virgil', 'Kalam', cursive;
+            font-family: 'Latin Modern Roman', 'Times New Roman', serif;
             font-size: 1.5rem;
             line-height: 1.6;
             overflow-x: hidden;
@@ -79,32 +101,6 @@
             pointer-events: none;
             width: 100%;
             height: 100%;
-        }
-
-        #header-underline {
-            position: fixed;
-            top: 110px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 280px;
-            height: 12px;
-            background-color: var(--accent-color);
-            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,6 Q30,2 100,1 L100,7 Q30,9 0,8 Z"/></svg>') no-repeat center / 100% 100%;
-            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,6 Q30,2 100,1 L100,7 Q30,9 0,8 Z"/></svg>') no-repeat center / 100% 100%;
-            z-index: 999;
-            opacity: 0.8;
-        }
-
-        .nav-underline {
-            position: absolute;
-            bottom: -8px;
-            left: -5%;
-            width: 110%;
-            height: 6px;
-            background-color: var(--accent-color);
-            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,5 Q30,2 100,1 L100,6 Q30,8 0,7 Z"/></svg>') no-repeat center / 100% 100%;
-            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,5 Q30,2 100,1 L100,6 Q30,8 0,7 Z"/></svg>') no-repeat center / 100% 100%;
-            opacity: 0.7;
         }
 
         #feed {
@@ -130,28 +126,11 @@
             font-weight: normal;
         }
 
-        /* Máscara SVG para criar o sublinhado irregular */
-        h1::after, h2::after, h3::after, h4::after, h5::after, h6::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: -2%;
-            width: 104%;
-            height: 8px; /* Altura da bounding box do traço */
-            background-color: var(--accent-color);
-            
-            /* O path d="M0,6 Q30,2 100,1 L100,7 Q30,9 0,8 Z" desenha uma forma fechada que é 
-               fina na esquerda (2 unidades de espessura) e grossa na direita (6 unidades). */
-            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,6 Q30,2 100,1 L100,7 Q30,9 0,8 Z"/></svg>') no-repeat center / 100% 100%;
-            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,6 Q30,2 100,1 L100,7 Q30,9 0,8 Z"/></svg>') no-repeat center / 100% 100%;
-            
-            opacity: 0.9;
-        }
-
         a {
             color: var(--text-color);
-            text-decoration: none;
-            border-bottom: 1px dashed var(--accent-color);
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 0.16em;
         }
 
         code, pre {
@@ -170,7 +149,6 @@
 </head>
 <body>
     <canvas id="screen"></canvas>
-    <div id="header-underline"></div>
     <main id="feed">
         <p class="para">
             <img src="{{PFP}}" alt="Bonatto" fetchpriority="high" loading="eager" width="463" height="512" style="max-width:100%;height:auto;">

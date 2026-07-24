@@ -62,13 +62,13 @@ const char *css_footer =
     "font-size: 18px; margin-top: 40px;";
 
 const char *msg_header	   = "BONATTO";
-const char *msg_whoami	   = "whoami";
-const char *msg_github_url = "https://github.com/SergioBonatto";
+const char *msg_whoami	   = "About";
+const char *msg_github_url = "https://github.com/fiBonatto";
 
 const char *msg_bio =
-    "Work spans formal methods, functional programming, and operating systems. "
-    "Main interests include dependent type theory, proof languages, language "
-    "interpreters, virtual machines, and minimalist kernels.";
+    "I am a software engineer because programming turned out to be the best way I know to understand things. \n"
+    "Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles. \n"
+    "This site is where those explorations converge.\n";
 
 const char *msg_seo =
     "Software engineer specialized in programming languages, compilers, formal "
