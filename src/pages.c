@@ -1,15 +1,16 @@
-#include <string.h>
-#include <stddef.h>
-
 #include "pages.h"
+
+#include "assets.h"
 #include "config.h"
 #include "ui.h"
-#include "assets.h"
+
+#include <stddef.h>
+#include <string.h>
 
 void page_render_home(void) {
 	const char *pfp = ASSET_PFP;
 
-	add_image(pfp, strlen(pfp), NULL, 0, 1.0f, 463, 512, 1);
+	add_image(pfp, strlen(pfp), NULL, 0, 1.0f, 393, 458, 1);
 	add_paragraph(msg_whoami, strlen(msg_whoami));
 	add_paragraph(msg_bio, strlen(msg_bio));
 
@@ -26,8 +27,9 @@ void page_render_blog(void) {
 	}
 
 	update_seo_metadata("Bonatto - Blog",
-		"Blog archive and articles about formal methods, programming languages, and systems.",
-		"#/blog");
+			    "Blog archive and articles about formal methods, "
+			    "programming languages, and systems.",
+			    "#/blog");
 }
 
 void page_render_404(void) {

@@ -41,24 +41,25 @@ const struct theme theme_light = {.bg	       = 3,
 				  .code_border = 4};
 
 const struct header_config header = {
-    .title = "Bonatto",
-    // .home_label = "home",
-    .blog_label = "blog",
-    .light_label = "light",
-    .dark_label = "dark",
+    .title	  = "Bonatto",
+    .blog_label	  = "blog",
+    .light_label  = "light",
+    .dark_label	  = "dark",
     .container_id = "header-nav",
-    // .home_id = "nav-home",
-    .blog_id = "nav-blog",
-    .theme_id = "theme-toggle",
+    .blog_id	  = "nav-blog",
+    .theme_id	  = "theme-toggle",
     .container_style =
-        "position:fixed;top:0;width:100%;background-color:var(--bg-color);"
-        "z-index:1000;padding:10px 40px;border-bottom:1px solid var(--grid-color);"
-        "display:flex;justify-content:space-between;align-items:center;box-sizing:border-box;",
-    .item_style = "font-size:18px;user-select:none;cursor:pointer;"
-                  "color:var(--text-color);text-decoration:none;",
-    .title_style = "font-size:20px;font-weight:bold;user-select:none;cursor:pointer;"
-               "color:var(--accent-color);text-decoration:none;"
-               "letter-spacing:0.5px;text-transform:uppercase;"
+	"position:fixed;top:0;width:100%;background-color:var(--bg-color);"
+	"z-index:1000;padding:10px 40px;border-bottom:1px solid "
+	"var(--grid-color);"
+	"display:flex;justify-content:space-between;align-items:center;box-"
+	"sizing:border-box;",
+    .item_style = "font-size:20px;user-select:none;cursor:pointer;"
+		  "color:var(--text-color);text-decoration:none;",
+    .title_style =
+	"font-size:18px;font-weight:bold;user-select:none;cursor:pointer;"
+	"color:var(--accent-color);text-decoration:none;"
+	"letter-spacing:0.5px;text-transform:uppercase;"
 
 };
 
@@ -75,8 +76,11 @@ const char *msg_whoami	   = "About";
 const char *msg_github_url = "https://github.com/fiBonatto";
 
 const char *msg_bio =
-    "I am a software engineer because programming turned out to be the best way I know to understand things. \n"
-    "Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles. \n"
+    "I am a software engineer because programming turned out to be the best "
+    "way I know to understand things. \n"
+    "Whether I am studying programming languages, writing software, exploring "
+    "theology, or writing poetry, I find myself asking the same questions "
+    "about structure, meaning, and first principles. \n"
     "This site is where those explorations converge.\n";
 
 const char *msg_seo =
@@ -104,6 +108,6 @@ const char *code_block_pre = "background:var(--code-bg-color);"
 			     "margin:20px 0;";
 
 const char *code_block_code = "font-family:'Courier New',monospace;"
-			      "font-size:0.9rem;"
+			      "font-size:1rem;"
 			      "line-height:1.5;"
 			      "color:var(--text-color);";
