@@ -5,55 +5,29 @@ date: "2025-12-30"
 description: "Uma análise crítica sobre o mito da necessidade estatal na economia, explorando como a tecnologia descentralizada e as criptomoedas demonstram que o monopólio do estado é apenas contingente, não essencial."
 
 ---
-
 Quando a gente fala sobre política, sempre surge aquele ponto em que o debate se torna acalorado, esquerda e direita divergem em praticamente tudo, mas recentemente vi algo curioso.
-
 Num debate entre trabalhistas e liberais, ambos concordaram numa mesma premissa: a ideia de que o estado é o emissor do dinheiro e, portanto, seria uma peça necessária para o desenvolvimento econômico.
-
 Essa premissa chama atenção precisamente por ser aceita pelos dois lados e, ao mesmo tempo, por ser uma falácia sustentada por uma confusão conceitual recorrente.
-
 A incapacidade de distinguir o que é necessário do que é apenas contingente atravessa todo o argumento deles e revela uma negação implícita da própria realidade tecnológica já existente. Mas é importante ir por partes.
-
 O argumento se sustenta na narrativa histórica de que, desde o pagamento de sal aos soldados, passando pela cunhagem de moedas de ouro, pela emissão de promissórias lastreadas e chegando ao sistema fiduciário atual, o estado sempre esteve no centro do processo de emissão dos meios de pagamento. A partir disso, concluem que se algo sempre ocorreu dessa forma, deve continuar sendo assim.
-
 Mas isso é apenas contingente, não necessário. O fato de algo ter sido feito de um determinado modo ao longo dos séculos não implica que esse seja o único modo possível.
-
 Por milênios a iluminação humana dependia de velas, tochas e lamparinas, mas isso não significava que a luz artificial estivesse presa para sempre ao fogo. Por milênios a humanidade não voava, e ainda assim o voo se tornou realidade há pouco mais de um século, o que historicamente é praticamente ontem.
-
 Esses limites eram circunstanciais, não essenciais. Tomá-los como norma é um exemplo típico de reificação do costume, a transformação de uma limitação técnica ou histórica em uma necessidade conceitual.
-
 A questão da moeda segue exatamente o mesmo padrão. O dinheiro em si não possui utilidade intrínseca além do material em que é fabricado. O valor reside na informação que ele transmite, na confiança, na escassez e na verificabilidade.
-
 Nada disso pertence ao estado por natureza. A associação entre ambas as coisas ocorre apenas por tradição e por essencialização indevida, não por necessidade lógica.
-
 A própria existência das criptomoedas demonstra isso de maneira direta. Elas eliminaram o monopólio estatal das moedas porque a única barreira real era tecnológica. Bastou um avanço computacional para que surgisse uma alternativa funcional, e o bitcoin foi o ponto de ruptura mais evidente.
-
 E isso não ficou restrito apenas à transferência de valores. Qualquer transação, desde a compra de uma pizza até o aluguel de um imóvel, passando até por contratos de casamento ou serviços, pode ser estruturada de forma descentralizada por meio de smart contracts em redes como a Ethereum.
-
 Processos que por séculos foram considerados funções essenciais do estado se mostraram simples expressões de confiança e registro, absolutamente replicáveis por código aberto e verificável.
-
 Com isso, muitos monopólios que antes pareciam naturais revelaram sua verdadeira natureza contingente. Limitados não pela necessidade, mas pela falta de tecnologia acessível e pelo monopólio da violência estatal. E esse é outro ponto que merece crítica própria, mas fica para outro momento.
-
 O estado, longe de ser o motor da economia, frequentemente se torna seu elemento estagnador. Inflaciona a moeda, produz crises cíclicas, fortalece monopólios e impõe barreiras que recaem sempre sobre os mais pobres.
-
 Não surpreende que governantes temam tanto as criptomoedas e outras tecnologias descentralizadas, desde redes sociais até sistemas que devolvem ao indivíduo um grau mínimo de autonomia.
-
 Quando perceberam que não conseguiriam eliminar essas tecnologias, optaram por outro caminho. Passaram a obrigar empresas a restringirem a privacidade e a liberdade dos usuários por meio de mecanismos como KYC e normas complementares.
-
 As empresas, por sua vez, ao enxergarem nessa exigência uma oportunidade de lucro adicional, já que o controle sobre os usuários gera vantagem competitiva, passaram a tratá-los como produtos.
-
 Em muitos casos, passaram não apenas a vender dados, mas até a custodiar aquilo que deveria pertencer exclusivamente ao usuário. Binance, essa crítica é dirigida diretamente a você.
-
 Nesse cenário, o indivíduo acaba sempre subjugado tanto pelo estado quanto pelas empresas que se alinham a ele. Esse foi um dos fatores que me motivaram a criar o Agoriz e, conforme o sistema evoluía, ficava cada vez mais evidente a necessidade de torná-lo realmente aberto e acessível para qualquer pessoa.
-
 Tenho dito há algum tempo que ele terá código aberto e custo zero. A única despesa adicional para o usuário será o gás da rede, que eu otimizei para ser o menor possível. Em redes como a Polygon ou até mesmo na Tether, que sei não serem as melhores e por isso uso como exemplo, essa taxa não chega a valer um centavo. São transações quase gratuitas, preservando privacidade, autonomia e custódia total pelo próprio usuário.
-
 Erros conceituais nos limitam a atingir nosso potencial máximo. Acreditar que algo é assim porque deve ser assim nos impede de ter o melhor, mas isso não significa que tudo que é novo é bom, obviamente temos shitcoins para provar isso. A questão não são os bens e serviços, mas os direitos.
-
 O indivíduo deve ter seu direito a privacidade e propriedade garantidos, se o estado não garante isso e até o ceifa, por meio de regulamentações e o roubo pela inflação, por exemplo, é dever da tecnologia garantir isso.
-
 Ser cypherpunk não é só um título "maneiro" e "cool" pra se enaltecer, deve ser um modo de vida que garanta ao usuário a liberdade que ele merece. Todos os dias surgem novas tecnologias e a reflexão que fica é se elas trabalham em favor ao estado, mantendo a opressão sobre o indivíduo ou se ela é libertária e atua pra garantir direitos naturais do ser humano?
-
 O estado não é necessário, é contingente e um dia acabará, isso já está acontecendo por meio da tecnologia, começamos com a economia, o passo atual é a educação e só Deus sabe o que virá no futuro.
-
 A emancipação do indivíduo é um trabalho árduo e contínuo, temos tanto desmentir falácias como a da necessidade estatal para mover a economia quanto construir alternativas para burlar o monopólio dos governos e o avanço tecnológico nos ajuda cada vez mais com isso.

@@ -5,7 +5,6 @@ date: "2026-04-04"
 description: "Uma breve reflexão sobre a arrogância acadêmica de engenheiros, programadores e universitários no geral e o contraste com matemáticos avançados"
 
 ---
-
 Eu navegava pelo twitter quando aparece uma publicação de uma moça, a Giovanna, questionando o motivo do estudante de computação ser tão soberbo e se achar um gênio. Esse post veio bem a calhar, uma vez que eu conversava sobre um tema muito similar com a Yuu, a humildade na matemática.
 
 Pode parecer incoerente, falar que os estudantes de computação são soberbos e a matemática ensina a humildade. A questão é que o estudante da computação não estuda matemática, estuda uma parte muito limitada dela. Isso cria uma armadilha, eles acabam sabendo muito mais do que a maioria das pessoas e, por isso, achando que são melhores do que os outros. O detalhe irônico é que não sabem quase nada perto do que a matemática é de verdade. 
