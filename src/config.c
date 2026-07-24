@@ -55,7 +55,10 @@ const struct header_config header = {
         "z-index:1000;padding:10px 40px;border-bottom:1px solid var(--grid-color);"
         "display:flex;justify-content:space-between;align-items:center;box-sizing:border-box;",
     .item_style = "font-size:18px;user-select:none;cursor:pointer;"
-                  "color:var(--text-color);text-decoration:none;"
+                  "color:var(--text-color);text-decoration:none;",
+    .title_style = "font-size:20px;font-weight:bold;user-select:none;cursor:pointer;"
+                   "color:var(--text-color);text-decoration:none;"
+
 };
 
 const char *css_feed = "padding: 20px; max-width: 900px; margin-top: 100px; "

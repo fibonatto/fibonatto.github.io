@@ -122,8 +122,8 @@ void ui_render_header(void) {
 
     add_header_container(header.container_id, header.container_style);
 
-    add_nav_link(header.title, header.item_style, "nav-title",
-                 header.container_id, 0);
+    add_nav_link(header.title, header.title_style, "nav-title",
+             header.container_id, 0);
 
     const char *group_style = "display:flex;align-items:center;gap:20px;";
     add_nav_group("nav-right-group", header.container_id, group_style);

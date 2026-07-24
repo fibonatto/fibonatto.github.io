@@ -36,6 +36,7 @@ struct header_config {
 	const char *theme_id;
 	const char *container_style;
 	const char *item_style;
+	const char *title_style;
 };
 
 extern const struct header_config header;
