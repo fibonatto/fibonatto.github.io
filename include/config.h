@@ -24,9 +24,22 @@ struct theme {
 extern const struct theme theme_dark;
 extern const struct theme theme_light;
 
-extern const char *css_theme_toggle;
-extern const char *css_nav_home;
-extern const char *css_nav_blog;
+struct header_config {
+	const char *title;
+	const char *home_label;
+	const char *blog_label;
+	const char *light_label;
+	const char *dark_label;
+	const char *container_id;
+	const char *home_id;
+	const char *blog_id;
+	const char *theme_id;
+	const char *container_style;
+	const char *item_style;
+};
+
+extern const struct header_config header;
+
 extern const char *css_feed;
 extern const char *css_footer;
 
@@ -66,7 +79,6 @@ int find_post_index_by_slug(const char *slug);
 
 #define UI_HEADER_HEIGHT 180
 
-extern const char *msg_header;
 extern const char *msg_whoami;
 extern const char *msg_bio;
 extern const char *msg_seo;

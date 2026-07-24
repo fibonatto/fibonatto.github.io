@@ -31,12 +31,14 @@ void add_image(const char *path_ptr, size_t path_len,
 	       const char *alt_ptr, size_t alt_len, float scale,
 	       int width, int height, int is_lcp);
 
-/*
- * add_theme_toggle - Creates a text toggle in the header.
- * @label: initial text (e.g., ":light")
- * @style: CSS style string
- */
-void add_theme_toggle(const char *label, const char *style);
+void add_header_container(const char *id, const char *style);
+void add_header_title(const char *text, const char *style, const char *parent_id);
+void add_theme_toggle(const char *label, const char *style, const char *id,
+		      const char *container_id);
+void add_nav_group(const char *id, const char *container_id, const char *style);
+void add_nav_link(const char *label, const char *style, const char *id,
+		  const char *container_id, int is_blog);
+void ui_render_header(void);
 
 /*
  * add_footer - Appends a footer element to the body.
@@ -61,14 +63,6 @@ void ui_end_render(void);
 void clear_feed(void);
 
 /*
- * add_nav_link - Creates a navigation link in the header.
- * @label: link text
- * @style: CSS style string
- * @id: element ID
- */
-void add_nav_link(const char *label, const char *style, const char *id);
-
-/*
  * add_blog_entry - Appends a blog entry link to the feed element.
  * @title: post title
  * @date: post date string
@@ -80,7 +74,7 @@ void add_blog_entry(const char *title, const char *date, const char *slug);
  * update_theme_toggle_label - Updates the text of the theme toggle button.
  * @label: new text
  */
-void update_theme_toggle_label(const char *label);
+void update_theme_toggle_label(const char *id, const char *label);
 
 /*
  * ui_toggle_theme - Toggles between dark and light themes.

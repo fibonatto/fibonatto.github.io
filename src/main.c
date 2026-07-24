@@ -23,12 +23,9 @@ int main(void) {
 
 	init_graphics(state.theme, UI_HEADER_HEIGHT);
 	update_theme_colors(state.theme, palette);
-	render_update_strings(msg_header, state.theme->text, palette);
 
 	apply_style("#feed", css_feed);
-	add_theme_toggle(state.is_dark ? ":light" : ":dark", css_theme_toggle);
-	add_nav_link(":blog", css_nav_blog, "nav-blog");
-	add_nav_link(":home", css_nav_home, "nav-home");
+	ui_render_header();
 
 	ui_init_router();
 	ui_get_current_hash(initial_hash, sizeof(initial_hash));

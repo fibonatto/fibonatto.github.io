@@ -40,17 +40,23 @@ const struct theme theme_light = {.bg	       = 3,
 				  .code_bg     = 3,
 				  .code_border = 4};
 
-const char *css_theme_toggle = "position: fixed; top: 20px; right: 20px; "
-			       "font-size: 18px; user-select: none; cursor: "
-			       "pointer; color: var(--text-color);";
-
-const char *css_nav_blog = "position: fixed; top: 20px; right: 80px; "
-			   "font-size: 18px; user-select: none; cursor: "
-			   "pointer; color: var(--text-color);";
-
-const char *css_nav_home = "position: fixed; top: 20px; right: 140px; "
-			   "font-size: 18px; user-select: none; cursor: "
-			   "pointer; color: var(--text-color);";
+const struct header_config header = {
+    .title = "Bonatto",
+    .home_label = "home",
+    .blog_label = "blog",
+    .light_label = "light",
+    .dark_label = "dark",
+    .container_id = "header-nav",
+    .home_id = "nav-home",
+    .blog_id = "nav-blog",
+    .theme_id = "theme-toggle",
+    .container_style =
+        "position:fixed;top:0;width:100%;background-color:var(--bg-color);"
+        "z-index:1000;padding:10px 40px;border-bottom:1px solid var(--grid-color);"
+        "display:flex;justify-content:space-between;align-items:center;box-sizing:border-box;",
+    .item_style = "font-size:18px;user-select:none;cursor:pointer;"
+                  "color:var(--text-color);text-decoration:none;"
+};
 
 const char *css_feed = "padding: 20px; max-width: 900px; margin-top: 100px; "
 		       "min-height: calc(100vh - 180px - 100px);";
@@ -61,7 +67,6 @@ const char *css_footer =
     "color: var(--text-color); "
     "font-size: 18px; margin-top: 40px;";
 
-const char *msg_header	   = "BONATTO";
 const char *msg_whoami	   = "About";
 const char *msg_github_url = "https://github.com/fiBonatto";
 

@@ -116,13 +116,45 @@ void add_footer(const char *style, const char *github_url) {
 	sys_render_footer(style, github_url);
 }
 
+void ui_render_header(void) {
+    const char *theme_label =
+        state.is_dark ? header.light_label : header.dark_label;
+
+    add_header_container(header.container_id, header.container_style);
+
+    add_nav_link(header.title, header.item_style, "nav-title",
+                 header.container_id, 0);
+
+    const char *group_style = "display:flex;align-items:center;gap:20px;";
+    add_nav_group("nav-right-group", header.container_id, group_style);
+
+    add_nav_link(header.home_label, header.item_style, header.home_id,
+                 "nav-right-group", 0);
+    add_nav_link(header.blog_label, header.item_style, header.blog_id,
+                 "nav-right-group", 1);
+    add_theme_toggle(theme_label, header.item_style, header.theme_id,
+                 "nav-right-group");
+}
+
+EM_JS(void, add_nav_group, (const char *id, const char *container_id, const char *style), {
+    const parent = document.getElementById(UTF8ToString(container_id));
+    if (!parent) return;
+
+    const div = document.createElement('div');
+    div.id = UTF8ToString(id);
+    div.setAttribute('style', UTF8ToString(style));
+    parent.appendChild(div);
+});
+
 EMSCRIPTEN_KEEPALIVE
 void ui_toggle_theme(void) {
 	state.is_dark = !state.is_dark;
 	state.theme = state.is_dark ? &theme_dark : &theme_light;
-	update_theme_toggle_label(state.is_dark ? ":light" : ":dark");
+	update_theme_toggle_label(header.theme_id,
+				  state.is_dark ? header.light_label :
+						  header.dark_label);
 	update_theme_colors(state.theme, palette);
-	render_update_strings(msg_header, state.theme->text, palette);
+	// render_update_strings(header.title, state.theme->text, palette);
 	sys_save_theme(state.is_dark ? 1 : 0);
 	draw_frame();
 }

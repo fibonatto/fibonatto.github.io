@@ -304,6 +304,18 @@ EM_JS(void, render_update_strings,
 		      Module._draw_frame();
       });
 
+EM_JS(void, add_header_title,
+      (const char *text, const char *style, const char *parent_id), {
+          const parent = document.getElementById(UTF8ToString(parent_id));
+          if (!parent) return;
+
+          const span = document.createElement('span');
+          span.innerText = UTF8ToString(text);
+          span.setAttribute('style', UTF8ToString(style));
+          
+          parent.insertBefore(span, parent.firstChild);
+      });
+
 EM_JS(void, apply_style, (const char *selector_cstr, const char *style_cstr), {
 	const selector = UTF8ToString(selector_cstr);
 	const style    = UTF8ToString(style_cstr);
@@ -329,13 +341,29 @@ EM_JS(void, draw_frame, (void), {
 });
 
 // From ui.c
-EM_JS(void, add_theme_toggle, (const char *label_cstr, const char *style_cstr),
-      {
+EM_JS(void, add_header_container, (const char *id_cstr, const char *style_cstr), {
+	const id    = UTF8ToString(id_cstr);
+	const style = UTF8ToString(style_cstr);
+	let header = document.getElementById(id);
+	if (!header) {
+		header	  = document.createElement("div");
+		header.id = id;
+		document.body.appendChild(header);
+	}
+	header.style.cssText = style;
+});
+
+EM_JS(void, add_theme_toggle,
+      (const char *label_cstr, const char *style_cstr, const char *id_cstr,
+       const char *container_id_cstr), {
 	      const label = UTF8ToString(label_cstr);
 	      const style = UTF8ToString(style_cstr);
+	      const id	  = UTF8ToString(id_cstr);
+	      const containerId = UTF8ToString(container_id_cstr);
+	      const header = document.getElementById(containerId) || document.body;
 
 	      const btn		= document.createElement("div");
-	      btn.id		= "theme-toggle";
+	      btn.id		= id;
 	      btn.textContent	= label;
 	      btn.style.cssText = style;
 
@@ -345,23 +373,17 @@ EM_JS(void, add_theme_toggle, (const char *label_cstr, const char *style_cstr),
 		      }
 	      };
 
-	      document.body.appendChild(btn);
+	      header.appendChild(btn);
       });
 
 EM_JS(void, add_nav_link,
-      (const char *label_cstr, const char *style_cstr, const char *id_cstr), {
+      (const char *label_cstr, const char *style_cstr, const char *id_cstr,
+       const char *container_id_cstr, int is_blog), {
 	      const label = UTF8ToString(label_cstr);
 	      const style = UTF8ToString(style_cstr);
 	      const id	  = UTF8ToString(id_cstr);
-
-	      let navContainer = document.getElementById("nav-container");
-	      if (!navContainer) {
-		      navContainer    = document.createElement("div");
-		      navContainer.id = "nav-container";
-		      navContainer.style.cssText =
-			  "position:fixed;top:0;width:100%;background-color:var(--bg-color);z-index:1000;padding:10px 0;border-bottom:1px solid var(--grid-color);display:flex;justify-content:center;gap:20px;";
-		      document.body.appendChild(navContainer);
-	      }
+	      const containerId = UTF8ToString(container_id_cstr);
+	      const header = document.getElementById(containerId) || document.body;
 
 	      const btn		= document.createElement("div");
 	      btn.id		= id;
@@ -370,18 +392,18 @@ EM_JS(void, add_nav_link,
 
 	      btn.onclick = () => {
 		      if (Module._switch_page) {
-			      const isBlog = btn.id === "nav-blog";
-			      Module._switch_page(isBlog);
+			      Module._switch_page(is_blog !== 0);
 		      }
 	      };
 
-	      // document.body.appendChild(btn);
-	      navContainer.appendChild(btn);
+	      header.appendChild(btn);
       });
 
-EM_JS(void, update_theme_toggle_label, (const char *label_cstr), {
+EM_JS(void, update_theme_toggle_label,
+      (const char *id_cstr, const char *label_cstr), {
+	const id    = UTF8ToString(id_cstr);
 	const label = UTF8ToString(label_cstr);
-	const btn   = document.getElementById("theme-toggle");
+	const btn   = document.getElementById(id);
 	if (btn)
 		btn.textContent = label;
 });
