@@ -1,3 +1,11 @@
+---
+
+title: "A velocidade da luz e a ilusão da inteligência infinita"
+date: "2026-08-11"
+description: "por que precisamos de arquitetura, não de modelos maiores"
+
+---
+
 # A velocidade da luz e a ilusão da inteligência infinita: por que precisamos de arquitetura, não de modelos maiores
 
 A discussão atual sobre inteligência artificial é dominada pela projeção de um crescimento linear e infinito. A cada novo lançamento de modelo, com mais parâmetros, maior capacidade de raciocínio ou menor custo por token, a tendência natural é traçar uma linha reta rumo à superinteligência:
