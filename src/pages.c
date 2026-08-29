@@ -40,5 +40,5 @@ void page_render_404(void) {
 }
 
 void page_add_footer(void) {
-	add_footer(css_footer, msg_github_url);
+	add_footer(css_footer, msg_github_url, msg_instagram_url);
 }

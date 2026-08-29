@@ -68,7 +68,8 @@ sed -i '' '$ s/,$//' compile_commands.json
 echo "]" >> compile_commands.json
 
 # 3. Post-processing and JS/WASM Hashing
-wasm-opt -Oz --all-features build/app.wasm -o build/app.wasm || echo "wasm-opt skipped"
+wasm-opt -Oz --enable-bulk-memory --enable-nontrapping-float-to-int build/app.wasm -o build/app.wasm || echo "wasm-opt skipped"
+node -e "const fs=require('fs'); WebAssembly.compile(fs.readFileSync('build/app.wasm')).catch(e=>{ console.error(e); process.exit(1); })"
 terser build/app.js -c -m -o build/app.js || echo "terser skipped"
 
 JS_HASH=$(shasum -a 256 build/app.js | cut -c 1-8)

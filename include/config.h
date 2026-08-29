@@ -84,6 +84,7 @@ extern const char *msg_whoami;
 extern const char *msg_bio;
 extern const char *msg_seo;
 extern const char *msg_github_url;
+extern const char *msg_instagram_url;
 extern const char *msg_404_title;
 extern const char *msg_404_body;
 extern const char *code_block_pre;

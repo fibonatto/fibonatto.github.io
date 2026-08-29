@@ -74,6 +74,7 @@ const char *css_footer =
 
 const char *msg_whoami	   = "About";
 const char *msg_github_url = "https://github.com/fiBonatto";
+const char *msg_instagram_url = "https://www.instagram.com/sergio_bonatto";
 
 const char *msg_bio =
     "I am a software engineer because programming turned out to be the best "
