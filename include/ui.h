@@ -44,10 +44,8 @@ void ui_render_header(void);
  * add_footer - Appends a footer element to the body.
  * @style: CSS style string
  * @github_url: GitHub profile URL
- * @instagram_url: Instagram profile URL
  */
-void add_footer(const char *style, const char *github_url,
-		const char *instagram_url);
+void add_footer(const char *style, const char *github_url);
 
 /*
  * ui_begin_render - Resets the global HTML buffer.

@@ -18,8 +18,7 @@ void sys_get_url_hash(char *buf, size_t max_len);
 void sys_init_router(void);
 
 void sys_set_meta(const char *title, const char *desc, const char *url);
-void sys_render_footer(const char *style, const char *github_url,
-		       const char *instagram_url);
+void sys_render_footer(const char *style, const char *github_url);
 void sys_console_log(const char *msg);
 double sys_now(void);
 

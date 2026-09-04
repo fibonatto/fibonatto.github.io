@@ -145,10 +145,9 @@ EM_JS(void, sys_set_meta,
 	      setMeta('name', 'twitter:image', imgUrl);
       });
 
-EM_JS(void, sys_render_footer, (const char *style_ptr, const char *url_ptr1, const char *url_ptr2), {
+EM_JS(void, sys_render_footer, (const char *style_ptr, const char *url_ptr1), {
 	const style = UTF8ToString(style_ptr);
 	const url1   = UTF8ToString(url_ptr1);
-	const url2   = UTF8ToString(url_ptr2);
 	const year  = new Date().getFullYear();
 
 	let footer =
@@ -193,18 +192,7 @@ EM_JS(void, sys_render_footer, (const char *style_ptr, const char *url_ptr1, con
 	github.style.cssText 	= 'color:var(--text-color);text-decoration:none;';
 	github.textContent   	= 'Github';
 
-	const dot3	   		= document.createElement('span');
-	dot3.style.cssText 	= 'color:var(--dim-text-color)';
-	dot3.textContent   	= '•';
-
-	const instagram	     	= document.createElement('a');
-	instagram.href	     	= url2;
-	instagram.target	= '_blank';
-	instagram.rel		= 'noreferrer';
-	instagram.style.cssText = 'color:var(--text-color);text-decoration:none;';
-	instagram.textContent   = 'Instagram';
-
-	meta.append(copyright, dot1, vim, dot2, github, dot3, instagram);
+	meta.append(copyright, dot1, vim, dot2, github);
 	row.appendChild(meta);
 	outer.appendChild(row);
 	footer.replaceChildren(outer);

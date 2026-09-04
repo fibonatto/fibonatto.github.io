@@ -112,9 +112,8 @@ void clear_feed(void) {
 	sys_set_html("#feed", "");
 }
 
-void add_footer(const char *style, const char *github_url,
-		const char *instagram_url) {
-	sys_render_footer(style, github_url, instagram_url);
+void add_footer(const char *style, const char *github_url) {
+	sys_render_footer(style, github_url);
 }
 
 void ui_render_header(void) {
