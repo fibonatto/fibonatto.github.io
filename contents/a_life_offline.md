@@ -33,7 +33,4 @@ Sometimes, especially at the beginning of a new day, I feel a force pushing me a
 
 Why is everyone angry or depressed on the internet? What's going wrong with us? Where are we going? I think I don't want to go there. We must return. As C.S. Lewis said:
 
-> “We all want progress. But progress means getting nearer to the place where you want to be. And if you have taken a wrong turning then to go forward does not get you any nearer. If you are on the wrong road progress means doing an about-turn and walking back to the right road and in that case the man who turns back soonest is the most progressive man. There is nothing progressive about being pig-headed and refusing to admit a mistake. And I think if you look at the present state of the world it's pretty plain that humanity has been making some big mistake. We're on the wrong road. And if that is so we must go back. Going back is the quickest way on.”
-
-~ C.S. Lewis, *The Case for Christianity*
-
+> “We all want progress. But progress means getting nearer to the place where you want to be. And if you have taken a wrong turning then to go forward does not get you any nearer. If you are on the wrong road progress means doing an about-turn and walking back to the right road and in that case the man who turns back soonest is the most progressive man. There is nothing progressive about being pig-headed and refusing to admit a mistake. And I think if you look at the present state of the world it's pretty plain that humanity has been making some big mistake. We're on the wrong road. And if that is so we must go back. Going back is the quickest way on.” (*The Case for Christianity*)
