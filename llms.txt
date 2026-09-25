@@ -12,8 +12,6 @@ It contains static HTML pages with the complete text of each post.
 
 ## Posts
 
-- [My Worflow (2026)](https://fibonatto.github.io/cli/post/workflow.html): This is my workflow draft apresentation
-
 - [Provérbios 1](https://fibonatto.github.io/cli/post/proverbios1.html): O Pai que ensina antes do erro
 
 - [A velocidade da luz e a ilusão da inteligência infinita](https://fibonatto.github.io/cli/post/ORDO.html): por que precisamos de arquitetura, não de modelos maiores
