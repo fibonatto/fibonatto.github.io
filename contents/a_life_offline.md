@@ -1,5 +1,12 @@
 ---
 
+title: "A Life Offline"
+date: "2026-09-25"
+description: "I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline."
+---
+
+# A life offline
+
 I'm a millennial, which means I got to witness the "birth" of the internet as we know it. When I was a child, a few centuries ago, before the dinosaurs, I had a computer without internet. It was just for playing pinball, drawing in Paint, and my father used it for work. I couldn't use it for a long time, less than an hour, but it was enough for me. My life was climbing trees, playing soccer, playing tag, stealing fruit from the neighbors. It was fun.
 
 When I grew up, we already had internet at home, but it was dial-up. I still couldn't use the computer for very long, maybe one hour per day, but I was a smart kid. I would wait for my parents to fall asleep, then cover myself and the PC with a blanket to access the internet. The blanket, if you don't know, was because the internet was so noisy that it could wake up the entire house.
@@ -20,7 +27,7 @@ What has the internet become? What has life become?
 
 When I was a kid, I remember the sky being so colorful and bright. There were so many birds tweeting. Now, the only bright thing is the fake colors of AI slop on X.
 
-Playing games was so cool. There was AOE, CS in LAN houses, and even chess and pinball were fun. Computers used to be an escape from life. Now, I have to go to the countryside, waterfalls, and parks to escape from the internet and LoL players.
+Playing games was so cool. There was AOE, CS in LAN houses, and even chess and pinball were fun. Computers used to be an escape from life. Now, I have to go to the countryside, waterfalls, and parks to escape from the internet.
 
 Sometimes, especially at the beginning of a new day, I feel a force pushing me away from the internet. I don't have an account on Twitter, Instagram, Facebook, or any social media. To be honest, this movement makes me feel happier. I have more time to study and focus on my job.
 

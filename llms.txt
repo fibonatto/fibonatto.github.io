@@ -12,6 +12,8 @@ It contains static HTML pages with the complete text of each post.
 
 ## Posts
 
+- [A Life Offline](https://fibonatto.github.io/cli/post/a_life_offline.html): I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.
+
 - [Provérbios 1](https://fibonatto.github.io/cli/post/proverbios1.html): O Pai que ensina antes do erro
 
 - [A velocidade da luz e a ilusão da inteligência infinita](https://fibonatto.github.io/cli/post/ORDO.html): por que precisamos de arquitetura, não de modelos maiores
