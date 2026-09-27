@@ -54,27 +54,50 @@ rss_date() {
 
 cat <<'EOF' > "$STYLE"
 html {
-  color: #1a1a1a;
-  background-color: #fdfdfd;
+  color: #22222;
+  background-color: #fff;
 }
+
 body {
   margin: 0 auto;
   max-width: 44em;
-  padding: 50px;
+  padding: 40px 30px;
   overflow-wrap: break-word;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.55;
 }
-pre, code {
-  font-family: Menlo, Monaco, Consolas, monospace;
-  font-size: 100%;
+
+a {
+  color: #356273;
 }
+
 pre {
-  overflow: auto;
+  min-height: 8em;
+  margin: 1.5em 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  overflow: hidden;
+  line-height: 1;
 }
-img, svg {
+
+pre code {
+  text-align: left;
+}
+
+img,
+svg {
   max-width: 100%;
 }
-a {
-  color: #1a1a1a;
+
+time,
+.date {
+  color: #777;
+  font-size: 0.9em;
 }
 EOF
 
