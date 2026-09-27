@@ -47,4 +47,3 @@ list of tools:
 - nvim 
 - basal 
 - man 
-- discordo 
