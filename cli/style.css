@@ -1,0 +1,23 @@
+html {
+  color: #1a1a1a;
+  background-color: #fdfdfd;
+}
+body {
+  margin: 0 auto;
+  max-width: 44em;
+  padding: 50px;
+  overflow-wrap: break-word;
+}
+pre, code {
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 100%;
+}
+pre {
+  overflow: auto;
+}
+img, svg {
+  max-width: 100%;
+}
+a {
+  color: #1a1a1a;
+}

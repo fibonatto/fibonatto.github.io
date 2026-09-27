@@ -9,6 +9,7 @@ POSTS="$CLI/post"
 INDEX="$CLI/index.html"
 RSS="$CLI/rss.xml"
 LLMS="$ROOT/llms.txt"
+STYLE="$CLI/style.css"
 
 SITE_URL="https://fibonatto.github.io"
 CLI_URL="$SITE_URL/cli"
@@ -48,6 +49,36 @@ rss_date() {
 }
 
 # ==============================================================================
+# Generate style.css
+# ==============================================================================
+
+cat <<'EOF' > "$STYLE"
+html {
+  color: #1a1a1a;
+  background-color: #fdfdfd;
+}
+body {
+  margin: 0 auto;
+  max-width: 44em;
+  padding: 50px;
+  overflow-wrap: break-word;
+}
+pre, code {
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 100%;
+}
+pre {
+  overflow: auto;
+}
+img, svg {
+  max-width: 100%;
+}
+a {
+  color: #1a1a1a;
+}
+EOF
+
+# ==============================================================================
 # Generate post pages
 # ==============================================================================
 
@@ -60,6 +91,7 @@ for file in "$CONTENTS"/*.md; do
 
     pandoc \
         --standalone \
+        --css="../style.css" \
         "$file" \
         -o "$POSTS/$name.html"
 done
@@ -117,6 +149,8 @@ done
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bonatto</title>
+
+  <link rel="stylesheet" href="style.css">
 
   <link
     rel="alternate"
