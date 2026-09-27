@@ -10,11 +10,15 @@ INDEX="$CLI/index.html"
 RSS="$CLI/rss.xml"
 LLMS="$ROOT/llms.txt"
 STYLE="$CLI/style.css"
-
+FAV="$ROOT/favicon.svg"
 SITE_URL="https://fibonatto.github.io"
 CLI_URL="$SITE_URL/cli"
+GITHUB_URL="https://github.com/fiBonatto"
+YEAR="$(date +%Y)"
 
 mkdir -p "$POSTS"
+cp "$FAV" "$CLI/favicon.svg"
+cp "$FAV" "$POSTS/favicon.svg"
 
 # ==============================================================================
 # Helpers
@@ -54,14 +58,20 @@ rss_date() {
 
 cat <<'EOF' > "$STYLE"
 html {
-  color: #22222;
+  color: #000;
   background-color: #fff;
 }
 
 body {
+  min-height: 100vh;
+  box-sizing: border-box;
   margin: 0 auto;
   max-width: 44em;
   padding: 40px 30px;
+
+  display: flex;
+  flex-direction: column;
+
   overflow-wrap: break-word;
 
   font-family: Georgia, "Times New Roman", serif;
@@ -98,6 +108,17 @@ time,
 .date {
   color: #777;
   font-size: 0.9em;
+}
+
+main {
+  flex: 1;
+}
+
+footer {
+  margin-top: 3em;
+  color: #777;
+  font-size: 0.9em;
+  text-align: center;
 }
 EOF
 
@@ -172,7 +193,23 @@ done
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bonatto</title>
+	<meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA" />
+  <meta name="author" content="Sergio Bonatto">
+  <meta property="og:title" content="Bonatto">
+  <meta property="og:description" content="Work spans formal methods, functional programming, and operating systems.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://fibonatto.github.io/public/SEO.png">
+  <meta property="og:url" content="https://fibonatto.github.io/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@fibonatto">
+  <meta name="twitter:creator" content="@fibonatto">
+  <meta name="twitter:title" content="Bonatto">
+  <meta name="twitter:description" content="Work spans formal methods, functional programming, and operating systems.">
+  <meta name="twitter:image" content="https://fibonatto.github.io/public/SEO.png">
+    
+  <link rel="preload" as="image" href="public/pfp.d2f5a1d6.avif" fetchpriority="high" type="image/avif">
 
+  <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
 
   <link
@@ -195,7 +232,16 @@ done
 </nav>
 
 <main>
-  <h2>Posts</h2>
+	<p class="para">
+		I am a software engineer because programming turned out to be the best way I know to understand things. 
+	</p>
+	<p>
+		Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles. 
+	</p>
+	<p>
+		This site is where those explorations converge.
+	</p>
+  <h2>Blog</h2>
 
   <ul>
 EOF
@@ -222,17 +268,20 @@ EOF
         printf '\n'
     done
 
-    cat <<'EOF'
+    # Sem aspas no delimitador: $YEAR, $SITE_URL e $GITHUB_URL precisam expandir.
+    cat <<EOF
   </ul>
 </main>
-
+<footer>
+  © $YEAR <a href="$SITE_URL">Bonatto</a> • Vim powered • <a href="$GITHUB_URL" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
 </body>
 </html>
 EOF
 } > "$INDEX"
 
 # ==============================================================================
-# Add navigation to post pages
+# Add favicon, navigation and footer to post pages
 # ==============================================================================
 
 for post in "$POSTS"/*.html; do
@@ -240,20 +289,34 @@ for post in "$POSTS"/*.html; do
 
     tmp_post="$(mktemp)"
 
-    awk '
-        !inserted && /<body[^>]*>/ {
+    awk -v year="$YEAR" -v site_url="$SITE_URL" -v github_url="$GITHUB_URL" '
+        !head_inserted && (/<head>/ || /<head /) {
+            print
+            print "  <link rel=\"icon\" type=\"image/svg+xml\" href=\"favicon.svg\">"
+            head_inserted=1
+            next
+        }
+
+        !nav_inserted && /<body[^>]*>/ {
             print
             print ""
             print "<nav>"
             print "  <a href=\"../index.html\">Back to posts</a>"
             print "</nav>"
-            inserted=1
+            nav_inserted=1
             next
+        }
+
+        /<\/body>/ && !footer_inserted {
+            print "<footer>"
+            printf "  © %s <a href=\"%s\">Bonatto</a> • Vim powered • <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>\n", year, site_url, github_url
+            print "</footer>"
+            print ""
+            footer_inserted=1
         }
 
         { print }
     ' "$post" > "$tmp_post"
-
     mv "$tmp_post" "$post"
 done
 

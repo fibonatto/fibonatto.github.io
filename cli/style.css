@@ -1,12 +1,18 @@
 html {
-  color: #22222;
+  color: #000;
   background-color: #fff;
 }
 
 body {
+  min-height: 100vh;
+  box-sizing: border-box;
   margin: 0 auto;
   max-width: 44em;
   padding: 40px 30px;
+
+  display: flex;
+  flex-direction: column;
+
   overflow-wrap: break-word;
 
   font-family: Georgia, "Times New Roman", serif;
@@ -43,4 +49,15 @@ time,
 .date {
   color: #777;
   font-size: 0.9em;
+}
+
+main {
+  flex: 1;
+}
+
+footer {
+  margin-top: 3em;
+  color: #777;
+  font-size: 0.9em;
+  text-align: center;
 }
