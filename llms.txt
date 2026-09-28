@@ -2,30 +2,29 @@
 
 > Software Engineer writing about programming languages, systems, type theory, and other technical subjects.
 
-The `/cli/` version of the blog is the preferred machine-readable representation.
-It contains static HTML pages with the complete text of each post.
+This site contains static HTML pages with the complete text of each post.
 
-## CLI Blog
+## Blog
 
-- [CLI Blog](https://fibonatto.github.io/cli/): Full-text static version of the blog.
-- [RSS](https://fibonatto.github.io/cli/rss.xml): RSS feed for new posts.
+- [Blog](https://fibonatto.github.io/): Full-text static version of the blog.
+- [RSS](https://fibonatto.github.io/rss.xml): RSS feed for new posts.
 
 ## Posts
 
-- [A Life Offline](https://fibonatto.github.io/cli/post/a_life_offline.html): I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.
+- [A Life Offline](https://fibonatto.github.io/post/a_life_offline.html): I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.
 
-- [Provérbios 1](https://fibonatto.github.io/cli/post/proverbios1.html): O Pai que ensina antes do erro
+- [Provérbios 1](https://fibonatto.github.io/post/proverbios1.html): O Pai que ensina antes do erro
 
-- [A velocidade da luz e a ilusão da inteligência infinita](https://fibonatto.github.io/cli/post/ORDO.html): por que precisamos de arquitetura, não de modelos maiores
+- [A velocidade da luz e a ilusão da inteligência infinita](https://fibonatto.github.io/post/ORDO.html): por que precisamos de arquitetura, não de modelos maiores
 
-- [Context as a Risk Variable](https://fibonatto.github.io/cli/post/context_as_a_risk_variable.html): A mathematical formulation for why more context does not imply more reliability in systems with LLMs
+- [Context as a Risk Variable](https://fibonatto.github.io/post/context_as_a_risk_variable.html): A mathematical formulation for why more context does not imply more reliability in systems with LLMs
 
-- [Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!](https://fibonatto.github.io/cli/post/terminal.html): Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.
+- [Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!](https://fibonatto.github.io/post/terminal.html): Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.
 
-- [Agorismo](https://fibonatto.github.io/cli/post/agorismo.html): Uma breve apresentação sobre minha ideologia política, o agorismo.
+- [Agorismo](https://fibonatto.github.io/post/agorismo.html): Uma breve apresentação sobre minha ideologia política, o agorismo.
 
-- [Ceticismo tecnologico](https://fibonatto.github.io/cli/post/ceticismo-tecnologico.html): Confiar cegamente nunca foi uma boa prática na vída política e nem relogiosa, por que seria na tecnológica? Manter um ceticismo sobre as maravilhas das IAs é um passo excencial para um desenvolvimento de qualidade
+- [Ceticismo tecnologico](https://fibonatto.github.io/post/ceticismo-tecnologico.html): Confiar cegamente nunca foi uma boa prática na vída política e nem relogiosa, por que seria na tecnológica? Manter um ceticismo sobre as maravilhas das IAs é um passo excencial para um desenvolvimento de qualidade
 
-- [Minha Noite Estrelada](https://fibonatto.github.io/cli/post/minha-noite-estrelada.html): Um poema que celebra o encontro apaixonado entre o dia e a noite, onde o amor e a paixão queimam no horizonte em labaredas que consomem o tempo.
+- [Minha Noite Estrelada](https://fibonatto.github.io/post/minha-noite-estrelada.html): Um poema que celebra o encontro apaixonado entre o dia e a noite, onde o amor e a paixão queimam no horizonte em labaredas que consomem o tempo.
 
-- [Criação Evolutiva pela Providência Divina - 1](https://fibonatto.github.io/cli/post/Criacionismo-Evolutivo-1.html): Uma Defesa Ortodoxa da Harmonia entre Revelação Especial e Geral. Questão 1: Como entender a existência da morte antes do pecado de Adão?
+- [Criação Evolutiva pela Providência Divina - 1](https://fibonatto.github.io/post/Criacionismo-Evolutivo-1.html): Uma Defesa Ortodoxa da Harmonia entre Revelação Especial e Geral. Questão 1: Como entender a existência da morte antes do pecado de Adão?

@@ -1,169 +1,119 @@
-<!doctype html>
-<html lang="pt">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Bonatto</title>
-    <meta name="description" content="Work spans formal methods, functional programming, and operating systems.">
-    <meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA" />
-    <meta name="author" content="Sergio Bonatto">
-    <meta property="og:title" content="Bonatto">
-    <meta property="og:description" content="Work spans formal methods, functional programming, and operating systems.">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://fibonatto.github.io/public/SEO.png">
-    <meta property="og:url" content="https://fibonatto.github.io/">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@fibonatto">
-    <meta name="twitter:creator" content="@fibonatto">
-    <meta name="twitter:title" content="Bonatto">
-    <meta name="twitter:description" content="Work spans formal methods, functional programming, and operating systems.">
-    <meta name="twitter:image" content="https://fibonatto.github.io/public/SEO.png">
-    
-    <link rel="preload" as="image" href="public/pfp.d2f5a1d6.avif" fetchpriority="high" type="image/avif">
-    
-    <script>
-        (function() {
-            const theme = localStorage.getItem('site-theme') || 'light';
-            if (theme === 'dark') document.documentElement.classList.add('dark-theme');
-        })();
-    </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bonatto</title>
+  <meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA" />
+  <meta name="author" content="Sergio Bonatto">
+  <meta property="og:title" content="Bonatto">
+  <meta property="og:description" content="Work spans formal methods, functional programming, and operating systems.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://fibonatto.github.io/SEO.png">
+  <meta property="og:url" content="https://fibonatto.github.io/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@fibonatto">
+  <meta name="twitter:creator" content="@fibonatto">
+  <meta name="twitter:title" content="Bonatto">
+  <meta name="twitter:description" content="Work spans formal methods, functional programming, and operating systems.">
+  <meta name="twitter:image" content="https://fibonatto.github.io/SEO.png">
 
-    <style>
-        @font-face {
-            font-family: 'Latin Modern Roman';
-            src: url('public/lmroman10-regular.58f33a73.otf') format('opentype');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
+  <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
 
-        @font-face {
-            font-family: 'Latin Modern Roman';
-            src: url('public/lmroman10-bold.85c20aa5.otf') format('opentype');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: 'Latin Modern Roman';
-            src: url('public/lmroman10-italic.fc73c186.otf') format('opentype');
-            font-weight: 400;
-            font-style: italic;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: 'Latin Modern Roman';
-            src: url('public/lmroman10-bolditalic.2560e30c.otf') format('opentype');
-            font-weight: 700;
-            font-style: italic;
-            font-display: swap;
-        }
-
-        :root {
-            --bg-color: #F2F1EE;
-            --text-color: #1c3d72;
-            --dim-text-color: #767A80;
-            --accent-color: #c0392b;
-            --grid-color: #e4e0d7;
-        }
-
-        .dark-theme {
-            --bg-color: #2f3238;
-            --text-color: #cfd3d8;
-            --dim-text-color: #7a8088;
-            --accent-color: #78a4c4;
-            --grid-color: #44484f;
-        }
-
-        html {
-            background-color: var(--bg-color);
-        }
-
-        body {
-            margin: 0;
-            background-color: transparent;
-            color: var(--text-color);
-            font-family: 'Latin Modern Roman', 'Times New Roman', serif;
-            font-size: 1.3rem;
-            line-height: 1.4;
-            overflow-x: hidden;
-            transition: none !important;
-        }
-
-        #screen {
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 5;
-            pointer-events: none;
-            width: 100%;
-            height: 100%;
-        }
-
-        #feed {
-            position: relative;
-            z-index: 10;
-            max-width: 900px;
-            margin: 100px auto 0;
-            padding: 20px;
-            min-height: calc(100vh - 280px);
-        }
-
-        .para {
-            margin: 12px 0;
-            line-height: 1.4;
-            white-space: pre-wrap;
-        }
-
-        h1, h2, h3, h4, h5, h6, .highlight-red {
-            position: relative;
-            display: inline-block;
-            margin-top: 1.2rem;
-            margin-bottom: 0.5rem;
-            font-weight: normal;
-        }
-
-        a {
-            color: var(--text-color);
-            text-decoration: underline;
-            text-decoration-thickness: 1px;
-            text-underline-offset: 0.16em;
-        }
-
-        code, pre {
-            font-family: 'Courier New', monospace !important;
-            font-size: 0.95rem;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            body { font-size: 1.05rem; }
-            #feed { margin-top: 60px; }
-        }
-    </style>
-    
-    <link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg">
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title="Bonatto"
+    href="rss.xml"
+  >
 </head>
 <body>
-    <canvas id="screen"></canvas>
-    <main id="feed">
-        <p class="para">
-            <img src="public/pfp.d2f5a1d6.avif" alt="Bonatto" fetchpriority="high" loading="eager" width="393" height="458" style="max-width:90%;height:auto;">
-        </p>
-        <h1 class="para">About</h1>
-        <p class="para">
-					I am a software engineer because programming turned out to be the best way I know to understand things. 
-				</p>
-				<p>
-					Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles. 
-				</p>
-				<p>
-					This site is where those explorations converge.
-				</p>
-    </main>
-    <script defer src="build/app.e7e521c1.js"></script>
+
+<header>
+  <h1>Bonatto</h1>
+  <p>Software Engineer · Programming Languages · Systems · Type Theory</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="rss.xml">RSS</a>
+</nav>
+
+<main>
+  <p class="para">
+    I am a software engineer because programming turned out to be the best way I know to understand things.
+  </p>
+  <p>
+    Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles.
+  </p>
+  <p>
+    This site is where those explorations converge.
+  </p>
+
+  <h2>Blog</h2>
+
+  <ul>
+    <li>
+      <time datetime="2026-09-25">2026-09-25</time>
+      <a href="post/a_life_offline.html">A Life Offline</a>
+      <p>I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.</p>
+    </li>
+
+    <li>
+      <time datetime="2026-09-08">2026-09-08</time>
+      <a href="post/proverbios1.html">Provérbios 1</a>
+      <p>O Pai que ensina antes do erro</p>
+    </li>
+
+    <li>
+      <time datetime="2026-08-11">2026-08-11</time>
+      <a href="post/ORDO.html">A velocidade da luz e a ilusão da inteligência infinita</a>
+      <p>por que precisamos de arquitetura, não de modelos maiores</p>
+    </li>
+
+    <li>
+      <time datetime="2026-05-14">2026-05-14</time>
+      <a href="post/context_as_a_risk_variable.html">Context as a Risk Variable</a>
+      <p>A mathematical formulation for why more context does not imply more reliability in systems with LLMs</p>
+    </li>
+
+    <li>
+      <time datetime="2026-03-23">2026-03-23</time>
+      <a href="post/terminal.html">Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!</a>
+      <p>Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.</p>
+    </li>
+
+    <li>
+      <time datetime="2026-03-17">2026-03-17</time>
+      <a href="post/agorismo.html">Agorismo</a>
+      <p>Uma breve apresentação sobre minha ideologia política, o agorismo.</p>
+    </li>
+
+    <li>
+      <time datetime="2026-03-14">2026-03-14</time>
+      <a href="post/ceticismo-tecnologico.html">Ceticismo tecnologico</a>
+      <p>Confiar cegamente nunca foi uma boa prática na vída política e nem relogiosa, por que seria na tecnológica? Manter um ceticismo sobre as maravilhas das IAs é um passo excencial para um desenvolvimento de qualidade</p>
+    </li>
+
+    <li>
+      <time datetime="2025-12-09">2025-12-09</time>
+      <a href="post/minha-noite-estrelada.html">Minha Noite Estrelada</a>
+      <p>Um poema que celebra o encontro apaixonado entre o dia e a noite, onde o amor e a paixão queimam no horizonte em labaredas que consomem o tempo.</p>
+    </li>
+
+    <li>
+      <time datetime="2025-09-05">2025-09-05</time>
+      <a href="post/Criacionismo-Evolutivo-1.html">Criação Evolutiva pela Providência Divina - 1</a>
+      <p>Uma Defesa Ortodoxa da Harmonia entre Revelação Especial e Geral. Questão 1: Como entender a existência da morte antes do pecado de Adão?</p>
+    </li>
+
+  </ul>
+</main>
+
+<footer>
+  © 2026 <a href="https://fibonatto.github.io">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
 </body>
 </html>

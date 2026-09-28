@@ -4,21 +4,17 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTENTS="$ROOT/contents"
-CLI="$ROOT/cli"
-POSTS="$CLI/post"
-INDEX="$CLI/index.html"
-RSS="$CLI/rss.xml"
+POSTS="$ROOT/post"
+INDEX="$ROOT/index.html"
+RSS="$ROOT/rss.xml"
 LLMS="$ROOT/llms.txt"
-STYLE="$CLI/style.css"
+STYLE="$ROOT/style.css"
 FAV="$ROOT/favicon.svg"
 SITE_URL="https://fibonatto.github.io"
-CLI_URL="$SITE_URL/cli"
 GITHUB_URL="https://github.com/fiBonatto"
 YEAR="$(date +%Y)"
 
 mkdir -p "$POSTS"
-cp "$FAV" "$CLI/favicon.svg"
-cp "$FAV" "$POSTS/favicon.svg"
 
 # ==============================================================================
 # Helpers
@@ -193,21 +189,19 @@ done
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bonatto</title>
-	<meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA" />
+  <meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA" />
   <meta name="author" content="Sergio Bonatto">
   <meta property="og:title" content="Bonatto">
   <meta property="og:description" content="Work spans formal methods, functional programming, and operating systems.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="https://fibonatto.github.io/public/SEO.png">
+  <meta property="og:image" content="https://fibonatto.github.io/SEO.png">
   <meta property="og:url" content="https://fibonatto.github.io/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@fibonatto">
   <meta name="twitter:creator" content="@fibonatto">
   <meta name="twitter:title" content="Bonatto">
   <meta name="twitter:description" content="Work spans formal methods, functional programming, and operating systems.">
-  <meta name="twitter:image" content="https://fibonatto.github.io/public/SEO.png">
-    
-  <link rel="preload" as="image" href="public/pfp.d2f5a1d6.avif" fetchpriority="high" type="image/avif">
+  <meta name="twitter:image" content="https://fibonatto.github.io/SEO.png">
 
   <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
@@ -232,15 +226,16 @@ done
 </nav>
 
 <main>
-	<p class="para">
-		I am a software engineer because programming turned out to be the best way I know to understand things. 
-	</p>
-	<p>
-		Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles. 
-	</p>
-	<p>
-		This site is where those explorations converge.
-	</p>
+  <p class="para">
+    I am a software engineer because programming turned out to be the best way I know to understand things.
+  </p>
+  <p>
+    Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles.
+  </p>
+  <p>
+    This site is where those explorations converge.
+  </p>
+
   <h2>Blog</h2>
 
   <ul>
@@ -268,13 +263,14 @@ EOF
         printf '\n'
     done
 
-    # Sem aspas no delimitador: $YEAR, $SITE_URL e $GITHUB_URL precisam expandir.
     cat <<EOF
   </ul>
 </main>
+
 <footer>
   © $YEAR <a href="$SITE_URL">Bonatto</a> • Vim powered • <a href="$GITHUB_URL" target="_blank" rel="noopener noreferrer">GitHub</a>
 </footer>
+
 </body>
 </html>
 EOF
@@ -292,7 +288,7 @@ for post in "$POSTS"/*.html; do
     awk -v year="$YEAR" -v site_url="$SITE_URL" -v github_url="$GITHUB_URL" '
         !head_inserted && (/<head>/ || /<head /) {
             print
-            print "  <link rel=\"icon\" type=\"image/svg+xml\" href=\"favicon.svg\">"
+            print "  <link rel=\"icon\" type=\"image/svg+xml\" href=\"../favicon.svg\">"
             head_inserted=1
             next
         }
@@ -317,6 +313,7 @@ for post in "$POSTS"/*.html; do
 
         { print }
     ' "$post" > "$tmp_post"
+
     mv "$tmp_post" "$post"
 done
 
@@ -330,8 +327,8 @@ done
 <rss version="2.0">
   <channel>
     <title>Bonatto</title>
-    <link>$CLI_URL/</link>
-    <description>CLI version of Bonatto's blog.</description>
+    <link>$SITE_URL/</link>
+    <description>Bonatto's blog.</description>
     <language>en</language>
 EOF
 
@@ -340,7 +337,7 @@ EOF
         safe_title="$(escape_xml "$title")"
         safe_description="$(escape_xml "$description")"
         published="$(rss_date "$date")"
-        url="$CLI_URL/post/$name.html"
+        url="$SITE_URL/post/$name.html"
 
         printf '\n'
         printf '    <item>\n'
@@ -369,20 +366,19 @@ EOF
 
 > Software Engineer writing about programming languages, systems, type theory, and other technical subjects.
 
-The \`/cli/\` version of the blog is the preferred machine-readable representation.
-It contains static HTML pages with the complete text of each post.
+This site contains static HTML pages with the complete text of each post.
 
-## CLI Blog
+## Blog
 
-- [CLI Blog]($CLI_URL/): Full-text static version of the blog.
-- [RSS]($CLI_URL/rss.xml): RSS feed for new posts.
+- [Blog]($SITE_URL/): Full-text static version of the blog.
+- [RSS]($SITE_URL/rss.xml): RSS feed for new posts.
 
 ## Posts
 EOF
 
     sort -r -k1,1 "$tmp" |
     while IFS=$'\t' read -r date title description name; do
-        url="$CLI_URL/post/$name.html"
+        url="$SITE_URL/post/$name.html"
 
         if [ -n "$description" ]; then
             printf '\n- [%s](%s): %s\n' \
@@ -405,4 +401,5 @@ echo "Generated:"
 echo "  posts → $POSTS"
 echo "  index → $INDEX"
 echo "  rss   → $RSS"
+echo "  style → $STYLE"
 echo "  llms  → $LLMS"
