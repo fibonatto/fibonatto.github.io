@@ -13,17 +13,15 @@ This site contains static HTML pages with the complete text of each post.
 
 - [A Life Offline](https://fibonatto.github.io/post/a_life_offline.html): I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.
 
-- [Provérbios 1](https://fibonatto.github.io/post/proverbios1.html): O Pai que ensina antes do erro
+- [Proverbs 1](https://fibonatto.github.io/post/proverbs1.html): The Father who teaches before the mistake
 
-- [A velocidade da luz e a ilusão da inteligência infinita](https://fibonatto.github.io/post/ORDO.html): por que precisamos de arquitetura, não de modelos maiores
+- [The Speed of Light and the Illusion of Infinite Intelligence](https://fibonatto.github.io/post/ORDO.html): Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead.
 
 - [Context as a Risk Variable](https://fibonatto.github.io/post/context_as_a_risk_variable.html): A mathematical formulation for why more context does not imply more reliability in systems with LLMs
 
 - [Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!](https://fibonatto.github.io/post/terminal.html): Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.
 
-- [Agorismo](https://fibonatto.github.io/post/agorismo.html): Uma breve apresentação sobre minha ideologia política, o agorismo.
-
-- [Ceticismo tecnologico](https://fibonatto.github.io/post/ceticismo-tecnologico.html): Confiar cegamente nunca foi uma boa prática na vída política e nem relogiosa, por que seria na tecnológica? Manter um ceticismo sobre as maravilhas das IAs é um passo excencial para um desenvolvimento de qualidade
+- [Agorism](https://fibonatto.github.io/post/agorism.html): A brief introduction to agorism, the political philosophy I identify with.
 
 - [Minha Noite Estrelada](https://fibonatto.github.io/post/minha-noite-estrelada.html): Um poema que celebra o encontro apaixonado entre o dia e a noite, onde o amor e a paixão queimam no horizonte em labaredas que consomem o tempo.
 
