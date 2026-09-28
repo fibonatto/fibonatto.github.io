@@ -124,6 +124,7 @@ User-Friendly!” date: “2026-03-23” description: “Still using a heavy
 framework or a stock shell? You’re leaving performance on the table.
 Learn how to evolve your workflow to a professional-grade setup using
 Antidote, custom Zsh logic, and high-performance tools.” —</p>
+<hr />
 <h1
 id="your-terminal-can-be-much-more-productive-fast-and-minimalist">YOUR
 TERMINAL CAN BE MUCH MORE PRODUCTIVE, FAST, AND MINIMALIST!</h1>
@@ -134,6 +135,7 @@ repetitive tasks for us, and your shell should be the command center of
 that automation. In this article, I will show you how to move from a
 basic or “bloated” setup to a professional, high-performance
 environment.</p>
+<hr />
 <h3 id="the-foundation-why-performance-matters">1. THE FOUNDATION: WHY
 PERFORMANCE MATTERS</h3>
 <p>Most users start with frameworks like <code>Oh My Zsh</code> because
@@ -142,18 +144,21 @@ frameworks become “heavy,” adding noticeable latency every time you open
 a new tab. The goal is to achieve <code>absolute efficiency</code>: a
 terminal that feels instantaneous, looks clean, and provides the right
 information at the right time.</p>
+<hr />
 <h4 id="before-you-start-font-requirements">BEFORE YOU START: FONT
 REQUIREMENTS</h4>
 <p>To see the icons and symbols used in modern tools, you must install a
 <code>Nerd Font</code>. I recommend <code>Fira Code Nerd Font</code>.
 Without it, your terminal will show broken characters instead of the
 icons for Git, folders, and files.</p>
+<hr />
 <h3 id="the-engine-zsh-antidote">2. THE ENGINE: ZSH + ANTIDOTE</h3>
 <p>Instead of loading dozens of unnecessary scripts, we will use
 <code>Antidote</code>. It is an ultra-fast plugin manager that compiles
 your dependencies into a single static file. Unlike other managers,
 <code>Antidote</code> does not run complex logic on every startup; it
 simply loads a pre-compiled script.</p>
+<hr />
 <h4 id="configuring-your-plugins-.zsh_plugins.txt">CONFIGURING YOUR
 PLUGINS (~/.zsh_plugins.txt)</h4>
 <p>Create a file named <code>~/.zsh_plugins.txt</code> and add only the
@@ -164,6 +169,7 @@ ohmyzsh/ohmyzsh path:plugins/gitignore</code></pre>
 <p>This gives you smart suggestions, fast syntax highlighting, and
 <code>Git</code> integration without the overhead of a full
 framework.</p>
+<hr />
 <h3 id="high-performance-.zshrc-logic">3. HIGH-PERFORMANCE .ZSHRC
 LOGIC</h3>
 <p>The secret to an instant boot is
@@ -178,18 +184,21 @@ if [[ ! -f &quot;$zsh_plugins_compiled&quot; || &quot;$zsh_plugins&quot; -nt &qu
   antidote bundle &lt; &quot;$zsh_plugins&quot; &gt; &quot;$zsh_plugins_compiled&quot;
 fi
 source &quot;$zsh_plugins_compiled&quot;</code></pre>
+<hr />
 <h3 id="modern-tools-eza-ls">4. MODERN TOOLS: EZA &gt; LS</h3>
 <p>The standard <code>ls</code> command is a relic. Use <code>eza</code>
 instead. It is written in <code>Rust</code>, supports icons, and
 integrates <code>Git</code> status directly into your file list.</p>
 <pre><code>alias ll=&quot;eza -la --icons&quot;
 alias ls=&quot;eza --icons&quot;</code></pre>
+<hr />
 <h3 id="aesthetic-prompt-pawsh-theme">5. AESTHETIC &amp; PROMPT: PAWSH
 THEME</h3>
 <p>For the visual interface, I use the <code>Pawsh</code> theme. It is
 minimalist, <code>Vi-mode</code> aware, and features a “cat prompt” that
 changes color based on the success or failure of your last command. It
 provides high visibility without cluttering your screen.</p>
+<hr />
 <h3 id="productivity-boost-aliases-typos">6. PRODUCTIVITY BOOST: ALIASES
 &amp; TYPOS</h3>
 <p>Don’t let typing mistakes slow you down. Use aliases to turn common
@@ -203,6 +212,7 @@ v, im, vom       vim             Immediate Editor Access
 .., cdd          cd ..           Fluid Navigation
 push, gp         git push        Streamlined Git
 ---------------------------------------------------------</code></pre>
+<hr />
 <h4 id="useful-functions">USEFUL FUNCTIONS</h4>
 <p>Add these to your <code>~/.zshrc</code> to handle common tasks:</p>
 <pre><code>`mkcd()`: Creates a directory and enters it immediately.
@@ -213,6 +223,7 @@ with <code>Antidote</code> and <code>eza</code> makes your environment
 feel like an extension of your thought process. You can find my full
 implementation, including modular configurations for <code>Vim</code>
 and <code>Zsh</code>, in my <code>OSX</code> repository on GitHub.</p>
+<hr />
   </article>
 </main>
 

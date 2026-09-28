@@ -5,6 +5,8 @@ date: "2026-05-14"
 description: "A mathematical formulation for why more context does not imply more reliability in systems with LLMs"
 ---
 
+---
+
 # Against the Contextual Monotonicity Hypothesis
 ## An operational formulation for reliability degradation under context growth in systems with LLMs
 A large part of contemporary engineering of systems with LLMs implicitly assumes a property of contextual monotonicity.
@@ -30,6 +32,8 @@ However, this conclusion depends on an undue extrapolation from an ideal predict
 This text proposes an alternative operational formulation:
 > in real generative systems, context must be treated simultaneously as a source of information and as a risk variable.
 More precisely, contextual growth does not imply monotonicity of reliability.
+
+---
 
 ## 1. Problem formulation
 Consider an input space:
@@ -63,6 +67,8 @@ for any additional sequence `𝑛`.
 A large part of contemporary architectures implicitly assumes this inequality.
 
 This text argues that it is not guaranteed in approximate generative systems.
+
+---
 
 ## 2. The extrapolation error
 In information theory, let:
@@ -103,6 +109,8 @@ The relevant operational question is:
 > can the concrete system use `𝑋ₙ` without degrading the decision margin of the inference?
 This is a question about approximation, statistical competition and operational stability.
 
+---
+
 ## 3. Non-monotonic reliability
 Consider a contextual decomposition:
 ```
@@ -133,6 +141,8 @@ This does not contradict information theory.
 
 It contradicts only the extrapolation of ideal information theory to finite probabilistic models executing under real constraints.
 
+---
+
 ## 4. Expected loss under imperfect conditioning
 
 Consider the expected logarithmic loss (cross-entropy):
@@ -161,6 +171,8 @@ The important consequence is:
 
 > the presence of additional information does not imply a reduction in the observed operational loss.
 The system may fail not because the correct information does not exist, but because it ceases to statistically dominate the inference process.
+
+---
 
 ## 5. Decision margin
 To simplify the analysis, consider the case where `𝒴 = {𝑦⁺, 𝑦⁻}`, where:
@@ -202,6 +214,8 @@ In code generation systems, this frequently appears operationally as:
 The problem is not the absence of superficial coherence.
 
 The problem is the loss of sufficient probabilistic separability between correct and incorrect solutions.
+
+---
 
 ## 6. Contextual competition
 In a simplified model of attentional competition, consider attention weights for the token at position `i`:
@@ -252,6 +266,8 @@ It is probabilistic competition for inferential influence.
 
 Modern architectures with head specialization, implicit sparsity and retrieval mechanisms partially mitigate this effect. However, such mechanisms do not eliminate the general problem of contextual competition under operational context growth.
 
+---
+
 ## 7. Cumulative context as authoritative state
 A large part of contemporary agentic systems treats accumulated probabilistic inference as an authoritative state representation.
 
@@ -285,6 +301,8 @@ The problem is turning accumulated probabilistic inference into an operational s
 An incorrect inference persisted in memory can reappear later as a valid contextual premise.
 
 This mechanism produces recursive contextual contamination: inference errors in cycle `𝑡` become contextual premises in cycle `𝑡 + 𝑘`, potentially amplifying `𝑒_𝑐𝑜𝑛𝑡𝑒𝑥𝑡` over time.
+
+---
 
 ## 8. Deterministic context reconstruction
 
@@ -353,6 +371,8 @@ The verifier can include:
 
 In this regime, probabilistic inference becomes a subordinate component of a deterministic control loop.
 
+---
+
 ## 9. Risk functions
 Consider an operational risk function over the repository:
 ```
@@ -400,6 +420,8 @@ In this regime, the system does not use the generative model as authority over t
 
 It uses the model as a heuristic mechanism restricted by external verifiers.
 
+---
+
 ## 10. Contextual convergence
 Consider the set of high-risk code units in cycle `𝑡`:
 ```
@@ -431,6 +453,8 @@ Architectures based on cumulative memory frequently produce the opposite propert
 ```
 even when the system approaches operational stability.
 
+---
+
 ## 11. Appropriate limits for probabilistic inference
 The fundamental problem is not using probabilistic models.
 
@@ -459,6 +483,8 @@ However, verifiable operational state must remain in deterministic artifacts:
 The context provided to the model must be a temporary projection of these artifacts.
 
 Not an accumulated probabilistic memory of what the system believes happened.
+
+---
 
 ## 12. Conclusion
 The contextual monotonicity hypothesis is not guaranteed in approximate generative systems.
@@ -498,3 +524,6 @@ Probabilistic inference must operate within deterministic envelopes capable of:
 - limiting contextual propagation
 
 The operational reliability of systems with LLMs depends less on the absolute amount of context available and more on the architectural capacity to control how context is produced, selected, validated and discarded.
+
+---
+

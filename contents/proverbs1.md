@@ -5,6 +5,8 @@ date: "2026-09-08"
 description: "The Father who teaches before the mistake"
 ---
 
+---
+
 # Proverbs 1: The Father Who Teaches Before the Mistake
 
 Proverbs begins by explaining why it was written: to teach wisdom, instruction, good judgment, justice, fairness, and righteousness. It isn't just about teaching someone to know more, but to learn how to live.
@@ -26,6 +28,8 @@ Right after that, the text says:
 This isn't there by accident. The first exercise in wisdom presented in the chapter is knowing how to listen.
 
 The text doesn't assume that the son already knows what to do. It assumes exactly the opposite: that he needs to be taught.
+
+---
 
 ### 1. What is God teaching us?
 
@@ -55,6 +59,8 @@ You don't have to always be right to be wise. You need to be able to listen when
 
 And that is especially important when the instruction comes from someone who loves you.
 
+---
+
 #### Not all suffering is the consequence of a wrong choice
 
 In the next part, Solomon gives a concrete example.
@@ -76,6 +82,8 @@ The text isn't saying that when someone suffers, it is because they did somethin
 Sometimes life simply hurts. Sometimes someone suffers without doing anything to cause it. Suffering is not automatically punishment.
 
 What Proverbs is teaching here is something more specific: there are choices that really do lead to bad places, and you don't have to wait until you get there before believing the warning.
+
+---
 
 #### Wisdom calls before the consequence
 
@@ -124,6 +132,8 @@ Proverbs isn't promising a life without suffering.
 It is a different kind of safety.
 
 It is the safety of someone who listens before entering the wrong path. And when she has to go through something difficult, she doesn't have to walk through it alone.
+
+---
 
 ### 2. What does this text reveal about God?
 
@@ -186,6 +196,8 @@ It is:
 ```
 
 There is still an invitation to listen.
+
+---
 
 ### 3. What does this text reveal about how God cares for His children?
 
@@ -255,3 +267,5 @@ And when He says that whoever listens to Him will live in safety, He isn't promi
 
 He is saying that she doesn't have to walk through life alone.
 
+
+---

@@ -1,9 +1,10 @@
 ---
-
 title: "The Speed of Light and the Illusion of Infinite Intelligence"
 date: "2026-08-11"
 description: "Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead."
 --- 
+
+---
 
 # The Speed of Light and the Illusion of Infinite Intelligence: Why We Need Architecture, Not Bigger Models
 
@@ -88,6 +89,8 @@ For an LLM to perform a task, it needs context: code, files, documentation, exec
 
 That relationship, however, is not necessarily monotonic.
 
+---
+
 ### Context Is Also a Risk Variable
 
 A larger context does not only add useful information. It also increases the space over which the model can make inferences.
@@ -164,6 +167,8 @@ Under certain conditions, because of the expansion of the inference surface, the
 
 The model can receive more information and produce a worse answer.
 
+---
+
 ### The Problem With Confidence
 
 There is another particularly dangerous characteristic of this behavior: increasing the context does not have to produce an obviously incoherent error.
@@ -234,6 +239,8 @@ The first problem is one of **inferential reliability**.
 The second is one of **temporal validity**.
 
 A robust architecture needs to deal with both. The real bottleneck is not the volumetric capacity of memory, but the historical validity and authority of the information that makes up the context.
+
+---
 
 ## Rebuild Instead of Inherit
 
@@ -317,3 +324,5 @@ Structural sources (Git, APIs, databases, code)
 The goal is not to force determinism into AI, but to make the data infrastructure reliable. We do not need to make intelligence rigid in order to make the system around it robust.
 
 ORDO is not a commercial product or a rigid framework. It works somewhat like Git or Kubernetes: it defines a set of structural principles that any engineering team can implement in its own stack to avoid lock-in to proprietary memory or orchestration solutions.
+
+---

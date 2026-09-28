@@ -122,6 +122,7 @@ footer {
 <p>title: “Context as a Risk Variable” date: “2026-05-14” description:
 “A mathematical formulation for why more context does not imply more
 reliability in systems with LLMs” —</p>
+<hr />
 <h1 id="against-the-contextual-monotonicity-hypothesis">Against the
 Contextual Monotonicity Hypothesis</h1>
 <h2
@@ -155,6 +156,7 @@ model.</p>
 real generative systems, context must be treated simultaneously as a
 source of information and as a risk variable. More precisely, contextual
 growth does not imply monotonicity of reliability.</p>
+<hr />
 <h2 id="problem-formulation">1. Problem formulation</h2>
 <p>Consider an input space:</p>
 <pre><code>𝑐 = (𝑥₁,𝑥₂,…,𝑥ₙ)∈𝒳*</code></pre>
@@ -184,6 +186,7 @@ is irrelevant to the argument, by <code>(𝑐 , 𝑛)</code>.</p>
 inequality.</p>
 <p>This text argues that it is not guaranteed in approximate generative
 systems.</p>
+<hr />
 <h2 id="the-extrapolation-error">2. The extrapolation error</h2>
 <p>In information theory, let:</p>
 <ul>
@@ -221,6 +224,7 @@ without degrading the decision margin of the inference? This is a
 question about approximation, statistical competition and operational
 stability.</p>
 </blockquote>
+<hr />
 <h2 id="non-monotonic-reliability">3. Non-monotonic reliability</h2>
 <p>Consider a contextual decomposition:</p>
 <pre><code>𝑐 = (𝑠 · 𝑛)</code></pre>
@@ -249,6 +253,7 @@ mass to redistribute <code>𝑞_θ</code> — as formalized in Section 6.</p>
 <p>This does not contradict information theory.</p>
 <p>It contradicts only the extrapolation of ideal information theory to
 finite probabilistic models executing under real constraints.</p>
+<hr />
 <h2 id="expected-loss-under-imperfect-conditioning">4. Expected loss
 under imperfect conditioning</h2>
 <p>Consider the expected logarithmic loss (cross-entropy):</p>
@@ -281,6 +286,7 @@ the observed operational loss. The system may fail not because the
 correct information does not exist, but because it ceases to
 statistically dominate the inference process.</p>
 </blockquote>
+<hr />
 <h2 id="decision-margin">5. Decision margin</h2>
 <p>To simplify the analysis, consider the case where
 <code>𝒴 = {𝑦⁺, 𝑦⁻}</code>, where:</p>
@@ -322,6 +328,7 @@ as:</p>
 <p>The problem is not the absence of superficial coherence.</p>
 <p>The problem is the loss of sufficient probabilistic separability
 between correct and incorrect solutions.</p>
+<hr />
 <h2 id="contextual-competition">6. Contextual competition</h2>
 <p>In a simplified model of attentional competition, consider attention
 weights for the token at position <code>i</code>:</p>
@@ -374,6 +381,7 @@ in <code>𝑆</code>.</p>
 retrieval mechanisms partially mitigate this effect. However, such
 mechanisms do not eliminate the general problem of contextual
 competition under operational context growth.</p>
+<hr />
 <h2 id="cumulative-context-as-authoritative-state">7. Cumulative context
 as authoritative state</h2>
 <p>A large part of contemporary agentic systems treats accumulated
@@ -410,6 +418,7 @@ valid contextual premise.</p>
 errors in cycle <code>𝑡</code> become contextual premises in cycle
 <code>𝑡 + 𝑘</code>, potentially amplifying <code>𝑒_𝑐𝑜𝑛𝑡𝑒𝑥𝑡</code> over
 time.</p>
+<hr />
 <h2 id="deterministic-context-reconstruction">8. Deterministic context
 reconstruction</h2>
 <p>An architectural alternative consists of not accumulating operational
@@ -463,6 +472,7 @@ self-confidence.</p>
 </ul>
 <p>In this regime, probabilistic inference becomes a subordinate
 component of a deterministic control loop.</p>
+<hr />
 <h2 id="risk-functions">9. Risk functions</h2>
 <p>Consider an operational risk function over the repository:</p>
 <pre><code>            𝑘
@@ -508,6 +518,7 @@ condition may be required:</p>
 authority over the state.</p>
 <p>It uses the model as a heuristic mechanism restricted by external
 verifiers.</p>
+<hr />
 <h2 id="contextual-convergence">10. Contextual convergence</h2>
 <p>Consider the set of high-risk code units in cycle <code>𝑡</code>:</p>
 <pre><code>𝑈ₜ = { 𝑢∈ ℛₜ : ρ(𝑢) &gt; τ } </code></pre>
@@ -540,6 +551,7 @@ frequently produce the opposite property:</p>
 </blockquote>
 <pre><code>|𝐶ₜ₊₁| ≥ |𝐶ₜ|</code></pre>
 <p>even when the system approaches operational stability.</p>
+<hr />
 <h2 id="appropriate-limits-for-probabilistic-inference">11. Appropriate
 limits for probabilistic inference</h2>
 <p>The fundamental problem is not using probabilistic models.</p>
@@ -570,6 +582,7 @@ artifacts:</p>
 these artifacts.</p>
 <p>Not an accumulated probabilistic memory of what the system believes
 happened.</p>
+<hr />
 <h2 id="conclusion">12. Conclusion</h2>
 <p>The contextual monotonicity hypothesis is not guaranteed in
 approximate generative systems.</p>
@@ -610,6 +623,7 @@ capable of:</p>
 absolute amount of context available and more on the architectural
 capacity to control how context is produced, selected, validated and
 discarded.</p>
+<hr />
   </article>
 </main>
 

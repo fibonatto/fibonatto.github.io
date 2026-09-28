@@ -5,6 +5,8 @@ date: "2026-03-17"
 description: "A brief introduction to agorism, the political philosophy I identify with."
 ---
 
+---
+
 # Agorism
 
 Since we're on the subject, I'd like to introduce you to my political ideology.
@@ -31,3 +33,5 @@ They can shut down social networks if they want, but we'll have blogs, forums, b
 
 Agorism is cypherpunk, and it won't die because of one more layer of state surveillance. It will only grow.
 
+
+---

@@ -15,7 +15,7 @@ This site contains static HTML pages with the complete text of each post.
 
 - [Proverbs 1](https://fibonatto.github.io/post/proverbs1.html): The Father who teaches before the mistake
 
-- [The Speed of Light and the Illusion of Infinite Intelligence](https://fibonatto.github.io/post/ORDO.html): Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead.
+- [The Speed of Light and the Illusion of Infinite Intelligence](https://fibonatto.github.io/post/ordo.html): Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead.
 
 - [Context as a Risk Variable](https://fibonatto.github.io/post/context_as_a_risk_variable.html): A mathematical formulation for why more context does not imply more reliability in systems with LLMs
 

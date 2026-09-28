@@ -5,6 +5,8 @@ date: "2026-09-25"
 description: "I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline."
 ---
 
+---
+
 # A life offline
 
 I'm a millennial, which means I got to witness the "birth" of the internet as we know it. When I was a child, a few centuries ago, before the dinosaurs, I had a computer without internet. It was just for playing pinball, drawing in Paint, and my father used it for work. I couldn't use it for a long time, less than an hour, but it was enough for me. My life was climbing trees, playing soccer, playing tag, stealing fruit from the neighbors. It was fun.
@@ -34,3 +36,5 @@ Sometimes, especially at the beginning of a new day, I feel a force pushing me a
 Why is everyone angry or depressed on the internet? What's going wrong with us? Where are we going? I think I don't want to go there. We must return. As C.S. Lewis said:
 
 > “We all want progress. But progress means getting nearer to the place where you want to be. And if you have taken a wrong turning then to go forward does not get you any nearer. If you are on the wrong road progress means doing an about-turn and walking back to the right road and in that case the man who turns back soonest is the most progressive man. There is nothing progressive about being pig-headed and refusing to admit a mistake. And I think if you look at the present state of the world it's pretty plain that humanity has been making some big mistake. We're on the wrong road. And if that is so we must go back. Going back is the quickest way on.” (*The Case for Christianity*)
+
+---
