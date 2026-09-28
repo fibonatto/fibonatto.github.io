@@ -14,35 +14,28 @@ Inside my Mac, all I need is a terminal and a web browser. That's it. What more 
 
 Yeah, it could be worse if I tried to look cool lol.
 
-# My Tools
+I tested a lot of terminal emulators, since alacritty until ghostty, eveyone has your own pros and cons. The terminal I most liked is the Kitty, pretty simple config and you can change everything, even the icon. Please, the default is the worse. Afther the icon, I changed a few configs, like keybinds and colors. My kitty config has less than 90 LOC with commentaries explayning what the config does. I basically enable splits as default, change `option` key to act like "alt" and enabled notifications. 
 
-The other part of my workflow it's the tools themselves. Some of them are made by me, I really like de DIY philosophy, that's how I learn. When I want to learn Rust, for example, I developed `Horos`, a minimalistic project scaffolding tool. It's write in Rust, but I wrote to create C files and directories instead write everything. I just do:
-```
-horos my-project
-```
+Kitty is powerfull, but it is not perfect, so we need Tmux. This has a lot of config, the most important, I think, is syncronization between clipboard, notifications, resurrect and continuum. I fell my terminal mor powerfull and integrate with my system.  
 
-I like this project because helpe me to be productive, so I can use:
-```
-horos --type kernel my-kernel
-```
+Another important layer of this system is the shell, o tryed bash, it's cool, and fish, it's weird. I stay with Zsh. In a first moment, my config had a lot of plugins, some of them was really heavy, so I meet Antidote. Good-bye Oh-my-zsh, it was eternal while it lasted.
 
-and I already have the project pre-configured. 
+I remember in my last week with OMZ, I'm waiting 2, even 3 seconds to my terminal load every configuration. Now, 75 ms with the same functionality. I lost nothing. 
 
-Another one that I like very much is Uchikomi, which I use to analyze code complexity, LOC and churn and sort the result by different metrics. 
 
-These are't huge pieces of software. That's kind of point. I don't need a masive IDE traying to do everrything for me. If there is some repetitive tasks that annoys me, I can just make a small tool for it. 
+
+
+
 
 
 list of tools:
-- Horos 
-- Uchikomi
+
 - Kitty 
 - tmux 
 - zsh
 - antidote 
 - dicordo 
 - w3m 
-- ORDO 
 - tell-ai 
 - nvim 
 - basal 
