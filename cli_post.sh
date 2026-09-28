@@ -8,8 +8,6 @@ POSTS="$ROOT/post"
 INDEX="$ROOT/index.html"
 RSS="$ROOT/rss.xml"
 LLMS="$ROOT/llms.txt"
-STYLE="$ROOT/style.css"
-FAV="$ROOT/favicon.svg"
 SITE_URL="https://fibonatto.github.io"
 GITHUB_URL="https://github.com/fiBonatto"
 YEAR="$(date +%Y)"
@@ -48,11 +46,8 @@ rss_date() {
         "+%a, %d %b %Y 00:00:00 -0300"
 }
 
-# ==============================================================================
-# Generate style.css
-# ==============================================================================
-
-cat <<'EOF' > "$STYLE"
+print_css() {
+    cat <<'EOF'
 html {
   color: #000;
   background-color: #fff;
@@ -117,31 +112,22 @@ footer {
   text-align: center;
 }
 EOF
+}
 
 # ==============================================================================
-# Generate post pages
+# Temporary files
 # ==============================================================================
 
-rm -f "$POSTS"/*.html
+TMP="$(mktemp)"
+CSS_TMP="$(mktemp)"
 
-for file in "$CONTENTS"/*.md; do
-    [ -f "$file" ] || continue
+trap 'rm -f "$TMP" "$CSS_TMP"' EXIT
 
-    name="$(basename "$file" .md)"
-
-    pandoc \
-        --standalone \
-        --css="../style.css" \
-        "$file" \
-        -o "$POSTS/$name.html"
-done
+print_css > "$CSS_TMP"
 
 # ==============================================================================
 # Collect post metadata
 # ==============================================================================
-
-tmp="$(mktemp)"
-trap 'rm -f "$tmp"' EXIT
 
 for file in "$CONTENTS"/*.md; do
     [ -f "$file" ] || continue
@@ -174,7 +160,42 @@ for file in "$CONTENTS"/*.md; do
         "$date" \
         "$title" \
         "$description" \
-        "$name" >> "$tmp"
+        "$name" >> "$TMP"
+done
+
+# ==============================================================================
+# Generate post pages
+# ==============================================================================
+
+rm -f "$POSTS"/*.html
+
+for file in "$CONTENTS"/*.md; do
+    [ -f "$file" ] || continue
+
+    name="$(basename "$file" .md)"
+
+    pandoc \
+        --standalone \
+        "$file" \
+        -o "$POSTS/$name.html"
+
+    tmp_post="$(mktemp)"
+
+    CSS_TMP="$CSS_TMP" perl -0pe '
+        BEGIN {
+            open my $fh, "<", $ENV{CSS_TMP}
+                or die "cannot open CSS: $!\n";
+
+            local $/;
+            $css = <$fh>;
+
+            close $fh;
+        }
+
+        s{</head>}{"  <style>\n" . $css . "  </style>\n</head>"}e
+    ' "$POSTS/$name.html" > "$tmp_post"
+
+    mv "$tmp_post" "$POSTS/$name.html"
 done
 
 # ==============================================================================
@@ -188,14 +209,18 @@ done
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Bonatto</title>
-  <meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA" />
+
+  <meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA">
   <meta name="author" content="Sergio Bonatto">
+
   <meta property="og:title" content="Bonatto">
   <meta property="og:description" content="Work spans formal methods, functional programming, and operating systems.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://fibonatto.github.io/SEO.png">
   <meta property="og:url" content="https://fibonatto.github.io/">
+
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@fibonatto">
   <meta name="twitter:creator" content="@fibonatto">
@@ -204,7 +229,14 @@ done
   <meta name="twitter:image" content="https://fibonatto.github.io/SEO.png">
 
   <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg">
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+EOF
+
+    print_css
+
+    cat <<'EOF'
+  </style>
 
   <link
     rel="alternate"
@@ -213,6 +245,7 @@ done
     href="rss.xml"
   >
 </head>
+
 <body>
 
 <header>
@@ -226,12 +259,14 @@ done
 </nav>
 
 <main>
-  <p class="para">
+  <p>
     I am a software engineer because programming turned out to be the best way I know to understand things.
   </p>
+
   <p>
     Whether I am studying programming languages, writing software, exploring theology, or writing poetry, I find myself asking the same questions about structure, meaning, and first principles.
   </p>
+
   <p>
     This site is where those explorations converge.
   </p>
@@ -241,15 +276,17 @@ done
   <ul>
 EOF
 
-    sort -r -k1,1 "$tmp" |
+    sort -r -k1,1 "$TMP" |
     while IFS=$'\t' read -r date title description name; do
         safe_title="$(escape_xml "$title")"
         safe_description="$(escape_xml "$description")"
 
         printf '    <li>\n'
+
         printf '      <time datetime="%s">%s</time>\n' \
             "$date" \
             "$date"
+
         printf '      <a href="post/%s.html">%s</a>\n' \
             "$name" \
             "$safe_title"
@@ -277,7 +314,7 @@ EOF
 } > "$INDEX"
 
 # ==============================================================================
-# Add favicon, navigation and footer to post pages
+# Add navigation and footer to post pages
 # ==============================================================================
 
 for post in "$POSTS"/*.html; do
@@ -285,14 +322,10 @@ for post in "$POSTS"/*.html; do
 
     tmp_post="$(mktemp)"
 
-    awk -v year="$YEAR" -v site_url="$SITE_URL" -v github_url="$GITHUB_URL" '
-        !head_inserted && (/<head>/ || /<head /) {
-            print
-            print "  <link rel=\"icon\" type=\"image/svg+xml\" href=\"../favicon.svg\">"
-            head_inserted=1
-            next
-        }
-
+    awk \
+        -v year="$YEAR" \
+        -v site_url="$SITE_URL" \
+        -v github_url="$GITHUB_URL" '
         !nav_inserted && /<body[^>]*>/ {
             print
             print ""
@@ -332,7 +365,7 @@ done
     <language>en</language>
 EOF
 
-    sort -r -k1,1 "$tmp" |
+    sort -r -k1,1 "$TMP" |
     while IFS=$'\t' read -r date title description name; do
         safe_title="$(escape_xml "$title")"
         safe_description="$(escape_xml "$description")"
@@ -376,7 +409,7 @@ This site contains static HTML pages with the complete text of each post.
 ## Posts
 EOF
 
-    sort -r -k1,1 "$tmp" |
+    sort -r -k1,1 "$TMP" |
     while IFS=$'\t' read -r date title description name; do
         url="$SITE_URL/post/$name.html"
 
@@ -401,5 +434,4 @@ echo "Generated:"
 echo "  posts → $POSTS"
 echo "  index → $INDEX"
 echo "  rss   → $RSS"
-echo "  style → $STYLE"
 echo "  llms  → $LLMS"
