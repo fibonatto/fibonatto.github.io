@@ -22,7 +22,3 @@ This site contains static HTML pages with the complete text of each post.
 - [Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!](https://fibonatto.github.io/post/terminal.html): Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.
 
 - [Agorism](https://fibonatto.github.io/post/agorism.html): A brief introduction to agorism, the political philosophy I identify with.
-
-- [Minha Noite Estrelada](https://fibonatto.github.io/post/minha-noite-estrelada.html): Um poema que celebra o encontro apaixonado entre o dia e a noite, onde o amor e a paixão queimam no horizonte em labaredas que consomem o tempo.
-
-- [Criação Evolutiva pela Providência Divina - 1](https://fibonatto.github.io/post/Criacionismo-Evolutivo-1.html): Uma Defesa Ortodoxa da Harmonia entre Revelação Especial e Geral. Questão 1: Como entender a existência da morte antes do pecado de Adão?

@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Bonatto</title>
-
-  <meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA">
+  <meta name="description" content="Work spans formal methods, functional programming, and operating systems.">
   <meta name="author" content="Sergio Bonatto">
+  <meta name="google-site-verification" content="YZt--bJGFhf1puUTMa3odpocmGWn3v5bRppUsbXeJeA">
+
+  <link rel="canonical" href="https://fibonatto.github.io/">
 
   <meta property="og:title" content="Bonatto">
   <meta property="og:description" content="Work spans formal methods, functional programming, and operating systems.">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
   <meta property="og:image" content="https://fibonatto.github.io/SEO.png">
   <meta property="og:url" content="https://fibonatto.github.io/">
 
@@ -27,66 +30,74 @@
   <style>
 html {
   color: #000;
-  background-color: #fff;
+  background: #fff;
 }
 
 body {
   min-height: 100vh;
   box-sizing: border-box;
-  margin: 0 auto;
   max-width: 44em;
-  padding: 40px 30px;
+  margin: 0 auto;
+  padding: 2em 1.5em;
 
   display: flex;
   flex-direction: column;
 
   overflow-wrap: break-word;
 
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
-  line-height: 1.55;
-}
-
-a {
-  color: #356273;
-}
-
-pre {
-  min-height: 8em;
-  margin: 1.5em 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  overflow: hidden;
-  line-height: 1;
-}
-
-pre code {
-  text-align: left;
-}
-
-img,
-svg {
-  max-width: 100%;
-}
-
-time,
-.date {
-  color: #777;
-  font-size: 0.9em;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 18px;
+  line-height: 1.5;
 }
 
 main {
   flex: 1;
 }
 
+a {
+  color: #315f70;
+}
+
+
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  line-height: 1.35;
+}
+
+pre code {
+  white-space: inherit;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+time {
+  color: #707070;
+  font-size: 0.85em;
+  font-weight: normal;
+}
+
 footer {
   margin-top: 3em;
-  color: #777;
-  font-size: 0.9em;
+  color: #707070;
+  font-size: 0.85em;
   text-align: center;
+}
+
+.post-list h3 {
+  margin-bottom: 0;
+}
+
+.post-list p {
+  margin-top: 0.25em;
 }
   </style>
 
@@ -105,8 +116,8 @@ footer {
   <p>Software Engineer · Programming Languages · Systems · Type Theory</p>
 </header>
 
-<nav>
-  <a href="index.html">Home</a>
+<nav aria-label="Primary navigation">
+  <a href="index.html" aria-current="page">Home</a>
   <a href="rss.xml">RSS</a>
 </nav>
 
@@ -125,60 +136,54 @@ footer {
 
   <h2>Blog</h2>
 
-  <ul>
+  <ul class="post-list">
     <li>
-      <time datetime="2026-09-25">2026-09-25</time>
-      <a href="post/a_life_offline.html">A Life Offline</a>
-      <p>I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.</p>
+      <article>
+        <time datetime="2026-09-25">2026-09-25</time> <a href="post/a_life_offline.html">A Life Offline</a>
+        <p>I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.</p>
+      </article>
     </li>
 
     <li>
-      <time datetime="2026-09-08">2026-09-08</time>
-      <a href="post/proverbs1.html">Proverbs 1</a>
-      <p>The Father who teaches before the mistake</p>
+      <article>
+        <time datetime="2026-09-08">2026-09-08</time> <a href="post/proverbs1.html">Proverbs 1</a>
+        <p>The Father who teaches before the mistake</p>
+      </article>
     </li>
 
     <li>
-      <time datetime="2026-08-11">2026-08-11</time>
-      <a href="post/ORDO.html">The Speed of Light and the Illusion of Infinite Intelligence</a>
-      <p>Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead.</p>
+      <article>
+        <time datetime="2026-08-11">2026-08-11</time> <a href="post/ORDO.html">The Speed of Light and the Illusion of Infinite Intelligence</a>
+        <p>Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead.</p>
+      </article>
     </li>
 
     <li>
-      <time datetime="2026-05-14">2026-05-14</time>
-      <a href="post/context_as_a_risk_variable.html">Context as a Risk Variable</a>
-      <p>A mathematical formulation for why more context does not imply more reliability in systems with LLMs</p>
+      <article>
+        <time datetime="2026-05-14">2026-05-14</time> <a href="post/context_as_a_risk_variable.html">Context as a Risk Variable</a>
+        <p>A mathematical formulation for why more context does not imply more reliability in systems with LLMs</p>
+      </article>
     </li>
 
     <li>
-      <time datetime="2026-03-23">2026-03-23</time>
-      <a href="post/terminal.html">Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!</a>
-      <p>Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.</p>
+      <article>
+        <time datetime="2026-03-23">2026-03-23</time> <a href="post/terminal.html">Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!</a>
+        <p>Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.</p>
+      </article>
     </li>
 
     <li>
-      <time datetime="2026-03-17">2026-03-17</time>
-      <a href="post/agorism.html">Agorism</a>
-      <p>A brief introduction to agorism, the political philosophy I identify with.</p>
-    </li>
-
-    <li>
-      <time datetime="2025-12-09">2025-12-09</time>
-      <a href="post/minha-noite-estrelada.html">Minha Noite Estrelada</a>
-      <p>Um poema que celebra o encontro apaixonado entre o dia e a noite, onde o amor e a paixão queimam no horizonte em labaredas que consomem o tempo.</p>
-    </li>
-
-    <li>
-      <time datetime="2025-09-05">2025-09-05</time>
-      <a href="post/Criacionismo-Evolutivo-1.html">Criação Evolutiva pela Providência Divina - 1</a>
-      <p>Uma Defesa Ortodoxa da Harmonia entre Revelação Especial e Geral. Questão 1: Como entender a existência da morte antes do pecado de Adão?</p>
+      <article>
+        <time datetime="2026-03-17">2026-03-17</time> <a href="post/agorism.html">Agorism</a>
+        <p>A brief introduction to agorism, the political philosophy I identify with.</p>
+      </article>
     </li>
 
   </ul>
 </main>
 
 <footer>
-  © 2026 <a href="https://fibonatto.github.io">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+  © 2026 <a href="./">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
 </footer>
 
 </body>

@@ -1,11 +1,4 @@
 User-agent: *
 Allow: /
 
-# Block source code and internal tools
-Disallow: /src/
-Disallow: /tools/
-Disallow: /build/*.o
-Disallow: /build/*.json
-Disallow: /contents/
-
 Sitemap: https://fibonatto.github.io/sitemap.xml

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Bonatto</title>
     <link>https://fibonatto.github.io/</link>
     <description>Bonatto's blog.</description>
     <language>en</language>
+    <atom:link href="https://fibonatto.github.io/rss.xml" rel="self" type="application/rss+xml" />
 
     <item>
       <title>A Life Offline</title>
@@ -27,7 +28,7 @@
       <link>https://fibonatto.github.io/post/ORDO.html</link>
       <guid isPermaLink="true">https://fibonatto.github.io/post/ORDO.html</guid>
       <pubDate>Tue, 11 Aug 2026 00:00:00 -0300</pubDate>
-      <description>Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead.</description>
+      <description>Why bigger models alone won&apos;t solve the problems of AI reliability, and why we need better architecture instead.</description>
     </item>
 
     <item>
@@ -43,7 +44,7 @@
       <link>https://fibonatto.github.io/post/terminal.html</link>
       <guid isPermaLink="true">https://fibonatto.github.io/post/terminal.html</guid>
       <pubDate>Mon, 23 Mar 2026 00:00:00 -0300</pubDate>
-      <description>Still using a heavy framework or a stock shell? You're leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.</description>
+      <description>Still using a heavy framework or a stock shell? You&apos;re leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.</description>
     </item>
 
     <item>
@@ -52,22 +53,6 @@
       <guid isPermaLink="true">https://fibonatto.github.io/post/agorism.html</guid>
       <pubDate>Tue, 17 Mar 2026 00:00:00 -0300</pubDate>
       <description>A brief introduction to agorism, the political philosophy I identify with.</description>
-    </item>
-
-    <item>
-      <title>Minha Noite Estrelada</title>
-      <link>https://fibonatto.github.io/post/minha-noite-estrelada.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/minha-noite-estrelada.html</guid>
-      <pubDate>Tue, 09 Dec 2025 00:00:00 -0300</pubDate>
-      <description>Um poema que celebra o encontro apaixonado entre o dia e a noite, onde o amor e a paixão queimam no horizonte em labaredas que consomem o tempo.</description>
-    </item>
-
-    <item>
-      <title>Criação Evolutiva pela Providência Divina - 1</title>
-      <link>https://fibonatto.github.io/post/Criacionismo-Evolutivo-1.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/Criacionismo-Evolutivo-1.html</guid>
-      <pubDate>Fri, 05 Sep 2025 00:00:00 -0300</pubDate>
-      <description>Uma Defesa Ortodoxa da Harmonia entre Revelação Especial e Geral. Questão 1: Como entender a existência da morte antes do pecado de Adão?</description>
     </item>
 
   </channel>
