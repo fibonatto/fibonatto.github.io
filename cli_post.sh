@@ -118,7 +118,7 @@ body {
   overflow-wrap: break-word;
 
   font-family: "Times New Roman", Times, serif;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.5;
 }
 
@@ -174,16 +174,15 @@ footer {
 CSS
 }
 
-# print_head TITLE DESCRIPTION CANONICAL_URL OG_TYPE ASSET_PREFIX [PUBLISHED]
-#   ASSET_PREFIX: "" for the index, "../" for pages under post/
-#   PUBLISHED:    ISO timestamp, only for articles
+# print_head TITLE DESCRIPTION CANONICAL_URL OG_TYPE [PUBLISHED]
+#   PUBLISHED: ISO timestamp, only for articles
+# Internal links are root-relative, so the same head works at any depth.
 print_head() {
     local title="$1"
     local description="$2"
     local canonical="$3"
     local og_type="$4"
-    local prefix="$5"
-    local published="${6:-}"
+    local published="${5:-}"
 
     local title_html description_html
     title_html="$(escape_html "$title")"
@@ -227,7 +226,7 @@ print_head() {
     fi
     printf '  <meta name="twitter:image" content="%s">\n\n' "$SITE_IMAGE"
 
-    printf '  <link rel="icon" type="image/svg+xml" sizes="any" href="%sfavicon.svg">\n\n' "$prefix"
+    printf '  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">\n\n'
 
     printf '  <style>\n'
     print_css
@@ -237,7 +236,7 @@ print_head() {
     printf '    rel="alternate"\n'
     printf '    type="application/rss+xml"\n'
     printf '    title="%s"\n' "$SITE_NAME"
-    printf '    href="%srss.xml"\n' "$prefix"
+    printf '    href="/rss.xml"\n'
     printf '  >\n'
     printf '</head>\n'
 }
@@ -316,15 +315,15 @@ while IFS="$SEP" read -r date title description name; do
     published="${date}T00:00:00-03:00"
 
     {
-        print_head "$title" "$description" "$canonical_url" "article" "../" "$published"
+        print_head "$title" "$description" "$canonical_url" "article" "$published"
 
         cat <<'EOF'
 
 <body>
 
 <nav aria-label="Primary navigation">
-  <a href="../index.html">Home</a>
-  <a href="../rss.xml">RSS</a>
+  <a href="/">Home</a>
+  <a href="/rss.xml">RSS</a>
 </nav>
 
 <main>
@@ -344,7 +343,7 @@ EOF
 </main>
 
 <footer>
-  © $YEAR <a href="$SITE_URL/">Bonatto</a> • Vim powered • <a href="$GITHUB_URL" target="_blank" rel="noopener noreferrer">GitHub</a>
+  © $YEAR <a href="/">Bonatto</a> • Vim powered • <a href="$GITHUB_URL" target="_blank" rel="noopener noreferrer">GitHub</a>
 </footer>
 
 </body>
@@ -361,7 +360,7 @@ done < <(sorted_posts)
 # ==============================================================================
 
 {
-    print_head "$SITE_NAME" "$SITE_DESCRIPTION" "$SITE_URL/" "website" ""
+    print_head "$SITE_NAME" "$SITE_DESCRIPTION" "$SITE_URL/" "website"
 
     cat <<'EOF'
 
@@ -373,8 +372,8 @@ done < <(sorted_posts)
 </header>
 
 <nav aria-label="Primary navigation">
-  <a href="index.html" aria-current="page">Home</a>
-  <a href="rss.xml">RSS</a>
+  <a href="/" aria-current="page">Home</a>
+  <a href="/rss.xml">RSS</a>
 </nav>
 
 <main>
@@ -402,7 +401,7 @@ EOF
 
             printf '    <li>\n'
             printf '      <article>\n'
-            printf '        <time datetime="%s">%s</time> <a href="post/%s.html">%s</a>\n' \
+            printf '        <time datetime="%s">%s</time> <a href="/post/%s.html">%s</a>\n' \
                 "$date" "$date" "$name" "$safe_title"
 
             if [ -n "$description" ]; then
@@ -418,7 +417,7 @@ EOF
 </main>
 
 <footer>
-  © $YEAR <a href="./">Bonatto</a> • Vim powered • <a href="$GITHUB_URL" target="_blank" rel="noopener noreferrer">GitHub</a>
+  © $YEAR <a href="/">Bonatto</a> • Vim powered • <a href="$GITHUB_URL" target="_blank" rel="noopener noreferrer">GitHub</a>
 </footer>
 
 </body>
