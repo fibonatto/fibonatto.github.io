@@ -1,4 +1,5 @@
 ---
+
 title: "The Speed of Light and the Illusion of Infinite Intelligence"
 date: "2026-08-11"
 description: "Why bigger models alone won't solve the problems of AI reliability, and why we need better architecture instead."

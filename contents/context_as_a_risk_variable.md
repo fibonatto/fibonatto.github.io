@@ -1,8 +1,10 @@
 ---
+
 title: "Context as a Risk Variable"
 date: "2026-05-14"
 description: "A mathematical formulation for why more context does not imply more reliability in systems with LLMs"
 ---
+
 # Against the Contextual Monotonicity Hypothesis
 ## An operational formulation for reliability degradation under context growth in systems with LLMs
 A large part of contemporary engineering of systems with LLMs implicitly assumes a property of contextual monotonicity.

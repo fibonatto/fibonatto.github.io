@@ -1,8 +1,10 @@
 ---
+
 title: "Agorism"
 date: "2026-03-17"
 description: "A brief introduction to agorism, the political philosophy I identify with."
 ---
+
 # Agorism
 
 Since we're on the subject, I'd like to introduce you to my political ideology.

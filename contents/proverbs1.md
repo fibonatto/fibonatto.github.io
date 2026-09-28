@@ -1,4 +1,5 @@
 ---
+
 title: "Proverbs 1"
 date: "2026-09-08"
 description: "The Father who teaches before the mistake"
