@@ -11,6 +11,8 @@ This site contains static HTML pages with the complete text of each post.
 
 ## Posts
 
+- [Why this make me sad](https://fibonatto.github.io/post/why_this_make_me_sad.html): "Why Brazilian education taught me to memorize formulas instead of understand what they mean, and why I think we've lost something important along the way.
+
 - [A Life Offline](https://fibonatto.github.io/post/a_life_offline.html): I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.
 
 - [Proverbs 1](https://fibonatto.github.io/post/proverbs1.html): The Father who teaches before the mistake
