@@ -14,29 +14,53 @@ Inside my Mac, all I need is a terminal and a web browser. That's it. What more 
 
 Yeah, it could be worse if I tried to look cool lol.
 
-I tested a lot of terminal emulators, since alacritty until ghostty, eveyone has your own pros and cons. The terminal I most liked is the Kitty, pretty simple config and you can change everything, even the icon. Please, the default is the worse. Afther the icon, I changed a few configs, like keybinds and colors. My kitty config has less than 90 LOC with commentaries explayning what the config does. I basically enable splits as default, change `option` key to act like "alt" and enabled notifications. 
+I tested a lot of terminal emulators, from Alacritty to Ghostty. Everyone has their own pros and cons. The terminal I liked most is Kitty. It has a pretty simple config, and you can change almost everything, even the icon. Please, the default icon is the worst.
 
-Kitty is powerfull, but it is not perfect, so we need Tmux. This has a lot of config, the most important, I think, is syncronization between clipboard, notifications, resurrect and continuum. I fell my terminal mor powerfull and integrate with my system.  
+After changing the icon, I changed a few other things, like keybinds and colors. My Kitty config has less than 90 LOC, with comments explaining what each part of the config does. I basically enabled splits by default, changed the `Option` key to act like `Alt`, and enabled notifications.
 
-Another important layer of this system is the shell, o tryed bash, it's cool, and fish, it's weird. I stay with Zsh. In a first moment, my config had a lot of plugins, some of them was really heavy, so I meet Antidote. Good-bye Oh-my-zsh, it was eternal while it lasted.
+Kitty is powerful, but it is not perfect, so we need tmux. It has a lot of configuration, but the most important things, I think, are clipboard synchronization, notifications, resurrect, and continuum. I feel like my terminal is much more powerful and better integrated with my system.
 
-I remember in my last week with OMZ, I'm waiting 2, even 3 seconds to my terminal load every configuration. Now, 75 ms with the same functionality. I lost nothing. 
+Another important layer of this system is the shell. I tried Bash, it's cool, and Fish, it's weird. I stayed with Zsh.
 
+At first, my config had a lot of plugins. Some of them were really heavy, so I found Antidote. Goodbye, Oh My Zsh. It was eternal while it lasted.
 
+I remember that during my last week with OMZ, I was waiting 2, even 3 seconds for my terminal to load all the configuration. Now, it's around 75 ms with basically the same functionality. I lost nothing.
 
+Like an onion, there is another layer, how I actually interact with the filesystem. I replaced some of the usual unix tools with newer alternatives that fit better into my workflow. 
+
+Not replaceing them completely, tbh. I still type the commands I'm used to. I just made aliases for them.
+
+For example, ls is now eza. I have a few different aliases depending on what I want to see, but the important one is simply that I can type ls and get eza instead. I don't need to remember a new command just to get a better version of something I already use.
+
+The same idea applies to cd. I use zoxide, so z handles directory navigation for me. After using it for a while, it becomes pretty hard to go back to manually typing long paths.
 
 
 
 
 list of tools:
 
-- Kitty 
-- tmux 
-- zsh
-- antidote 
-- dicordo 
-- w3m 
-- tell-ai 
+- Kitty (https://github.com/kovidgoyal/kitty) 
+- tmux (https://github.com/tmux/tmux) 
+- zsh 
+- antidote (https://github.com/mattmc3/antidote)
+- fd (https://github.com/sharkdp/fd)
+- rg (https://github.com/burntsushi/ripgrep)
+- eza (https://github.com/eza-community/eza)
+- zoxide (https://github.com/ajeetdsouza/zoxide)
+- bat (https://github.com/sharkdp/bat)
+- dicordo (https://github.com/ayn2op/discordo)
+- w3m (https://github.com/acg/w3m)
+- tell-ai (https://github.com/naoeosavio/Tell-ai) 
 - nvim 
 - basal 
 - man 
+- scripts (https://github.com/fibonatto/Scripts):
+    - dev 
+    - feat 
+    - tn 
+    - tmux-kill 
+    - ddg 
+    - killp 
+    - extract
+
+
