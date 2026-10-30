@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Context as a Risk Variable</title>
+  <meta name="description" content="A mathematical formulation for why more context does not imply more reliability in systems with LLMs">
+  <meta name="author" content="Sergio Bonatto">
+
+  <link rel="canonical" href="https://fibonatto.github.io/post/context-as-a-risk-variable.html">
+
+  <meta property="og:title" content="Context as a Risk Variable">
+  <meta property="og:description" content="A mathematical formulation for why more context does not imply more reliability in systems with LLMs">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:image" content="https://fibonatto.github.io/SEO.png">
+  <meta property="og:url" content="https://fibonatto.github.io/post/context-as-a-risk-variable.html">
+  <meta property="article:published_time" content="2026-05-14T00:00:00-03:00">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@fibonatto">
+  <meta name="twitter:creator" content="@fibonatto">
+  <meta name="twitter:title" content="Context as a Risk Variable">
+  <meta name="twitter:description" content="A mathematical formulation for why more context does not imply more reliability in systems with LLMs">
+  <meta name="twitter:image" content="https://fibonatto.github.io/SEO.png">
+
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow-wrap: break-word;
+
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main {
+  flex: 1;
+}
+
+a {
+  color: #BD7948;
+}
+
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  line-height: 1.35;
+}
+
+pre code {
+  white-space: inherit;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+time {
+  color: #8E8E88;
+  font-size: 0.85em;
+  font-weight: normal;
+}
+
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.post-list h3 {
+  margin-bottom: 0;
+}
+
+.post-list p {
+  margin-top: 0.25em;
+}
+  </style>
+
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title="Bonatto"
+    href="/rss.xml"
+  >
+</head>
+
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+  <h1>Context as a Risk Variable</h1>
+<p><em>An operational formulation for reliability degradation under
+context growth in systems with LLMs</em></p>
+<p>A large part of contemporary engineering of systems with LLMs
+implicitly assumes a property of contextual monotonicity.</p>
+<p>The hypothesis can be formulated informally as follows:</p>
+<blockquote>
+<p>adding context does not reduce reliability.</p>
+</blockquote>
+<p>This premise appears in different architectures and operational
+strategies:</p>
+<ul>
+<li>continuous increase of context windows</li>
+<li>persistent memory between inference cycles</li>
+<li>aggressive retrieval via RAG</li>
+<li>serialization of entire repositories</li>
+<li>cumulative interaction history</li>
+<li>long-running stateful agents</li>
+<li>progressive expansion of operational memory</li>
+</ul>
+<p>The intuitive justification seems reasonable. If the system has more
+information available during inference, then it should make better
+decisions.</p>
+<p>However, this conclusion depends on an undue extrapolation from an
+ideal predictor to a finite-capacity approximate probabilistic
+model.</p>
+<p>This text proposes an alternative operational formulation:</p>
+<blockquote>
+<p>in real generative systems, context must be treated simultaneously as
+a source of information and as a risk variable.</p>
+</blockquote>
+<p>More precisely, contextual growth does not imply monotonicity of
+reliability.</p>
+<h2 id="problem-formulation">1. Problem formulation</h2>
+<p>Consider an input space:</p>
+<pre class="text"><code>𝑐 = (𝑥₁, 𝑥₂, …, 𝑥ₙ) ∈ 𝒳*
+</code></pre>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+represents the operational context provided to the system, as an ordered
+sequence of tokens, documents, retrieved states or conditioning
+artifacts</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="script">𝒳</mi><mo>*</mo></msup><annotation encoding="application/x-tex">\mathcal{X}^*</annotation></semantics></math>
+represents the set of finite sequences over the alphabet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="script">𝒳</mi><annotation encoding="application/x-tex">\mathcal{X}</annotation></semantics></math></li>
+</ul>
+<p>Also consider:</p>
+<ul>
+<li>a task
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math></li>
+<li>a set of acceptable outputs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>T</mi></msub><mo>⊆</mo><mi mathvariant="script">𝒴</mi></mrow><annotation encoding="application/x-tex">A_T \subseteq \mathcal{Y}</annotation></semantics></math></li>
+<li>a parametrized generative model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">q_\theta</annotation></semantics></math></li>
+</ul>
+<p>We define the operational reliability of the system as:</p>
+<pre class="text"><code>𝑅(𝑐) = ℙ(𝑦 ∼ 𝑞(θ)(· | 𝑐))(𝑦 ∈ 𝐴(𝑇))
+𝑅(𝑐) = ℙ(𝑦 ∼ 𝑞₍θ₎(·|𝑐))(𝑦 ∈ 𝐴ₜ)
+</code></pre>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi mathvariant="double-struck">ℙ</mi><mrow><mi>y</mi><mo>∼</mo><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>∈</mo><msub><mi>A</mi><mi>T</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+R(c) = \mathbb{P}_{y \sim q_\theta(\cdot \mid c)} \left( y \in A_T \right)
+</annotation></semantics></math></p>
+<p><strong>Notational note.</strong> Since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+is a sequence, the addition of context
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+represents concatenation, not set union. We denote concatenation by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>⋅</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">c \cdot n</annotation></semantics></math>
+or, when the order is irrelevant to the argument, by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo>,</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(c, n)</annotation></semantics></math>.</p>
+<p>The contextual monotonicity hypothesis can then be written as:</p>
+<pre class="text"><code>𝑅(𝑐 · 𝑛) ≥ 𝑅(𝑐)
+</code></pre>
+<p>for any additional sequence
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.</p>
+<p>A large part of contemporary architectures implicitly assumes this
+inequality.</p>
+<p>This text argues that it is not guaranteed in approximate generative
+systems.</p>
+<h2 id="the-extrapolation-error">2. The extrapolation error</h2>
+<p>In information theory, let:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>
+be the variable to be predicted</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>r</mi></msub><annotation encoding="application/x-tex">X_r</annotation></semantics></math>
+the relevant subset of context</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>n</mi></msub><annotation encoding="application/x-tex">X_n</annotation></semantics></math>
+additional context</li>
+</ul>
+<p>Then the following holds:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>∣</mo><msub><mi>X</mi><mi>r</mi></msub><mo>,</mo><msub><mi>X</mi><mi>n</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>≤</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>∣</mo><msub><mi>X</mi><mi>r</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+H(Y \mid X_r, X_n) \le H(Y \mid X_r)
+</annotation></semantics></math></p>
+<p>The inequality is correct.</p>
+<p>Conditioning on more variables does not increase the true conditional
+entropy, because an ideal predictor can always ignore irrelevant
+variables.</p>
+<p>However, this property belongs to the true distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
+of the observed process, not to the approximate model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">q_\theta</annotation></semantics></math>
+used operationally.</p>
+<p>A parametrized generative system does not directly implement:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>∣</mo><msub><mi>x</mi><mi>r</mi></msub><mo>,</mo><msub><mi>x</mi><mi>n</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+p(y \mid x_r, x_n)
+</annotation></semantics></math></p>
+<p>It implements an approximation:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>∣</mo><msub><mi>x</mi><mi>r</mi></msub><mo>,</mo><msub><mi>x</mi><mi>n</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+q_\theta(y \mid x_r, x_n)
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+represents learned parameters</li>
+<li>inference occurs under a finite computational budget</li>
+<li>the real input is a concrete sequence of tokens</li>
+<li>relevance selection is approximate</li>
+</ul>
+<p>The relevant operational question is not:</p>
+<blockquote>
+<p>is there useful information in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>n</mi></msub><annotation encoding="application/x-tex">X_n</annotation></semantics></math>?</p>
+</blockquote>
+<p>The relevant operational question is:</p>
+<blockquote>
+<p>can the concrete system use
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>n</mi></msub><annotation encoding="application/x-tex">X_n</annotation></semantics></math>
+without degrading the decision margin of the inference?</p>
+</blockquote>
+<p>This is a question about approximation, statistical competition and
+operational stability.</p>
+<h2 id="non-monotonic-reliability">3. Non-monotonic reliability</h2>
+<p>Consider a contextual decomposition:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>⋅</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+c = (s \cdot n)
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+represents relevant operational signal</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+represents contextual noise, obsolete state, redundant information,
+conflicting instructions or spurious retrieval</li>
+</ul>
+<p>The contextual monotonicity hypothesis assumes:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>⋅</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+R(s \cdot n) \ge R(s)
+</annotation></semantics></math></p>
+<p>However, in approximate models, the operationally dangerous case
+is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>⋅</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+R(s \cdot n) &lt; R(s)
+</annotation></semantics></math></p>
+<p><strong>Sufficient condition.</strong> This occurs when the injection
+of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+shifts the distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>s</mi><mo>⋅</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">q_\theta(\cdot \mid s \cdot n)</annotation></semantics></math>
+away from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>T</mi></msub><annotation encoding="application/x-tex">A_T</annotation></semantics></math>
+relative to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">q_\theta(\cdot \mid s)</annotation></semantics></math>.
+A formal sufficient condition is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mrow><mi>K</mi><mi>L</mi></mrow></msub><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>s</mi><mo>⋅</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>&gt;</mo><msub><mi>D</mi><mrow><mi>K</mi><mi>L</mi></mrow></msub><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+D_{KL}\big(p(\cdot \mid s) \,\|\, q_\theta(\cdot \mid s \cdot n)\big) &gt; D_{KL}\big(p(\cdot \mid s) \,\|\, q_\theta(\cdot \mid s)\big)
+</annotation></semantics></math></p>
+<p>That is: the addition of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+increases the divergence between the model and the true distribution,
+degrading the probability of producing outputs in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>T</mi></msub><annotation encoding="application/x-tex">A_T</annotation></semantics></math>.
+This condition is realizable whenever
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+introduces sufficient competitive attentional mass to redistribute
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">q_\theta</annotation></semantics></math>,
+as formalized in Section 6.</p>
+<p>This does not contradict information theory.</p>
+<p>It contradicts only the extrapolation of ideal information theory to
+finite probabilistic models executing under real constraints.</p>
+<h2 id="expected-loss-under-imperfect-conditioning">4. Expected loss
+under imperfect conditioning</h2>
+<p>Consider the expected logarithmic loss (cross-entropy):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>q</mi><mi>θ</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi mathvariant="double-struck">𝔼</mi><mrow><mi>y</mi><mo>∼</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mi mathvariant="normal">log</mi><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">
+L(q_\theta, c) = \mathbb{E}_{y \sim p(\cdot \mid c)} \left[ -\log q_\theta(y \mid c) \right]
+</annotation></semantics></math></p>
+<p>The formal decomposition of this quantity is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>q</mi><mi>θ</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>H</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>+</mo><msub><mi>D</mi><mrow><mi>K</mi><mi>L</mi></mrow></msub><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+L(q_\theta, c) = H\big(p(\cdot \mid c)\big) + D_{KL}\big(p(\cdot \mid c) \,\|\, q_\theta(\cdot \mid c)\big)
+</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">H(p(\cdot \mid c))</annotation></semantics></math>
+is the irreducible entropy of the task and the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mrow><mi>K</mi><mi>L</mi></mrow></msub><annotation encoding="application/x-tex">D_{KL}</annotation></semantics></math>
+term captures all additional loss arising from the approximation.</p>
+<p>In real operational systems, the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mrow><mi>K</mi><mi>L</mi></mrow></msub><annotation encoding="application/x-tex">D_{KL}</annotation></semantics></math>
+term can be interpreted as composed of three conceptually distinct
+sources:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mrow><mi>K</mi><mi>L</mi></mrow></msub><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>≈</mo><msub><mi>e</mi><mtext mathvariant="normal">approx</mtext></msub><mo>+</mo><msub><mi>e</mi><mtext mathvariant="normal">context</mtext></msub><mo>+</mo><msub><mi>e</mi><mtext mathvariant="normal">selection</mtext></msub></mrow><annotation encoding="application/x-tex">
+D_{KL}\big(p(\cdot \mid c) \,\|\, q_\theta(\cdot \mid c)\big) \approx e_{\text{approx}} + e_{\text{context}} + e_{\text{selection}}
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>e</mi><mtext mathvariant="normal">approx</mtext></msub><annotation encoding="application/x-tex">e_{\text{approx}}</annotation></semantics></math>
+represents the intrinsic approximation error of the model, present even
+with ideal context</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>e</mi><mtext mathvariant="normal">context</mtext></msub><annotation encoding="application/x-tex">e_{\text{context}}</annotation></semantics></math>
+represents degradation induced by long, noisy or conflicting
+context</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>e</mi><mtext mathvariant="normal">selection</mtext></msub><annotation encoding="application/x-tex">e_{\text{selection}}</annotation></semantics></math>
+represents contextual selection error: relevant information present but
+not selected or not dominant</li>
+</ul>
+<p>This decomposition of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mrow><mi>K</mi><mi>L</mi></mrow></msub><annotation encoding="application/x-tex">D_{KL}</annotation></semantics></math>
+is an operational interpretation, not a single formal identity. Its
+value lies in making explicit that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>e</mi><mtext mathvariant="normal">context</mtext></msub><annotation encoding="application/x-tex">e_{\text{context}}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>e</mi><mtext mathvariant="normal">selection</mtext></msub><annotation encoding="application/x-tex">e_{\text{selection}}</annotation></semantics></math>
+grow with the uncontrolled growth of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.</p>
+<p>The important consequence is:</p>
+<blockquote>
+<p>the presence of additional information does not imply a reduction in
+the observed operational loss.</p>
+</blockquote>
+<p>The system may fail not because the correct information does not
+exist, but because it ceases to statistically dominate the inference
+process.</p>
+<h2 id="decision-margin">5. Decision margin</h2>
+<p>To simplify the analysis, consider the case where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="script">𝒴</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><msup><mi>y</mi><mo>+</mo></msup><mo>,</mo><msup><mi>y</mi><mo>−</mo></msup><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\mathcal{Y} = \{y^+, y^-\}</annotation></semantics></math>,
+where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>y</mi><mo>+</mo></msup><annotation encoding="application/x-tex">y^+</annotation></semantics></math>
+represents the correct output, with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>T</mi></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><msup><mi>y</mi><mo>+</mo></msup><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">A_T = \{y^+\}</annotation></semantics></math></li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>y</mi><mo>−</mo></msup><annotation encoding="application/x-tex">y^-</annotation></semantics></math>
+represents an incorrect, regressive or unnecessary output</li>
+</ul>
+<p>Define the logarithmic decision margin:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>y</mi><mo>+</mo></msup><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>y</mi><mo>−</mo></msup><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+\Delta(c) = \log q_\theta(y^+ \mid c) - \log q_\theta(y^- \mid c)
+</annotation></semantics></math></p>
+<p>In this binary regime, operational reliability is related to the
+margin by the logistic function:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi mathvariant="double-struck">ℙ</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>=</mo><msup><mi>y</mi><mo>+</mo></msup><mo>∣</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Δ</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mi mathvariant="normal">Δ</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+R(c) = \mathbb{P}(y = y^+ \mid c) = \sigma(\Delta(c)) = \frac{1}{1 + e^{-\Delta(c)}}
+</annotation></semantics></math></p>
+<p>Since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+is strictly increasing, it holds directly that:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>⋅</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mi mathvariant="normal">Δ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>⟹</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>⋅</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+\Delta(s \cdot n) &lt; \Delta(s) \implies R(s \cdot n) &lt; R(s)
+</annotation></semantics></math></p>
+<p>Contextual degradation can therefore be interpreted as margin
+collapse: the addition of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+reduces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math>,
+which reduces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
+monotonically. The system exhibits operational stability when:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">
+\Delta(c) &gt; 0
+</annotation></semantics></math></p>
+<p>When the margin approaches zero, small perturbations become
+sufficient to change the final decision.</p>
+<p>In code generation systems, this frequently appears operationally
+as:</p>
+<ul>
+<li>editing outside the requested scope</li>
+<li>invisible regression</li>
+<li>alteration of correct code</li>
+<li>recovery of obsolete state</li>
+<li>partial obedience to instructions</li>
+<li>semantically plausible but incorrect changes</li>
+<li>instability between equivalent cycles</li>
+</ul>
+<p>The problem is not the absence of superficial coherence.</p>
+<p>The problem is the loss of sufficient probabilistic separability
+between correct and incorrect solutions.</p>
+<h2 id="contextual-competition">6. Contextual competition</h2>
+<p>In a simplified model of attentional competition, consider attention
+weights for the token at position
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi mathvariant="bold-italic">𝒒</mi><mi>i</mi><mi>⊤</mi></msubsup><msub><mi mathvariant="bold-italic">𝒌</mi><mi>j</mi></msub><mi>/</mi><msqrt><mi>d</mi></msqrt><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><munderover><mo>∑</mo><mrow><mi>l</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi mathvariant="bold-italic">𝒒</mi><mi>i</mi><mi>⊤</mi></msubsup><msub><mi mathvariant="bold-italic">𝒌</mi><mi>l</mi></msub><mi>/</mi><msqrt><mi>d</mi></msqrt><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+\alpha_{ij} = \frac{\exp\left(\mathbf{q}_i^\top \mathbf{k}_j / \sqrt{d}\right)}{\sum_{l=1}^{m} \exp\left(\mathbf{q}_i^\top \mathbf{k}_l / \sqrt{d}\right)}
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="bold-italic">𝒒</mi><mi>i</mi></msub><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mi>d</mi></msup></mrow><annotation encoding="application/x-tex">\mathbf{q}_i \in \mathbb{R}^d</annotation></semantics></math>
+represents the query vector of the token at position
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math></li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="bold-italic">𝒌</mi><mi>j</mi></msub><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mi>d</mi></msup></mrow><annotation encoding="application/x-tex">\mathbf{k}_j \in \mathbb{R}^d</annotation></semantics></math>
+represents the key vector of the token at position
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math></li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>
+represents the dimensionality of the attention space</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+represents the total number of available tokens</li>
+</ul>
+<p><strong>Note.</strong> The symbol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝒒</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\mathbf{q}_i</annotation></semantics></math>
+(bold vector) denotes the attention query vector and is distinct from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">q_\theta</annotation></semantics></math>,
+which denotes the parametrized generative model.</p>
+<p>Separate the context into:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>:
+set of relevant token positions</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>:
+set of irrelevant token positions</li>
+</ul>
+<p>The attentional mass on the relevant signal, for the query position
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>,
+is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>A</mi><mi>S</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi></mrow></munder><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi></mrow></munder><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>N</mi></mrow></munder><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+A_S^{(i)} = \frac{\sum_{j \in S} \exp(z_{ij})}{\sum_{j \in S} \exp(z_{ij}) + \sum_{j \in N} \exp(z_{ij})}
+</annotation></semantics></math></p>
+<p>with:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msubsup><mi mathvariant="bold-italic">𝒒</mi><mi>i</mi><mi>⊤</mi></msubsup><msub><mi mathvariant="bold-italic">𝒌</mi><mi>j</mi></msub><mi>/</mi><msqrt><mi>d</mi></msqrt></mrow><annotation encoding="application/x-tex">
+z_{ij} = \mathbf{q}_i^\top \mathbf{k}_j / \sqrt{d}
+</annotation></semantics></math></p>
+<p>Even when each irrelevant token has low individual relevance, the
+accumulated growth of the denominator can reduce the statistical
+dominance of the relevant signal. Formally, if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>N</mi><mo stretchy="false" form="prefix">|</mo><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">|N| \to \infty</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(z_{ij})</annotation></semantics></math>
+bounded away from zero for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>∈</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">j \in N</annotation></semantics></math>,
+then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>A</mi><mi>S</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A_S^{(i)} \to 0</annotation></semantics></math>
+independently of the relevance of the tokens in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>.</p>
+<p>The operational problem is not only computational cost.</p>
+<p>It is probabilistic competition for inferential influence.</p>
+<p>Modern architectures with head specialization, implicit sparsity and
+retrieval mechanisms partially mitigate this effect. However, such
+mechanisms do not eliminate the general problem of contextual
+competition under operational context growth.</p>
+<h2 id="cumulative-context-as-authoritative-state">7. Cumulative context
+as authoritative state</h2>
+<p>A large part of contemporary agentic systems treats accumulated
+probabilistic inference as an authoritative state representation.</p>
+<p>Formally, consider the contextual growth between inference
+cycles:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>c</mi><mi>t</mi></msub><mo>⋅</mo><msub><mi>h</mi><mi>t</mi></msub><mo>⋅</mo><msub><mi>m</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">
+c_{t+1} = c_t \cdot h_t \cdot m_t
+</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>⋅</mi><annotation encoding="application/x-tex">\cdot</annotation></semantics></math>
+denotes sequence concatenation and:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>t</mi></msub><annotation encoding="application/x-tex">c_t</annotation></semantics></math>
+represents the context of the current cycle</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>t</mi></msub><annotation encoding="application/x-tex">h_t</annotation></semantics></math>
+represents the interaction history added in cycle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math></li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>t</mi></msub><annotation encoding="application/x-tex">m_t</annotation></semantics></math>
+represents persistent memory content retrieved in cycle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math></li>
+</ul>
+<p>This type of architecture tends to satisfy:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>c</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">|</mo><mo>≥</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">
+|c_{t+1}| \ge |c_t|
+</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>⋅</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\cdot|</annotation></semantics></math>
+denotes the sequence length. The continuous growth of context produces
+multiple consequences:</p>
+<ul>
+<li>increase in the conflict exposure</li>
+<li>increase in inferential cost</li>
+<li>reduction in auditability</li>
+<li>propagation of obsolete state</li>
+<li>amplification of spurious retrieval</li>
+<li>greater sensitivity to contextual ordering</li>
+</ul>
+<p>The central problem is not memory itself.</p>
+<p>The problem is turning accumulated probabilistic inference into an
+operational source of truth.</p>
+<p>An incorrect inference persisted in memory can reappear later as a
+valid contextual premise.</p>
+<p>This mechanism produces recursive contextual contamination: inference
+errors in cycle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+become contextual premises in cycle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>+</mo><mi>k</mi></mrow><annotation encoding="application/x-tex">t + k</annotation></semantics></math>,
+potentially amplifying
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>e</mi><mtext mathvariant="normal">context</mtext></msub><annotation encoding="application/x-tex">e_{\text{context}}</annotation></semantics></math>
+over time.</p>
+<h2 id="deterministic-context-reconstruction">8. Deterministic context
+reconstruction</h2>
+<p>An architectural alternative consists of not accumulating operational
+context between inference cycles.</p>
+<p>Instead, the context can be reconstructed deterministically from the
+verifiable state of the system.</p>
+<p>Consider a repository
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\mathcal{R}_t</annotation></semantics></math>
+in cycle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
+<p>A deterministic analyzer produces:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>t</mi></msub><mo>=</mo><mi>A</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+S_t = A(\mathcal{R}_t)
+</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+represents a deterministic structural analysis process.</p>
+<p>This analyzer can compute:</p>
+<ul>
+<li>dependency graphs</li>
+<li>cyclomatic complexity</li>
+<li>cognitive complexity</li>
+<li>churn</li>
+<li>test coverage</li>
+<li>failure regions</li>
+<li>structural coupling</li>
+<li>typing</li>
+<li>risk metrics</li>
+</ul>
+<p>A selector function then defines the operational context:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>t</mi></msub><mo>=</mo><mi>π</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>t</mi></msub><mo>,</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+C_t = \pi(S_t, T)
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+represents the current task</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>
+represents a contextual selection policy</li>
+</ul>
+<p>The probabilistic agent does not receive the entire repository.</p>
+<p>It receives only
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>t</mi></msub><annotation encoding="application/x-tex">C_t</annotation></semantics></math>
+under an explicit constraint:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>C</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>≤</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">
+|C_t| \le B
+</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+represents a maximum operational context budget.</p>
+<p>The model then proposes a change:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>t</mi></msub><mo>∼</mo><msub><mi>q</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><msub><mi>C</mi><mi>t</mi></msub><mo>,</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+P_t \sim q_\theta(\cdot \mid C_t, T)
+</annotation></semantics></math></p>
+<p>The state transition does not depend on the model's
+self-confidence.</p>
+<p>It depends on an external verifier:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo>,</mo><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>⇒</mo><msub><mi mathvariant="script">ℛ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">p</mi><mi mathvariant="normal">p</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">y</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo>,</mo><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+V(\mathcal{R}_t, P_t) = 1 \Rightarrow \mathcal{R}_{t+1} = \mathrm{apply}(\mathcal{R}_t, P_t)
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo>,</mo><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mo>⇒</mo><msub><mi mathvariant="script">ℛ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">
+V(\mathcal{R}_t, P_t) = 0 \Rightarrow \mathcal{R}_{t+1} = \mathcal{R}_t
+</annotation></semantics></math></p>
+<p>The verifier can include:</p>
+<ul>
+<li>compilation</li>
+<li>static analysis</li>
+<li>test execution</li>
+<li>structural invariants</li>
+<li>domain validations</li>
+<li>risk policies</li>
+</ul>
+<p>In this regime, probabilistic inference becomes a subordinate
+component of a deterministic control loop.</p>
+<h2 id="risk-functions">9. Risk functions</h2>
+<p>Consider an operational risk function over the repository:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="script">ℛ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover><msub><mi>w</mi><mi>i</mi></msub><msub><mi>φ</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="script">ℛ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+\Phi(\mathcal{R}) = \sum_{i=1}^{k} w_i \varphi_i(\mathcal{R})
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>φ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\varphi_i</annotation></semantics></math>
+represents deterministic metrics extracted from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="script">ℛ</mi><annotation encoding="application/x-tex">\mathcal{R}</annotation></semantics></math></li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>i</mi></msub><annotation encoding="application/x-tex">w_i</annotation></semantics></math>
+represents weights defined by the system policy</li>
+</ul>
+<p><strong>Relation to operational reliability.</strong> Under regular
+conditions of contextual selection, in particular when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>
+is a monotonic projection of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>t</mi></msub><annotation encoding="application/x-tex">S_t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+is computed over the same artifacts that compose
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>t</mi></msub><annotation encoding="application/x-tex">C_t</annotation></semantics></math>,
+the following relation holds:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>⟹</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>C</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>C</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+\Phi(\mathcal{R}_{t+1}) &lt; \Phi(\mathcal{R}_t) \implies R(C_{t+1}) \ge R(C_t)
+</annotation></semantics></math></p>
+<p>This relation is not universal: it depends on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>
+being risk-sensitive, that is, on selecting regions of high
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>φ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\varphi_i</annotation></semantics></math>
+with priority. When this condition is satisfied,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+serves as a measurable proxy for operational reliability.</p>
+<p>Possible examples of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>:</p>
+<ul>
+<li>compilation errors</li>
+<li>test failures</li>
+<li>structural complexity</li>
+<li>high churn</li>
+<li>lint violations</li>
+<li>circular dependencies</li>
+<li>absence of minimum coverage</li>
+<li>historical instability</li>
+</ul>
+<p>A conservative transition policy may require simultaneously:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo>,</mo><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">
+V(\mathcal{R}_t, P_t) = 1
+</annotation></semantics></math></p>
+<p>and:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>≤</mo><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+\Phi(\mathcal{R}_{t+1}) \le \Phi(\mathcal{R}_t)
+</annotation></semantics></math></p>
+<p>For systems of automatic iterative improvement, the stronger
+condition may be required:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+\Phi(\mathcal{R}_{t+1}) &lt; \Phi(\mathcal{R}_t)
+</annotation></semantics></math></p>
+<p>In this regime, the system does not use the generative model as
+authority over the state.</p>
+<p>It uses the model as a heuristic mechanism restricted by external
+verifiers.</p>
+<h2 id="contextual-convergence">10. Contextual convergence</h2>
+<p>Consider the set of high-risk code units in cycle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>u</mi><mo>∈</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo>:</mo><mi>ρ</mi><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo><mo>&gt;</mo><mi>τ</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">
+U_t = \{ u \in \mathcal{R}_t : \rho(u) &gt; \tau \}
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\rho(u)</annotation></semantics></math>
+represents the local risk of unit
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>,
+computed deterministically (for example, as a linear combination of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>φ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\varphi_i</annotation></semantics></math>
+over
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>)</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\tau &gt; 0</annotation></semantics></math>
+represents an operational threshold</li>
+</ul>
+<p>Define the operational context as the structural neighborhood of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mi>t</mi></msub><annotation encoding="application/x-tex">U_t</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>t</mi></msub><mo>=</mo><msub><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mi>G</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
+C_t = \mathrm{neighborhood}_G(U_t)
+</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is the dependency graph of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\mathcal{R}_t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mi>G</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{neighborhood}_G(U)</annotation></semantics></math>
+denotes the set of units at edge distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo><mi>k</mi></mrow><annotation encoding="application/x-tex">\le k</annotation></semantics></math>
+from some element of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>.</p>
+<p>With this definition,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mi>G</mi></msub><annotation encoding="application/x-tex">\mathrm{neighborhood}_G</annotation></semantics></math>
+is monotonic:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>⊆</mo><msup><mi>U</mi><mo>′</mo></msup><mo>⇒</mo><msub><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mi>G</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>⊆</mo><msub><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">b</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mi>G</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U \subseteq U&#39; \Rightarrow \mathrm{neighborhood}_G(U) \subseteq \mathrm{neighborhood}_G(U&#39;)</annotation></semantics></math>.
+Therefore:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>U</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">|</mo><mo>&lt;</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>U</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>⇒</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>C</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">|</mo><mo>≤</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>C</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">
+|U_{t+1}| &lt; |U_t| \Rightarrow |C_{t+1}| \le |C_t|
+</annotation></semantics></math></p>
+<p>The expression above does not constitute universal proof of
+convergence: it depends on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\Phi(\mathcal{R}_t)</annotation></semantics></math>
+being strictly decreasing across cycles, which requires the conditions
+of Section 9.</p>
+<p>It describes a desirable architectural property:</p>
+<blockquote>
+<p>the system must possess structural pressure to reduce operational
+context as the state converges.</p>
+</blockquote>
+<p>Architectures based on cumulative memory frequently produce the
+opposite property:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>C</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">|</mo><mo>≥</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>C</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">
+|C_{t+1}| \ge |C_t|
+</annotation></semantics></math></p>
+<p>even when the system approaches operational stability.</p>
+<h2 id="appropriate-limits-for-probabilistic-inference">11. Appropriate
+limits for probabilistic inference</h2>
+<p>The fundamental problem is not using probabilistic models.</p>
+<p>The fundamental problem is allowing probabilistic models to become
+authorities over operational state.</p>
+<p>Generative models are particularly useful for:</p>
+<ul>
+<li>synthesis</li>
+<li>heuristic search</li>
+<li>structural transformation</li>
+<li>semantic compression</li>
+<li>approximate exploration of large spaces</li>
+</ul>
+<p>However, verifiable operational state must remain in deterministic
+artifacts:</p>
+<ul>
+<li>code</li>
+<li>types</li>
+<li>tests</li>
+<li>builds</li>
+<li>metrics</li>
+<li>graphs</li>
+<li>structured logs</li>
+<li>analyzers</li>
+<li>formal or semi-formal verifiers</li>
+</ul>
+<p>The context provided to the model must be a temporary projection of
+these artifacts.</p>
+<p>Not an accumulated probabilistic memory of what the system believes
+happened.</p>
+<h2 id="conclusion">12. Conclusion</h2>
+<p>The contextual monotonicity hypothesis is not guaranteed in
+approximate generative systems.</p>
+<p>The relevant operational formulation is not:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arg</mi><mo>&#8289;</mo></mrow><munder><mi mathvariant="normal">max</mi><mi>c</mi></munder><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">arg</mi><mo>&#8289;</mo></mrow><munder><mi mathvariant="normal">max</mi><mi>c</mi></munder><mo stretchy="false" form="prefix">|</mo><mi>c</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">
+\arg\max_c R(c) = \arg\max_c |c|
+</annotation></semantics></math></p>
+<p>In real systems, the correct problem is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arg</mi><mo>&#8289;</mo></mrow><munder><mi mathvariant="normal">max</mi><mi>c</mi></munder><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>≠</mo><mrow><mi mathvariant="normal">arg</mi><mo>&#8289;</mo></mrow><munder><mi mathvariant="normal">max</mi><mi>c</mi></munder><mo stretchy="false" form="prefix">|</mo><mi>c</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">
+\arg\max_c R(c) \neq \arg\max_c |c|
+</annotation></semantics></math></p>
+<p>The best context is not necessarily the largest.</p>
+<p>It is the context that maximizes operational reliability under real
+inference constraints.</p>
+<p>Consequently, robust architectures for agentic systems must:</p>
+<ul>
+<li>reconstruct context deterministically from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\mathcal{R}_t</annotation></semantics></math></li>
+<li>explicitly limit the contextual budget via
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>C</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>≤</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">|C_t| \le B</annotation></semantics></math></li>
+<li>separate verifiable state
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="script">ℛ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\mathcal{R}_t</annotation></semantics></math>)
+from probabilistic inference
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">q_\theta</annotation></semantics></math>)</li>
+<li>use external verifiers for state transitions</li>
+<li>prevent authoritative persistence of unverified inference</li>
+<li>reduce operational context as the system converges, via
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>U</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>↓</mo><mo>⇒</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>C</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>↓</mo></mrow><annotation encoding="application/x-tex">|U_t| \downarrow \Rightarrow |C_t| \downarrow</annotation></semantics></math></li>
+</ul>
+<p>The path to more reliable generative systems probably does not
+consist of unrestricted expansion of operational memory.</p>
+<p>It consists of progressively reducing probabilistic authority over
+the system state.</p>
+<p>Probabilistic inference must operate within deterministic envelopes
+capable of:</p>
+<ul>
+<li>reconstructing state</li>
+<li>selecting context</li>
+<li>validating transitions</li>
+<li>rejecting regressions</li>
+<li>measuring risk externally</li>
+<li>limiting contextual propagation</li>
+</ul>
+<p>The operational reliability of systems with LLMs depends less on the
+absolute amount of context available and more on the architectural
+capacity to control how context is produced, selected, validated and
+discarded.</p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

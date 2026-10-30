@@ -8,59 +8,19 @@
     <atom:link href="https://fibonatto.github.io/rss.xml" rel="self" type="application/rss+xml" />
 
     <item>
-      <title>Why this make me sad</title>
-      <link>https://fibonatto.github.io/post/why_this_make_me_sad.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/why_this_make_me_sad.html</guid>
-      <pubDate>Mon, 28 Sep 2026 00:00:00 -0300</pubDate>
-      <description>&quot;Why Brazilian education taught me to memorize formulas instead of understand what they mean, and why I think we&apos;ve lost something important along the way.</description>
-    </item>
-
-    <item>
-      <title>A Life Offline</title>
-      <link>https://fibonatto.github.io/post/a_life_offline.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/a_life_offline.html</guid>
-      <pubDate>Fri, 25 Sep 2026 00:00:00 -0300</pubDate>
-      <description>I grew up with computers as an escape from life. Now, after years of dial-up, LAN parties, forums, games, and social media, I find myself wanting to escape from the internet instead. Maybe there is still a life worth living offline.</description>
-    </item>
-
-    <item>
-      <title>Proverbs 1</title>
-      <link>https://fibonatto.github.io/post/proverbs1.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/proverbs1.html</guid>
-      <pubDate>Tue, 08 Sep 2026 00:00:00 -0300</pubDate>
-      <description>The Father who teaches before the mistake</description>
-    </item>
-
-    <item>
       <title>The Speed of Light and the Illusion of Infinite Intelligence</title>
-      <link>https://fibonatto.github.io/post/ordo.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/ordo.html</guid>
+      <link>https://fibonatto.github.io/post/speed-of-light-illusion-of-infinite-intelligence.html</link>
+      <guid isPermaLink="true">https://fibonatto.github.io/post/speed-of-light-illusion-of-infinite-intelligence.html</guid>
       <pubDate>Tue, 11 Aug 2026 00:00:00 -0300</pubDate>
       <description>Why bigger models alone won&apos;t solve the problems of AI reliability, and why we need better architecture instead.</description>
     </item>
 
     <item>
       <title>Context as a Risk Variable</title>
-      <link>https://fibonatto.github.io/post/context_as_a_risk_variable.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/context_as_a_risk_variable.html</guid>
+      <link>https://fibonatto.github.io/post/context-as-a-risk-variable.html</link>
+      <guid isPermaLink="true">https://fibonatto.github.io/post/context-as-a-risk-variable.html</guid>
       <pubDate>Thu, 14 May 2026 00:00:00 -0300</pubDate>
       <description>A mathematical formulation for why more context does not imply more reliability in systems with LLMs</description>
-    </item>
-
-    <item>
-      <title>Your Terminal Can Be Much More Productive, Beautiful, and User-Friendly!</title>
-      <link>https://fibonatto.github.io/post/terminal.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/terminal.html</guid>
-      <pubDate>Mon, 23 Mar 2026 00:00:00 -0300</pubDate>
-      <description>Still using a heavy framework or a stock shell? You&apos;re leaving performance on the table. Learn how to evolve your workflow to a professional-grade setup using Antidote, custom Zsh logic, and high-performance tools.</description>
-    </item>
-
-    <item>
-      <title>Agorism</title>
-      <link>https://fibonatto.github.io/post/agorism.html</link>
-      <guid isPermaLink="true">https://fibonatto.github.io/post/agorism.html</guid>
-      <pubDate>Tue, 17 Mar 2026 00:00:00 -0300</pubDate>
-      <description>A brief introduction to agorism, the political philosophy I identify with.</description>
     </item>
 
   </channel>

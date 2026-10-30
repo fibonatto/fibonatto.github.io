@@ -28,39 +28,30 @@ mkdir -p "$POSTS"
 # Helpers
 # ==============================================================================
 
-# Reads a key from the YAML frontmatter only (the block between the first two
-# `---` lines). Lines in the post body are never matched.
-get_frontmatter() {
+# Reads a `#+KEY:` keyword from the Org header only (the leading block of
+# `#+` lines). Keys are case-insensitive; lines in the post body are never
+# matched.
+get_org_keyword() {
     local key="$1"
     local file="$2"
-    local value
 
-    value="$(
-        awk -v key="$key" '
-            { sub(/\r$/, "") }
-            NR == 1 { if ($0 == "---") next; exit }
-            $0 == "---" || $0 == "..." { exit }
-            index($0, key ":") == 1 {
-                sub(/^[^:]*:[[:space:]]*/, "")
-                print
+    awk -v key="$key" '
+        { sub(/\r$/, "") }
+        /^[[:space:]]*$/ { next }
+        !/^#\+/ { exit }
+        {
+            line = $0
+            sub(/^#\+/, "", line)
+            name = line
+            sub(/:.*$/, "", name)
+            if (tolower(name) == tolower(key)) {
+                sub(/^[^:]*:[[:space:]]*/, "", line)
+                sub(/[[:space:]]+$/, "", line)
+                print line
                 exit
             }
-        ' "$file"
-    )"
-
-    case "$value" in
-        \"*\")
-            value="${value#\"}"
-            value="${value%\"}"
-            ;;
-        \'*\')
-            value="${value#\'}"
-            value="${value%\'}"
-            ;;
-    esac
-
-    printf '%s' "$value" |
-        sed -e 's/\\"/"/g'
+        }
+    ' "$file"
 }
 
 escape_html() {
@@ -101,8 +92,8 @@ sorted_posts() {
 print_css() {
     cat <<'CSS'
 html {
-  color: #000;
-  background: #fff;
+  color: #4A505E;
+  background: #FAF5E5;
 }
 
 body {
@@ -127,9 +118,8 @@ main {
 }
 
 a {
-  color: #315f70;
+  color: #BD7948;
 }
-
 
 pre {
   max-width: 100%;
@@ -152,14 +142,14 @@ svg {
 }
 
 time {
-  color: #707070;
+  color: #8E8E88;
   font-size: 0.85em;
   font-weight: normal;
 }
 
 footer {
   margin-top: 3em;
-  color: #707070;
+  color: #8E8E88;
   font-size: 0.85em;
   text-align: center;
 }
@@ -173,7 +163,6 @@ footer {
 }
 CSS
 }
-
 # print_head TITLE DESCRIPTION CANONICAL_URL OG_TYPE [PUBLISHED]
 #   PUBLISHED: ISO timestamp, only for articles
 # Internal links are root-relative, so the same head works at any depth.
@@ -253,25 +242,26 @@ trap 'rm -f "$TMP" "$BODY_TMP" 2>/dev/null || true' EXIT
 # Collect post metadata
 # ==============================================================================
 
-for file in "$CONTENTS"/*.md; do
+for file in "$CONTENTS"/*.org; do
     [ -f "$file" ] || continue
 
-    date="$(get_frontmatter "date" "$file")"
-    title="$(get_frontmatter "title" "$file")"
-    description="$(get_frontmatter "description" "$file")"
+    raw_date="$(get_org_keyword "date" "$file")"
+    title="$(get_org_keyword "title" "$file")"
+    description="$(get_org_keyword "description" "$file")"
 
-    if [ -z "$date" ]; then
-        echo "warning: no date found in $file" >&2
-        continue
+    # Accepts `<2026-08-11>`, `[2026-08-11 Tue]` and bare `2026-08-11`.
+    date=""
+    if [[ "$raw_date" =~ [0-9]{4}-[0-9]{2}-[0-9]{2} ]]; then
+        date="${BASH_REMATCH[0]}"
     fi
 
-    if ! [[ "$date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
-        echo "warning: date '$date' in $file is not YYYY-MM-DD" >&2
+    if [ -z "$date" ]; then
+        echo "warning: no valid #+date (YYYY-MM-DD) found in $file" >&2
         continue
     fi
 
     if [ -z "$title" ]; then
-        title="$(sed -n 's/^#[[:space:]]\(.*\)$/\1/p' "$file" | head -n 1)"
+        title="$(sed -n 's/^\*[[:space:]][[:space:]]*\(.*\)$/\1/p' "$file" | head -n 1)"
     fi
 
     if [ -z "$title" ]; then
@@ -283,7 +273,7 @@ for file in "$CONTENTS"/*.md; do
         echo "warning: no description found in $file" >&2
     fi
 
-    name="$(basename "$file" .md)"
+    name="$(basename "$file" .org)"
 
     printf '%s%s%s%s%s%s%s\n' \
         "$date" "$SEP" \
@@ -301,11 +291,14 @@ rm -f "$POSTS"/*.html
 while IFS="$SEP" read -r date title description name; do
     [ -n "$name" ] || continue
 
-    source="$CONTENTS/$name.md"
+    source="$CONTENTS/$name.org"
     output="$POSTS/$name.html"
     BODY_TMP="$(mktemp)"
 
+    # Top-level Org headings (`* `) become <h2>, leaving <h1> for the title.
     pandoc \
+        --from org \
+        --shift-heading-level-by=1 \
         --syntax-highlighting=none \
         --to html \
         "$source" \
@@ -330,11 +323,7 @@ while IFS="$SEP" read -r date title description name; do
   <article>
 EOF
 
-        # pandoc without --standalone ignores the frontmatter title; only add
-        # an <h1> when the body doesn't already provide one.
-        if ! grep -qi '<h1' "$BODY_TMP"; then
-            printf '  <h1>%s</h1>\n' "$(escape_html "$title")"
-        fi
+        printf '  <h1>%s</h1>\n' "$(escape_html "$title")"
 
         cat "$BODY_TMP"
 
