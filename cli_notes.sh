@@ -6,6 +6,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SITE_URL="https://fibonatto.github.io"
 GITHUB_URL="https://github.com/fiBonatto"
 SITE_NAME="Bonatto"
+SITE_IMAGE="$SITE_URL/SEO.png"
 YEAR="$(date +%Y)"
 OUTPUT="$ROOT/notes"
 
@@ -78,6 +79,7 @@ slugify() {
             -e 's/-$//'
 }
 
+# Category slug, then source path: preserves the NN_ prefix order.
 sorted_records() {
     LC_ALL=C sort -t "$SEP" -k1,1 -k5,5 "$TMP"
 }
@@ -105,6 +107,42 @@ body {
 
 main { flex: 1; }
 a { color: #BD7948; }
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+
 pre {
   max-width: 100%;
   margin: 1.5em 0;
@@ -151,57 +189,69 @@ math[display="block"] {
   max-width: 100%;
   overflow-x: auto;
 }
-table {
-  display: block;
-  max-width: 100%;
-  margin: 1.5em 0;
-  overflow-x: auto;
-  border-collapse: collapse;
-  font-size: 0.95em;
-}
-th, td {
-  padding: 0.4em 0.75em;
-  border: 1px solid #8E8E88;
-  text-align: left;
-  vertical-align: top;
-}
-th {
-  background: rgba(74, 80, 94, 0.08);
-  font-weight: bold;
-}
-pre code { white-space: inherit; }
-img, svg { max-width: 100%; height: auto; }
-footer {
-  margin-top: 3em;
-  color: #8E8E88;
-  font-size: 0.85em;
-  text-align: center;
-}
-.notes-list { padding-left: 1.4em; }
-.notes-list li { margin: 0.15em 0; }
-.category { margin-top: 1.8em; }
 CSS
 }
 
+# print_head TITLE DESCRIPTION CANONICAL_URL OG_TYPE [PUBLISHED]
 print_head() {
-    local title="$1" canonical="$2" description="${3:-}"
-    printf '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+    local title="$1"
+    local description="$2"
+    local canonical="$3"
+    local og_type="$4"
+    local published="${5:-}"
+
+    local title_html description_html
+    title_html="$(escape_html "$title")"
+    description_html="$(escape_html "$description")"
+
+    printf '<!DOCTYPE html>\n'
+    printf '<html lang="en">\n'
+    printf '<head>\n'
     printf '  <meta charset="utf-8">\n'
-    printf '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-    printf '  <title>%s</title>\n' "$(escape_html "$title")"
+    printf '  <meta name="viewport" content="width=device-width, initial-scale=1">\n\n'
+
+    printf '  <title>%s</title>\n' "$title_html"
     if [ -n "$description" ]; then
-        printf '  <meta name="description" content="%s">\n' "$(escape_html "$description")"
+        printf '  <meta name="description" content="%s">\n' "$description_html"
     fi
     printf '  <meta name="author" content="Sergio Bonatto">\n'
-    printf '  <link rel="canonical" href="%s">\n' "$canonical"
-    printf '  <meta property="og:title" content="%s">\n' "$(escape_html "$title")"
-    printf '  <meta property="og:type" content="website">\n'
+
+    printf '\n  <link rel="canonical" href="%s">\n\n' "$canonical"
+
+    printf '  <meta property="og:title" content="%s">\n' "$title_html"
+    if [ -n "$description" ]; then
+        printf '  <meta property="og:description" content="%s">\n' "$description_html"
+    fi
+    printf '  <meta property="og:type" content="%s">\n' "$og_type"
     printf '  <meta property="og:site_name" content="%s">\n' "$SITE_NAME"
+    printf '  <meta property="og:image" content="%s">\n' "$SITE_IMAGE"
     printf '  <meta property="og:url" content="%s">\n' "$canonical"
-    printf '  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">\n'
+    if [ -n "$published" ]; then
+        printf '  <meta property="article:published_time" content="%s">\n' "$published"
+    fi
+
+    printf '\n  <meta name="twitter:card" content="summary_large_image">\n'
+    printf '  <meta name="twitter:site" content="@fibonatto">\n'
+    printf '  <meta name="twitter:creator" content="@fibonatto">\n'
+    printf '  <meta name="twitter:title" content="%s">\n' "$title_html"
+    if [ -n "$description" ]; then
+        printf '  <meta name="twitter:description" content="%s">\n' "$description_html"
+    fi
+    printf '  <meta name="twitter:image" content="%s">\n\n' "$SITE_IMAGE"
+
+    printf '  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">\n\n'
+
     printf '  <style>\n'
     print_css
-    printf '  </style>\n</head>\n'
+    printf '  </style>\n\n'
+
+    printf '  <link\n'
+    printf '    rel="alternate"\n'
+    printf '    type="application/rss+xml"\n'
+    printf '    title="%s"\n' "$SITE_NAME"
+    printf '    href="/rss.xml"\n'
+    printf '  >\n'
+    printf '</head>\n'
 }
 
 # Collect .org files directly under each subject directory. Root-level files,
@@ -213,8 +263,8 @@ while IFS= read -r -d '' category_dir; do
     while IFS= read -r -d '' file; do
         base="$(basename "$file" .org)"
         rel="${file#"$SOURCE"/}"
-        rel_dir="$(dirname "$rel")"
         file_slug="$(slugify "$base")"
+
         title="$(get_org_keyword title "$file")"
         if [ -z "$title" ]; then
             title="$(first_org_heading "$file" || true)"
@@ -222,18 +272,27 @@ while IFS= read -r -d '' category_dir; do
         if [ -z "$title" ]; then
             title="$base"
         fi
+
         description="$(get_org_keyword description "$file")"
-        # Bash read collapses adjacent IFS delimiters. Keep empty fields explicit.
         [ -n "$description" ] || description="__NO_DESCRIPTION__"
+
+        raw_date="$(get_org_keyword date "$file")"
+        date=""
+        if [[ "$raw_date" =~ [0-9]{4}-[0-9]{2}-[0-9]{2} ]]; then
+            date="${BASH_REMATCH[0]}"
+        fi
+        [ -n "$date" ] || date="__NO_DATE__"
+
         output_rel="$category_slug/$file_slug.html"
 
-        printf '%s%s%s%s%s%s%s%s%s%s%s\n' \
+        printf '%s%s%s%s%s%s%s%s%s%s%s%s%s\n' \
             "$category_slug" "$SEP" \
             "$category_name" "$SEP" \
             "$title" "$SEP" \
             "$description" "$SEP" \
             "$rel" "$SEP" \
-            "$output_rel" >> "$TMP"
+            "$output_rel" "$SEP" \
+            "$date" >> "$TMP"
     done < <(find "$category_dir" -type f -name '*.org' ! -name 'README.org' -print0)
 done < <(find "$SOURCE" -mindepth 1 -maxdepth 1 -type d -print0)
 
@@ -247,27 +306,33 @@ rm -rf "$OUTPUT"
 mkdir -p "$OUTPUT"
 
 # Generate each note page.
-while IFS="$SEP" read -r category_slug category_name title description rel output_rel; do
+while IFS="$SEP" read -r category_slug category_name title description rel output_rel date; do
     [ -n "$output_rel" ] || continue
     [ "$description" != "__NO_DESCRIPTION__" ] || description=""
+    [ "$date" != "__NO_DATE__" ] || date=""
+
+    published=""
+    [ -z "$date" ] || published="${date}T00:00:00-03:00"
+
     source="$SOURCE/$rel"
     output="$OUTPUT/$output_rel"
     mkdir -p "$(dirname "$output")"
     BODY_TMP="$(mktemp)"
 
     pandoc \
-    --from org \
-    --shift-heading-level-by=1 \
-    --syntax-highlighting=pygments \
-    --math-method=mathml \
-    --to html \
-    "$source" \
-    -o "$BODY_TMP"
-    
-        canonical="$SITE_URL/notes/$output_rel"
+        --from org \
+        --shift-heading-level-by=1 \
+        --syntax-highlighting=pygments \
+        --math-method=mathml \
+        --to html \
+        "$source" \
+        -o "$BODY_TMP"
+
+    canonical="$SITE_URL/notes/$output_rel"
     {
-        print_head "$title" "$canonical" "$description"
+        print_head "$title" "$description" "$canonical" "article" "$published"
         cat <<'EOF'
+
 <body>
 
 <nav aria-label="Primary navigation">
@@ -300,8 +365,9 @@ done < <(sorted_records)
 
 # Generate the single, complete notes index with direct links to every note.
 {
-    print_head "Notes" "${SITE_URL}/notes/" "Programming notes organized by subject."
+    print_head "Notes" "Programming notes organized by subject." "$SITE_URL/notes/" "website"
     cat <<'EOF'
+
 <body>
 
 <header>
@@ -319,12 +385,11 @@ done < <(sorted_records)
 EOF
 
     current_category=""
-    while IFS="$SEP" read -r category_slug category_name title description rel output_rel; do
+    while IFS="$SEP" read -r category_slug category_name title description rel output_rel date; do
         [ -n "$output_rel" ] || continue
-        [ "$description" != "__NO_DESCRIPTION__" ] || description=""
         if [ "$category_slug" != "$current_category" ]; then
             if [ -n "$current_category" ]; then
-                printf '  </ul>\n'
+                printf '    </ul>\n  </section>\n'
             fi
             current_category="$category_slug"
             printf '  <section class="category" id="%s">\n' "$(escape_html "$category_slug")"

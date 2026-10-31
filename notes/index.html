@@ -3,15 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Notes</title>
   <meta name="description" content="Programming notes organized by subject.">
   <meta name="author" content="Sergio Bonatto">
+
   <link rel="canonical" href="https://fibonatto.github.io/notes/">
+
   <meta property="og:title" content="Notes">
+  <meta property="og:description" content="Programming notes organized by subject.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Bonatto">
+  <meta property="og:image" content="https://fibonatto.github.io/SEO.png">
   <meta property="og:url" content="https://fibonatto.github.io/notes/">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@fibonatto">
+  <meta name="twitter:creator" content="@fibonatto">
+  <meta name="twitter:title" content="Notes">
+  <meta name="twitter:description" content="Programming notes organized by subject.">
+  <meta name="twitter:image" content="https://fibonatto.github.io/SEO.png">
+
   <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+
   <style>
 html {
   color: #4A505E;
@@ -34,6 +48,42 @@ body {
 
 main { flex: 1; }
 a { color: #BD7948; }
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+
 pre {
   max-width: 100%;
   margin: 1.5em 0;
@@ -80,37 +130,16 @@ math[display="block"] {
   max-width: 100%;
   overflow-x: auto;
 }
-table {
-  display: block;
-  max-width: 100%;
-  margin: 1.5em 0;
-  overflow-x: auto;
-  border-collapse: collapse;
-  font-size: 0.95em;
-}
-th, td {
-  padding: 0.4em 0.75em;
-  border: 1px solid #8E8E88;
-  text-align: left;
-  vertical-align: top;
-}
-th {
-  background: rgba(74, 80, 94, 0.08);
-  font-weight: bold;
-}
-pre code { white-space: inherit; }
-img, svg { max-width: 100%; height: auto; }
-footer {
-  margin-top: 3em;
-  color: #8E8E88;
-  font-size: 0.85em;
-  text-align: center;
-}
-.notes-list { padding-left: 1.4em; }
-.notes-list li { margin: 0.15em 0; }
-.category { margin-top: 1.8em; }
   </style>
+
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title="Bonatto"
+    href="/rss.xml"
+  >
 </head>
+
 <body>
 
 <header>
@@ -140,7 +169,8 @@ footer {
       <li><a href="/notes/c/09-preprocessor.html">The C Preprocessor</a></li>
       <li><a href="/notes/c/10-toolchain.html">C Toolchain</a></li>
       <li><a href="/notes/c/11-concurrency.html">C Concurrency</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="common-lisp">
     <h2>Common Lisp</h2>
     <ul class="notes-list">
@@ -148,7 +178,8 @@ footer {
       <li><a href="/notes/common-lisp/functions.html">Common Lisp Functions</a></li>
       <li><a href="/notes/common-lisp/learn.html">Learn Common Lisp</a></li>
       <li><a href="/notes/common-lisp/macros.html">common Lisp Macros</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="cpp">
     <h2>Cpp</h2>
     <ul class="notes-list">
@@ -156,7 +187,8 @@ footer {
       <li><a href="/notes/cpp/functions.html">C++ Functions</a></li>
       <li><a href="/notes/cpp/learn.html">Learn C++</a></li>
       <li><a href="/notes/cpp/templates.html">C++ Templates</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="foundations">
     <h2>Foundations</h2>
     <ul class="notes-list">
@@ -172,7 +204,8 @@ footer {
       <li><a href="/notes/foundations/10-type-systems.html">Type Systems</a></li>
       <li><a href="/notes/foundations/11-memory-management.html">Memory Management</a></li>
       <li><a href="/notes/foundations/12-concurrency.html">Concurrency and Distributed Systems Foundations</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="haskell">
     <h2>Haskell</h2>
     <ul class="notes-list">
@@ -180,12 +213,14 @@ footer {
       <li><a href="/notes/haskell/functions.html">Haskell Functions</a></li>
       <li><a href="/notes/haskell/learn.html">Learn Haskell</a></li>
       <li><a href="/notes/haskell/typeclasses.html">Haskell Type Classes</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="homotopy-type-theory">
     <h2>Homotopy Type Theory</h2>
     <ul class="notes-list">
       <li><a href="/notes/homotopy-type-theory/homotopy-type-theory.html">Homotopy Type Theory</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="rust">
     <h2>Rust</h2>
     <ul class="notes-list">
@@ -204,7 +239,8 @@ footer {
       <li><a href="/notes/rust/12-concurrency.html">Rust Concurrency</a></li>
       <li><a href="/notes/rust/13-unsafe-and-ffi.html">Rust Unsafe and FFI</a></li>
       <li><a href="/notes/rust/14-toolchain.html">Rust Toolchain</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="software-architecture">
     <h2>Software Architecture</h2>
     <ul class="notes-list">
@@ -218,7 +254,8 @@ footer {
       <li><a href="/notes/software-architecture/08-evolutionary-architecture.html">Evolutionary Architecture</a></li>
       <li><a href="/notes/software-architecture/09-technical-debt.html">Technical Debt</a></li>
       <li><a href="/notes/software-architecture/10-architecture-review.html">Architecture Review</a></li>
-  </ul>
+    </ul>
+  </section>
   <section class="category" id="web3">
     <h2>Web3</h2>
     <ul class="notes-list">

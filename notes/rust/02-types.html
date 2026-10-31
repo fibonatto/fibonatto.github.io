@@ -3,14 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Rust Types</title>
   <meta name="author" content="Sergio Bonatto">
+
   <link rel="canonical" href="https://fibonatto.github.io/notes/rust/02-types.html">
+
   <meta property="og:title" content="Rust Types">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="article">
   <meta property="og:site_name" content="Bonatto">
+  <meta property="og:image" content="https://fibonatto.github.io/SEO.png">
   <meta property="og:url" content="https://fibonatto.github.io/notes/rust/02-types.html">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@fibonatto">
+  <meta name="twitter:creator" content="@fibonatto">
+  <meta name="twitter:title" content="Rust Types">
+  <meta name="twitter:image" content="https://fibonatto.github.io/SEO.png">
+
   <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+
   <style>
 html {
   color: #4A505E;
@@ -33,6 +45,42 @@ body {
 
 main { flex: 1; }
 a { color: #BD7948; }
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+
 pre {
   max-width: 100%;
   margin: 1.5em 0;
@@ -79,37 +127,16 @@ math[display="block"] {
   max-width: 100%;
   overflow-x: auto;
 }
-table {
-  display: block;
-  max-width: 100%;
-  margin: 1.5em 0;
-  overflow-x: auto;
-  border-collapse: collapse;
-  font-size: 0.95em;
-}
-th, td {
-  padding: 0.4em 0.75em;
-  border: 1px solid #8E8E88;
-  text-align: left;
-  vertical-align: top;
-}
-th {
-  background: rgba(74, 80, 94, 0.08);
-  font-weight: bold;
-}
-pre code { white-space: inherit; }
-img, svg { max-width: 100%; height: auto; }
-footer {
-  margin-top: 3em;
-  color: #8E8E88;
-  font-size: 0.85em;
-  text-align: center;
-}
-.notes-list { padding-left: 1.4em; }
-.notes-list li { margin: 0.15em 0; }
-.category { margin-top: 1.8em; }
   </style>
+
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title="Bonatto"
+    href="/rss.xml"
+  >
 </head>
+
 <body>
 
 <nav aria-label="Primary navigation">
