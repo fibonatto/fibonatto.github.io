@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theory of Computation</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/07-theory-of-computation.html">
+  <meta property="og:title" content="Theory of Computation">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/07-theory-of-computation.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Theory of Computation</h1>
+<h2 id="theory-of-computation-1">Theory of Computation</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>The theory of computation tells you what is impossible, what is
+intrinsically expensive, and what the right abstraction for a problem
+is. At Staff scope it saves months of work:</p>
+<ul>
+<li>you recognize requests that ask for the impossible ("detect every
+bug", "prove these two programs equivalent", "tell me if this job will
+ever finish") and propose the decidable approximation instead;</li>
+<li>you choose the weakest sufficient language for a format or DSL
+(regular, context-free, Turing-complete), because power costs
+analyzability and security;</li>
+<li>you understand why regex engines, parsers, and static analyzers
+behave as they do, including their performance cliffs.</li>
+</ul>
+<p>This file is about computability and formal languages;
+resource-bounded complexity (P, NP) is in <code
+class="verbatim">04_complexity.org</code>.</p>
+<h3 id="formal-languages-and-automata">1. Formal languages and
+automata</h3>
+<p>An <em>alphabet</em> is a finite set of symbols; a <em>string</em> is
+a finite sequence; a <em>language</em> is a set of strings. A
+computational problem is "decide membership in a language".</p>
+<p><strong>Chomsky hierarchy</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Grammar</th>
+<th>Machine</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regular</td>
+<td>Right-linear</td>
+<td>Finite automaton (DFA / NFA)</td>
+<td>Tokens, identifiers, simple log formats</td>
+</tr>
+<tr>
+<td>Context-free</td>
+<td>Context-free</td>
+<td>Pushdown automaton</td>
+<td>Balanced parentheses, most programming-language syntax</td>
+</tr>
+<tr>
+<td>Context-sensitive</td>
+<td>Context-sensitive</td>
+<td>Linear-bounded automaton</td>
+<td>Some natural-language structure; type-checking-like constraints</td>
+</tr>
+<tr>
+<td>Recursively enumerable</td>
+<td>Unrestricted</td>
+<td>Turing machine</td>
+<td>Everything computable</td>
+</tr>
+</tbody>
+</table>
+<p>More power means less you can decide about the language: emptiness,
+equivalence, and ambiguity become harder or undecidable as you
+climb.</p>
+<h3 id="finite-automata-and-regular-languages">2. Finite automata and
+regular languages</h3>
+<ul>
+<li>A <strong>DFA</strong> has finitely many states, a start state,
+accepting states, and one transition per state and symbol. It runs in
+O(n) time, O(1) memory, with no backtracking.</li>
+<li>An <strong>NFA</strong> may have several or no transitions per
+symbol (and epsilon moves). It accepts if some path accepts. NFAs and
+DFAs recognize the same class: regular languages. Converting an NFA with
+n states to a DFA can need 2<sup>n</sup> states (the subset
+construction); the language "the k-th symbol from the end is a" shows
+this blowup is unavoidable.</li>
+<li><strong>Regular expressions</strong> (with union, concatenation,
+star) denote exactly the regular languages (Kleene's theorem).
+Thompson's construction turns a regex into an NFA of linear size, which
+can be simulated in O(n m) time without exponential blowup.</li>
+<li><strong>Closure</strong>: regular languages are closed under union,
+intersection, complement, concatenation, and star; DFA equivalence and
+emptiness are decidable (equivalence in near-linear time after
+minimization). NFA/regex equivalence is PSPACE-complete.</li>
+<li><strong>Pumping lemma</strong>: any sufficiently long string in a
+regular language can be pumped (a middle part repeated) and stay in the
+language. Use it to prove non-regularity (for example a<sup>n</sup>
+b<sup>n</sup>, balanced parentheses, "number of a equals number of
+b").</li>
+<li><strong>Minimization</strong>: every regular language has a unique
+minimal DFA (Myhill-Nerode); Hopcroft's algorithm finds it in O(n log
+n).</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DFA:</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, start, accepting, delta):</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.start, <span class="va">self</span>.accepting, <span class="va">self</span>.delta <span class="op">=</span> start, <span class="bu">set</span>(accepting), delta</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> accepts(<span class="va">self</span>, word):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> <span class="va">self</span>.start</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> ch <span class="kw">in</span> word:</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            s <span class="op">=</span> <span class="va">self</span>.delta[(s, ch)]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> s <span class="kw">in</span> <span class="va">self</span>.accepting</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>even_ones <span class="op">=</span> DFA(<span class="st">&quot;e&quot;</span>, {<span class="st">&quot;e&quot;</span>}, {(<span class="st">&quot;e&quot;</span>, <span class="st">&quot;0&quot;</span>): <span class="st">&quot;e&quot;</span>, (<span class="st">&quot;e&quot;</span>, <span class="st">&quot;1&quot;</span>): <span class="st">&quot;o&quot;</span>, (<span class="st">&quot;o&quot;</span>, <span class="st">&quot;0&quot;</span>): <span class="st">&quot;o&quot;</span>, (<span class="st">&quot;o&quot;</span>, <span class="st">&quot;1&quot;</span>): <span class="st">&quot;e&quot;</span>})</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> even_ones.accepts(<span class="st">&quot;1001&quot;</span>) <span class="kw">and</span> <span class="kw">not</span> even_ones.accepts(<span class="st">&quot;1011&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> nfa_kth_from_end(k):</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;NFA for: the k-th symbol from the end is &#39;a&#39;.&quot;&quot;&quot;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">=</span> {}</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> add(s, c, t):</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        delta.setdefault((s, c), <span class="bu">set</span>()).add(t)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> c <span class="kw">in</span> <span class="st">&quot;ab&quot;</span>:</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        add(<span class="dv">0</span>, c, <span class="dv">0</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    add(<span class="dv">0</span>, <span class="st">&quot;a&quot;</span>, <span class="dv">1</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, k):</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> c <span class="kw">in</span> <span class="st">&quot;ab&quot;</span>:</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            add(i, c, i <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> delta, <span class="dv">0</span>, {k}</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> subset_construction(delta, start, accepting, alphabet<span class="op">=</span><span class="st">&quot;ab&quot;</span>):</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    start_set <span class="op">=</span> <span class="bu">frozenset</span>([start])</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    seen, todo, trans <span class="op">=</span> {start_set}, [start_set], {}</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> todo:</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        S <span class="op">=</span> todo.pop()</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> c <span class="kw">in</span> alphabet:</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>            T <span class="op">=</span> <span class="bu">frozenset</span>(t <span class="cf">for</span> s <span class="kw">in</span> S <span class="cf">for</span> t <span class="kw">in</span> delta.get((s, c), ()))</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>            trans[(S, c)] <span class="op">=</span> T</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> T <span class="kw">not</span> <span class="kw">in</span> seen:</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>                seen.add(T)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>                todo.append(T)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> seen, trans, {S <span class="cf">for</span> S <span class="kw">in</span> seen <span class="cf">if</span> S <span class="op">&amp;</span> accepting}</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">6</span>):</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    d, s0, acc <span class="op">=</span> nfa_kth_from_end(k)</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    states, _, _ <span class="op">=</span> subset_construction(d, s0, acc)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="bu">len</span>(states) <span class="op">==</span> <span class="dv">2</span> <span class="op">**</span> k          <span class="co"># exponential blowup: NFA has k+1 states</span></span></code></pre></div>
+<p><strong>Regex engines in practice.</strong> Backtracking engines
+(Perl-compatible: Python <code class="verbatim">re</code>, Java,
+JavaScript, PCRE) try alternatives one at a time and can take
+exponential time on patterns such as <code
+class="verbatim">(a+)+$</code> against a long run of <code
+class="verbatim">a</code> followed by a mismatch (ReDoS, a real
+denial-of-service vector). Automata-based engines (RE2, Rust's <code
+class="verbatim">regex</code> crate, Go's <code
+class="verbatim">regexp</code>) guarantee linear time but do not support
+backreferences, which make matching NP-hard. Rule: never run an
+untrusted regex, or a regex on untrusted input, with a backtracking
+engine without a time limit.</p>
+<h3 id="context-free-languages-and-parsing">3. Context-free languages
+and parsing</h3>
+<ul>
+<li>A <strong>context-free grammar</strong> (CFG) has rules A -&gt;
+alpha with a single nonterminal on the left. A
+<strong>derivation</strong> or <strong>parse tree</strong> shows how a
+string arises. A grammar is <strong>ambiguous</strong> if some string
+has two parse trees (the dangling-else problem, operator precedence);
+ambiguity is undecidable to detect in general, so languages are designed
+with unambiguous grammars or explicit precedence declarations.</li>
+<li><strong>Pushdown automata</strong> (finite control plus a stack)
+recognize exactly the context-free languages. The stack is what lets
+them match nesting; one stack cannot count two things (a<sup>n</sup>
+b<sup>n</sup> c<sup>n</sup> is not context-free; use the pumping lemma
+for CFLs).</li>
+<li><strong>Parsing algorithms</strong>: general CFG parsing in
+O(n<sup>3</sup>) (CYK on Chomsky normal form, Earley, GLR);
+deterministic subclasses in linear time: LL(k) (top-down, recursive
+descent), LR(k) / LALR (bottom-up, used by yacc and bison); PEG and
+packrat parsers (ordered choice, linear time with memoization); Pratt
+parsing for expression precedence. Parser combinators (see <code
+class="verbatim">09_functional-programming.org</code>) build
+recursive-descent parsers compositionally.</li>
+<li><strong>Closure</strong>: CFLs are closed under union,
+concatenation, star, and intersection with a regular language, but not
+under intersection or complement. Equivalence and universality are
+undecidable for CFGs.</li>
+<li>Real languages mix layers: a regular lexer, a context-free parser,
+then context-sensitive checks (declared-before-use, types) in later
+phases. Indentation-sensitive syntax and C's typedef ambiguity need
+lexer/parser feedback.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> cyk(word, rules, start<span class="op">=</span><span class="st">&quot;S&quot;</span>):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;CYK recognizer for a grammar in Chomsky normal form: rules are (lhs, (rhs...)).&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(word)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    table <span class="op">=</span> [[<span class="bu">set</span>() <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n)] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n)]     <span class="co"># table[i][len-1]</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, ch <span class="kw">in</span> <span class="bu">enumerate</span>(word):</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> lhs, rhs <span class="kw">in</span> rules:</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> rhs <span class="op">==</span> (ch,):</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                table[i][<span class="dv">0</span>].add(lhs)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> length <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">2</span>, n <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n <span class="op">-</span> length <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> split <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, length):</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                left, right <span class="op">=</span> table[i][split <span class="op">-</span> <span class="dv">1</span>], table[i <span class="op">+</span> split][length <span class="op">-</span> split <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> lhs, rhs <span class="kw">in</span> rules:</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="bu">len</span>(rhs) <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> rhs[<span class="dv">0</span>] <span class="kw">in</span> left <span class="kw">and</span> rhs[<span class="dv">1</span>] <span class="kw">in</span> right:</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                        table[i][length <span class="op">-</span> <span class="dv">1</span>].add(lhs)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> start <span class="kw">in</span> table[<span class="dv">0</span>][n <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co"># a^n b^n (n &gt;= 1):  S -&gt; A B | A T ;  T -&gt; S B ;  A -&gt; a ;  B -&gt; b</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>rules <span class="op">=</span> [(<span class="st">&quot;S&quot;</span>, (<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>)), (<span class="st">&quot;S&quot;</span>, (<span class="st">&quot;A&quot;</span>, <span class="st">&quot;T&quot;</span>)), (<span class="st">&quot;T&quot;</span>, (<span class="st">&quot;S&quot;</span>, <span class="st">&quot;B&quot;</span>)), (<span class="st">&quot;A&quot;</span>, (<span class="st">&quot;a&quot;</span>,)), (<span class="st">&quot;B&quot;</span>, (<span class="st">&quot;b&quot;</span>,))]</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> cyk(<span class="st">&quot;ab&quot;</span>, rules) <span class="kw">and</span> cyk(<span class="st">&quot;aabb&quot;</span>, rules) <span class="kw">and</span> cyk(<span class="st">&quot;aaabbb&quot;</span>, rules)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="kw">not</span> cyk(<span class="st">&quot;aab&quot;</span>, rules) <span class="kw">and</span> <span class="kw">not</span> cyk(<span class="st">&quot;abab&quot;</span>, rules) <span class="kw">and</span> <span class="kw">not</span> cyk(<span class="st">&quot;ba&quot;</span>, rules)</span></code></pre></div>
+<h3 id="turing-machines-and-the-church-turing-thesis">4. Turing machines
+and the Church-Turing thesis</h3>
+<p>A <strong>Turing machine</strong> has an infinite tape, a head, a
+finite set of states, and a transition function (state, symbol) -&gt;
+(state, symbol, move). It models everything a computer can do:</p>
+<ul>
+<li>Variants (multiple tapes, nondeterminism, two-way infinite tapes,
+random access) compute the same functions, with at most polynomial
+slowdown for deterministic variants (the "extended" Church-Turing thesis
+is more contested, especially with quantum computing).</li>
+<li>The <strong>Church-Turing thesis</strong>: the intuitive notion of
+"effectively computable" equals Turing-computable. It is not a theorem
+but a well-supported claim; lambda calculus, recursive functions,
+register machines, and every real programming language define the same
+class.</li>
+<li>A <strong>universal Turing machine</strong> takes a description of a
+machine and an input and simulates it: the theoretical foundation of the
+stored-program computer, interpreters, and virtual machines.</li>
+<li><strong>Decidable</strong> (recursive) languages: a machine always
+halts with yes or no. <strong>Recognizable</strong> (recursively
+enumerable): a machine halts on yes-instances and may loop on
+no-instances. A language is decidable iff both it and its complement are
+recognizable.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_tm(rules, tape, state<span class="op">=</span><span class="st">&quot;q0&quot;</span>, blank<span class="op">=</span><span class="st">&quot;_&quot;</span>, accept<span class="op">=</span><span class="st">&quot;halt&quot;</span>, max_steps<span class="op">=</span><span class="dv">10_000</span>):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    tape <span class="op">=</span> <span class="bu">dict</span>(<span class="bu">enumerate</span>(tape))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    head <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(max_steps):</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> state <span class="op">==</span> accept:</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>            lo, hi <span class="op">=</span> <span class="bu">min</span>(tape), <span class="bu">max</span>(tape)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;&quot;</span>.join(tape.get(i, blank) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(lo, hi <span class="op">+</span> <span class="dv">1</span>)).strip(blank)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        state, write, move <span class="op">=</span> rules[(state, tape.get(head, blank))]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        tape[head] <span class="op">=</span> write</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        head <span class="op">+=</span> {<span class="st">&quot;L&quot;</span>: <span class="op">-</span><span class="dv">1</span>, <span class="st">&quot;R&quot;</span>: <span class="dv">1</span>, <span class="st">&quot;S&quot;</span>: <span class="dv">0</span>}[move]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">&quot;step limit exceeded&quot;</span>)     <span class="co"># we cannot decide in general whether it would halt</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># binary increment: scan to the right end, then carry leftwards</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>inc <span class="op">=</span> {(<span class="st">&quot;q0&quot;</span>, <span class="st">&quot;0&quot;</span>): (<span class="st">&quot;q0&quot;</span>, <span class="st">&quot;0&quot;</span>, <span class="st">&quot;R&quot;</span>), (<span class="st">&quot;q0&quot;</span>, <span class="st">&quot;1&quot;</span>): (<span class="st">&quot;q0&quot;</span>, <span class="st">&quot;1&quot;</span>, <span class="st">&quot;R&quot;</span>), (<span class="st">&quot;q0&quot;</span>, <span class="st">&quot;_&quot;</span>): (<span class="st">&quot;q1&quot;</span>, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;L&quot;</span>),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>       (<span class="st">&quot;q1&quot;</span>, <span class="st">&quot;1&quot;</span>): (<span class="st">&quot;q1&quot;</span>, <span class="st">&quot;0&quot;</span>, <span class="st">&quot;L&quot;</span>), (<span class="st">&quot;q1&quot;</span>, <span class="st">&quot;0&quot;</span>): (<span class="st">&quot;halt&quot;</span>, <span class="st">&quot;1&quot;</span>, <span class="st">&quot;S&quot;</span>), (<span class="st">&quot;q1&quot;</span>, <span class="st">&quot;_&quot;</span>): (<span class="st">&quot;halt&quot;</span>, <span class="st">&quot;1&quot;</span>, <span class="st">&quot;S&quot;</span>)}</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> run_tm(inc, <span class="st">&quot;1011&quot;</span>) <span class="op">==</span> <span class="st">&quot;1100&quot;</span> <span class="kw">and</span> run_tm(inc, <span class="st">&quot;111&quot;</span>) <span class="op">==</span> <span class="st">&quot;1000&quot;</span> <span class="kw">and</span> run_tm(inc, <span class="st">&quot;0&quot;</span>) <span class="op">==</span> <span class="st">&quot;1&quot;</span></span></code></pre></div>
+<h3 id="undecidability">5. Undecidability</h3>
+<p><strong>The halting problem</strong>: no program H(P, x) correctly
+decides, for every program P and input x, whether P halts on x. Proof by
+diagonalization: suppose H exists; build D(P) that runs H(P, P) and does
+the opposite (loops if H says halts; halts if H says loops). Then D(D)
+halts iff it does not halt, a contradiction.</p>
+<pre class="text"><code>def D(P):
+    if halts(P, P):      # assumed decider
+        while True: pass
+    return               # halts
+# D(D) halts  &lt;=&gt;  halts(D, D) says &quot;loops&quot;  &lt;=&gt;  D(D) does not halt
+</code></pre>
+<p><strong>Reductions</strong> spread undecidability: to show problem B
+undecidable, show that a solver for B would solve a known undecidable
+problem A. Undecidable: A<sub>TM</sub> (does machine M accept w), HALT,
+emptiness of a TM's language, equivalence of two TMs, the Post
+correspondence problem, tiling the plane, Hilbert's tenth problem
+(integer solutions of polynomial equations), and equivalence or
+ambiguity of context-free grammars.</p>
+<p><strong>Rice's theorem</strong>: every non-trivial <em>semantic</em>
+property of programs (a property of the function the program computes:
+"returns 0 on all inputs", "never dereferences null", "is equivalent to
+this other program", "outputs only primes") is undecidable. Only
+<em>syntactic</em> properties (does it contain the word <code
+class="verbatim">goto</code>? is it well-typed under this finite rule
+set?) can be decided exactly.</p>
+<p>Consequences for tooling:</p>
+<ul>
+<li>Static analyzers, linters, optimizers, and security scanners cannot
+be both <em>sound</em> (never miss a bug) and <em>complete</em> (never
+raise a false alarm) on a Turing-complete language. Real tools pick:
+over-approximate (false positives) or under-approximate (false
+negatives). Abstract interpretation formalizes the first choice.</li>
+<li>Type systems are decidable by design, and so they reject some
+correct programs. Type inference for System F is undecidable; practical
+systems restrict it (see <code
+class="verbatim">10_type-systems.org</code>).</li>
+<li>Perfect test generation, equivalence checking of arbitrary code,
+"will this migration terminate?" are not solvable in general. Bound the
+question: timeouts, step budgets, restricted DSLs, fuel parameters, or
+total functional languages that only permit provably terminating
+programs (as in Lean).</li>
+<li>Goedel's incompleteness theorems and the incomputability of
+Kolmogorov complexity (shortest program for a string) and of the Busy
+Beaver function are cousins of the same diagonal argument.</li>
+</ul>
+<h3 id="recursion-self-reference-and-programs-as-data">6. Recursion,
+self-reference, and programs as data</h3>
+<ul>
+<li><strong>Kleene's recursion theorem</strong>: a program can obtain
+its own source and compute with it. Quines, self-replicating programs,
+and compilers that compile themselves (bootstrapping) are
+instances.</li>
+<li><strong>The s-m-n theorem</strong> and <strong>partial
+evaluation</strong>: specializing a program on part of its input yields
+a faster program; the idea behind staged compilation and JIT
+specialization.</li>
+<li><strong>Total versus partial functions</strong>: ordinary programs
+may diverge. Proof assistants and total languages require termination
+arguments (structural recursion, well-founded measures), restricting
+expressiveness to gain guarantees.</li>
+</ul>
+<h3 id="beyond-the-basic-model">7. Beyond the basic model</h3>
+<ul>
+<li><strong>Probabilistic computation</strong> (BPP) and <strong>quantum
+computation</strong> (BQP) change resources but not computability: a
+quantum computer decides the same languages as a Turing machine; the
+question is speed (Shor's algorithm factors in polynomial time; no known
+quantum speedup solves NP-complete problems in polynomial time).</li>
+<li><strong>Cellular automata</strong> (Conway's Game of Life, Rule 110)
+can be universal; <strong>accidental Turing completeness</strong>
+appears in templates, macros, configuration languages, and spreadsheets,
+and it makes termination and resource bounds undecidable for them.</li>
+<li><strong>Oracle machines</strong> and the <strong>arithmetical
+hierarchy</strong> classify degrees of undecidability.</li>
+<li><strong>Lambda calculus</strong> (see <code
+class="verbatim">09_functional-programming.org</code>) is the equivalent
+model behind functional languages.</li>
+</ul>
+<h3 id="from-theory-to-engineering-decisions">8. From theory to
+engineering decisions</h3>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Result</th>
+<th>Engineering consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Will this program halt?</td>
+<td>Undecidable (halting problem)</td>
+<td>Timeouts, budgets, termination checkers on restricted forms</td>
+</tr>
+<tr>
+<td>Are these two programs equivalent?</td>
+<td>Undecidable (Rice)</td>
+<td>Tests, refinement proofs on small languages, canonical forms</td>
+</tr>
+<tr>
+<td>Does this code ever do X (null, race, leak)?</td>
+<td>Undecidable in general</td>
+<td>Conservative analysis; accept false positives or negatives</td>
+</tr>
+<tr>
+<td>Is this regular expression ambiguous or equivalent to that one?</td>
+<td>PSPACE-complete</td>
+<td>Avoid cleverness; test with examples</td>
+</tr>
+<tr>
+<td>Is this CFG ambiguous?</td>
+<td>Undecidable</td>
+<td>Use parser generators with conflict reports</td>
+</tr>
+<tr>
+<td>Parse this input</td>
+<td>Linear for LL/LR/PEG; cubic for general CFG</td>
+<td>Choose a grammar class that gives linear parsing</td>
+</tr>
+<tr>
+<td>Does this regex with backreferences match?</td>
+<td>NP-complete</td>
+<td>Use linear-time engines; ban backreferences on untrusted input</td>
+</tr>
+<tr>
+<td>Is this SQL query equivalent to that one (full SQL)?</td>
+<td>Undecidable</td>
+<td>Rely on optimizers' heuristics, not proofs</td>
+</tr>
+<tr>
+<td>Can this DSL express loops?</td>
+<td>If yes, likely Turing-complete</td>
+<td>Decide deliberately; unbounded loops forfeit termination
+guarantees</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Design rule (principle of least power)</strong>: use the
+least expressive language that does the job (a regular language for a
+log format, a CFG for a config grammar, a restricted DSL for policy).
+Weaker languages can be analyzed, bounded, and secured; each added
+feature (loops, recursion, eval) forfeits some of that. Many security
+and reliability incidents come from "configuration" that quietly became
+a programming language.</p>
+<h3 id="self-check">9. Self-check</h3>
+<ol>
+<li>Prove that {a<sup>n</sup> b<sup>n</sup> : n &gt;= 0} is not regular.
+Is it context-free? Is {a<sup>n</sup> b<sup>n</sup> c<sup>n</sup>}
+context-free?</li>
+<li>Convert the regex <code class="verbatim">(a|b)*abb</code> to an NFA,
+then to a DFA; how many states does the minimal DFA have?</li>
+<li>Explain in your own words why Rice's theorem means a perfect "will
+this PR introduce a null dereference?" checker cannot exist.</li>
+<li>Reduce A<sub>TM</sub> to "does this program ever print 'hello'?" to
+show the latter is undecidable.</li>
+<li>Why do RE2-style engines forbid backreferences?</li>
+<li>A product manager wants a rules language "just flexible enough".
+What questions do you ask before adding conditionals, variables, and
+loops?</li>
+</ol>
+<h3 id="exercises">10. Exercises</h3>
+<ul>
+<li>Warm-up: write a DFA that accepts binary strings representing
+numbers divisible by 3; verify it against Python's <code
+class="verbatim">%</code>.</li>
+<li>Core: implement Thompson's NFA construction and NFA simulation for a
+regex subset (concatenation, union, star); test against Python's <code
+class="verbatim">re</code> on random inputs; show your engine is linear
+where <code class="verbatim">re</code> is exponential.</li>
+<li>Core: implement an LL(1) recursive-descent parser for arithmetic
+with precedence, and a Pratt parser; compare error handling.</li>
+<li>Core: write a CYK recognizer and convert a small grammar to Chomsky
+normal form by hand.</li>
+<li>Stretch: write a universal Turing machine simulator and a machine
+that decides palindromes.</li>
+<li>Stretch: implement Hopcroft's DFA minimization and check it on
+random DFAs.</li>
+<li>Stretch: work through the halting-problem reduction chapter of
+Sipser's book or the MIT 18.404J problem sets.</li>
+</ul>
+<h3 id="resources">11. Resources</h3>
+<ul>
+<li>MIT 18.404J <em>Theory of Computation</em> (Sipser; lecture notes,
+videos, problem sets; covers regular and context-free languages,
+decidability, reducibility, complexity): <a
+href="https://ocw.mit.edu/courses/mathematics/18-404j-theory-of-computation-fall-2020/">https://ocw.mit.edu/courses/mathematics/18-404j-theory-of-computation-fall-2020/</a></li>
+<li>Sipser, <em>Introduction to the Theory of Computation</em> (the
+standard text; book).</li>
+<li>Erickson's notes on models of computation (automata, formal
+languages, context-free grammars, Turing machines), linked from his
+algorithms page: <a
+href="https://jeffe.cs.illinois.edu/teaching/algorithms/">https://jeffe.cs.illinois.edu/teaching/algorithms/</a></li>
+<li>Arora and Barak, <em>Computational Complexity: A Modern
+Approach</em> (draft online; assumes essentially no background in the
+first chapters): <a
+href="https://theory.cs.princeton.edu/complexity">https://theory.cs.princeton.edu/complexity</a></li>
+<li>Pierce et al., <em>Software Foundations</em> (languages, operational
+semantics, termination in a proof assistant): <a
+href="https://softwarefoundations.cis.upenn.edu/">https://softwarefoundations.cis.upenn.edu/</a></li>
+<li>Nystrom, <em>Crafting Interpreters</em> (lexing, parsing, and
+executing a full language; free): <a
+href="https://craftinginterpreters.com">https://craftinginterpreters.com</a></li>
+<li>Russ Cox's articles on regular expression matching (the Thompson NFA
+versus backtracking) are the clearest account of the engineering
+side.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Power versus analyzability: regular &lt; context-free &lt;
+Turing-complete; each step loses decision procedures.</li>
+<li>Backtracking regex engines are exponential in the worst case;
+automata engines are linear.</li>
+<li>Rice's theorem: semantic questions about arbitrary programs are
+undecidable, so tools approximate.</li>
+<li>Use the least powerful language that solves the problem.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

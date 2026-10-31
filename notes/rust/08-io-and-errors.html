@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust I/O and Error Handling</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/08-io-and-errors.html">
+  <meta property="og:title" content="Rust I/O and Error Handling">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/08-io-and-errors.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust I/O and Error Handling</h1>
+<h2 id="rust-io-and-error-handling-1">Rust I/O and Error Handling</h2>
+<h3 id="panics-versus-results">1. Panics versus Results</h3>
+<ul>
+<li>A <strong>panic</strong> signals a bug: a violated invariant, an
+impossible state. It unwinds the stack and ends the thread.</li>
+<li>A <strong><code class="verbatim">Result</code></strong> signals an
+expected failure: bad input, a missing file, a network error. The caller
+decides what to do.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> s<span class="op">.</span>parse()<span class="op">.</span>unwrap()<span class="op">;</span>            <span class="co">// panics on Err: only for &quot;cannot happen&quot; cases</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> s<span class="op">.</span>parse()<span class="op">.</span>expect(<span class="st">&quot;config port is validated earlier&quot;</span>)<span class="op">;</span>   <span class="co">// panics with a message</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> s<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>()<span class="op">.</span>unwrap_or(<span class="dv">0</span>)<span class="op">;</span>      <span class="co">// supply a default</span></span></code></pre></div>
+<p>Use <code class="verbatim">unwrap</code> and <code
+class="verbatim">expect</code> in tests, examples, and where the failure
+would be a bug. In library and application paths, propagate with <code
+class="verbatim">?</code>.</p>
+<h3 id="option-and-result">2. Option and Result</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="dt">Option</span><span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span> <span class="cn">None</span><span class="op">,</span> <span class="cn">Some</span>(T) <span class="op">}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="dt">Result</span><span class="op">&lt;</span>T<span class="op">,</span> E<span class="op">&gt;</span> <span class="op">{</span> <span class="cn">Ok</span>(T)<span class="op">,</span> <span class="cn">Err</span>(E) <span class="op">}</span></span></code></pre></div>
+<p>Both are <code class="verbatim">#[must_use]</code>: ignoring a <code
+class="verbatim">Result</code> triggers a warning. Common
+combinators:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">map(f)</code></td>
+<td>Transform the success value</td>
+</tr>
+<tr>
+<td><code class="verbatim">map_err(f)</code></td>
+<td>Transform the error</td>
+</tr>
+<tr>
+<td><code class="verbatim">and_then(f)</code></td>
+<td>Chain a step that can itself fail</td>
+</tr>
+<tr>
+<td><code class="verbatim">unwrap_or(v)</code>, <code
+class="verbatim">unwrap_or_else(f)</code>, <code
+class="verbatim">unwrap_or_default()</code></td>
+<td>Fallback value</td>
+</tr>
+<tr>
+<td><code class="verbatim">ok_or(e)</code>, <code
+class="verbatim">ok_or_else(f)</code></td>
+<td><code class="verbatim">Option</code> to <code
+class="verbatim">Result</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">ok()</code></td>
+<td><code class="verbatim">Result</code> to <code
+class="verbatim">Option</code>, discarding the error</td>
+</tr>
+<tr>
+<td><code class="verbatim">filter(p)</code></td>
+<td>Keep <code class="verbatim">Some</code> only if the predicate
+holds</td>
+</tr>
+<tr>
+<td><code class="verbatim">take()</code>, <code
+class="verbatim">replace(v)</code></td>
+<td>Move the value out of an <code class="verbatim">Option</code> in
+place</td>
+</tr>
+<tr>
+<td><code class="verbatim">as_ref()</code>, <code
+class="verbatim">as_mut()</code>, <code
+class="verbatim">as_deref()</code></td>
+<td>Borrow the contents</td>
+</tr>
+<tr>
+<td><code class="verbatim">transpose()</code></td>
+<td>Swap <code class="verbatim">Option&lt;Result&lt;T,E&gt;&gt;</code>
+and <code class="verbatim">Result&lt;Option&lt;T&gt;,E&gt;</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">is_some()</code>, <code
+class="verbatim">is_ok()</code>, <code
+class="verbatim">matches!</code></td>
+<td>Tests</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-operator">3. The ? operator</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>fs<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>io<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> read_number(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span><span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="pp">fs::</span>read_to_string(path)<span class="op">?;</span>       <span class="co">// io::Error converted to Box&lt;dyn Error&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> n <span class="op">=</span> text<span class="op">.</span>trim()<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>()<span class="op">?;</span>        <span class="co">// ParseIntError converted too</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(n)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> first_char(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> c <span class="op">=</span> s<span class="op">.</span>chars()<span class="op">.</span>next()<span class="op">?;</span>                  <span class="co">// ? works on Option inside functions returning Option</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Some</span>(c)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>On <code class="verbatim">Err(e)</code>, <code
+class="verbatim">?</code> returns early with <code
+class="verbatim">Err(From::from(e))</code>, so the function's error type
+must implement <code class="verbatim">From</code> for each error it
+propagates. On <code class="verbatim">None</code>, it returns <code
+class="verbatim">None</code>. You cannot mix <code
+class="verbatim">?</code> on an <code class="verbatim">Option</code> and
+a <code class="verbatim">Result</code> in the same function without
+converting (<code class="verbatim">ok_or</code>, <code
+class="verbatim">ok</code>).</p>
+<p><strong>Entry points</strong> may return <code
+class="verbatim">Result</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span><span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> n <span class="op">=</span> read_number(<span class="st">&quot;port.txt&quot;</span>)<span class="op">?;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{n}&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="defining-error-types">4. Defining error types</h3>
+<p>An error type implements <code class="verbatim">Display</code> (the
+message), <code class="verbatim">Debug</code>, and <code
+class="verbatim">std::error::Error</code>. For a library, an enum of
+failure kinds is the usual shape:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span><span class="op">{</span>fmt<span class="op">,</span> io<span class="op">,</span> <span class="pp">num::</span>ParseIntError<span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> ConfigError <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Io(<span class="pp">io::</span><span class="bu">Error</span>)<span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    Parse(ParseIntError)<span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    OutOfRange(<span class="dt">i64</span>)<span class="op">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">fmt::</span><span class="bu">Display</span> <span class="cf">for</span> ConfigError <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> fmt(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> f<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="pp">fmt::</span>Formatter<span class="op">&lt;</span><span class="ot">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="pp">fmt::</span><span class="dt">Result</span> <span class="op">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span> <span class="op">{</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            <span class="pp">ConfigError::</span>Io(e) <span class="op">=&gt;</span> <span class="pp">write!</span>(f<span class="op">,</span> <span class="st">&quot;I/O error: {e}&quot;</span>)<span class="op">,</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            <span class="pp">ConfigError::</span>Parse(e) <span class="op">=&gt;</span> <span class="pp">write!</span>(f<span class="op">,</span> <span class="st">&quot;parse error: {e}&quot;</span>)<span class="op">,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            <span class="pp">ConfigError::</span>OutOfRange(n) <span class="op">=&gt;</span> <span class="pp">write!</span>(f<span class="op">,</span> <span class="st">&quot;{n} is out of range&quot;</span>)<span class="op">,</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">std::error::</span><span class="bu">Error</span> <span class="cf">for</span> ConfigError <span class="op">{</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> source(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span>(<span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span> <span class="op">+</span> <span class="ot">&#39;static</span>)<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span> <span class="op">{</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            <span class="pp">ConfigError::</span>Io(e) <span class="op">=&gt;</span> <span class="cn">Some</span>(e)<span class="op">,</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            <span class="pp">ConfigError::</span>Parse(e) <span class="op">=&gt;</span> <span class="cn">Some</span>(e)<span class="op">,</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>            <span class="pp">ConfigError::</span>OutOfRange(_) <span class="op">=&gt;</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">From</span><span class="op">&lt;</span><span class="pp">io::</span><span class="bu">Error</span><span class="op">&gt;</span> <span class="cf">for</span> ConfigError <span class="op">{</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> from(e<span class="op">:</span> <span class="pp">io::</span><span class="bu">Error</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> <span class="pp">ConfigError::</span>Io(e) <span class="op">}</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">From</span><span class="op">&lt;</span>ParseIntError<span class="op">&gt;</span> <span class="cf">for</span> ConfigError <span class="op">{</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> from(e<span class="op">:</span> ParseIntError) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> <span class="pp">ConfigError::</span>Parse(e) <span class="op">}</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> read_port(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">,</span> ConfigError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="pp">std::fs::</span>read_to_string(path)<span class="op">?;</span>           <span class="co">// From&lt;io::Error&gt;</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> n<span class="op">:</span> <span class="dt">i64</span> <span class="op">=</span> text<span class="op">.</span>trim()<span class="op">.</span>parse()<span class="op">?;</span>                   <span class="co">// From&lt;ParseIntError&gt;</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    <span class="pp">u16::</span>try_from(n)<span class="op">.</span>map_err(<span class="op">|</span>_<span class="op">|</span> <span class="pp">ConfigError::</span>OutOfRange(n))</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The boilerplate is mechanical, which is why crates exist for it:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// thiserror: derive the impls for library errors</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="pp">thiserror::</span><span class="bu">Error</span><span class="at">)]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> ConfigError <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;I/O error: {0}&quot;</span><span class="at">)]</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    Io(<span class="at">#[</span>from<span class="at">]</span> <span class="pp">std::io::</span><span class="bu">Error</span>)<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;parse error: {0}&quot;</span><span class="at">)]</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    Parse(<span class="at">#[</span>from<span class="at">]</span> <span class="pp">std::num::</span>ParseIntError)<span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>error<span class="at">(</span><span class="st">&quot;{0} is out of range&quot;</span><span class="at">)]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    OutOfRange(<span class="dt">i64</span>)<span class="op">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">// anyhow: one flexible error type for applications, with context</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">anyhow::</span><span class="op">{</span>Context<span class="op">,</span> <span class="dt">Result</span><span class="op">};</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> run(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="pp">std::fs::</span>read_to_string(path)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>with_context(<span class="op">||</span> <span class="pp">format!</span>(<span class="st">&quot;reading {path}&quot;</span>))<span class="op">?;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> n<span class="op">:</span> <span class="dt">u16</span> <span class="op">=</span> text<span class="op">.</span>trim()<span class="op">.</span>parse()<span class="op">.</span>context(<span class="st">&quot;port must be a number&quot;</span>)<span class="op">?;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{n}&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Guideline: libraries return specific error types (callers can match
+on them); applications use <code class="verbatim">anyhow::Result</code>
+and print the chain of causes. Neither crate is in the standard
+library.</p>
+<h3 id="files-and-streams">5. Files and streams</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::fs::</span><span class="op">{</span><span class="kw">self</span><span class="op">,</span> File<span class="op">,</span> OpenOptions<span class="op">};</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::io::</span><span class="op">{</span><span class="kw">self</span><span class="op">,</span> <span class="bu">BufRead</span><span class="op">,</span> BufReader<span class="op">,</span> BufWriter<span class="op">,</span> <span class="bu">Read</span><span class="op">,</span> <span class="bu">Write</span><span class="op">};</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> text <span class="op">=</span> <span class="pp">fs::</span>read_to_string(<span class="st">&quot;in.txt&quot;</span>)<span class="op">?;</span>            <span class="co">// whole file as String</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> bytes <span class="op">=</span> <span class="pp">fs::</span>read(<span class="st">&quot;in.bin&quot;</span>)<span class="op">?;</span>                     <span class="co">// whole file as Vec&lt;u8&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">fs::</span>write(<span class="st">&quot;out.txt&quot;</span><span class="op">,</span> <span class="st">&quot;hello</span><span class="sc">\n</span><span class="st">&quot;</span>)<span class="op">?;</span>                    <span class="co">// create or truncate, write, close</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f <span class="op">=</span> <span class="pp">File::</span>open(<span class="st">&quot;in.txt&quot;</span>)<span class="op">?;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> reader <span class="op">=</span> <span class="pp">BufReader::</span>new(f)<span class="op">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> line <span class="kw">in</span> reader<span class="op">.</span>lines() <span class="op">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> line <span class="op">=</span> line<span class="op">?;</span>                                <span class="co">// each line is io::Result&lt;String&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{line}&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> out <span class="op">=</span> <span class="pp">File::</span>create(<span class="st">&quot;out.txt&quot;</span>)<span class="op">?;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> w <span class="op">=</span> <span class="pp">BufWriter::</span>new(out)<span class="op">;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="pp">writeln!</span>(w<span class="op">,</span> <span class="st">&quot;x = {}&quot;</span><span class="op">,</span> <span class="dv">5</span>)<span class="op">?;</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>w<span class="op">.</span>flush()<span class="op">?;</span>                                          <span class="co">// see below</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> f <span class="op">=</span> <span class="pp">OpenOptions::</span>new()<span class="op">.</span>append(<span class="cn">true</span>)<span class="op">.</span>create(<span class="cn">true</span>)<span class="op">.</span>open(<span class="st">&quot;log.txt&quot;</span>)<span class="op">?;</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>f<span class="op">.</span>write_all(<span class="st">b&quot;entry</span><span class="sc">\n</span><span class="st">&quot;</span>)<span class="op">?;</span></span></code></pre></div>
+<ul>
+<li>The <code class="verbatim">Read</code>, <code
+class="verbatim">Write</code>, <code class="verbatim">BufRead</code>,
+and <code class="verbatim">Seek</code> traits are implemented by files,
+sockets, stdin/stdout, and in-memory buffers (<code
+class="verbatim">Cursor&lt;Vec&lt;u8&gt;&gt;</code>, <code
+class="verbatim">&amp;[u8]</code>), so code written against <code
+class="verbatim">impl Read</code> or <code
+class="verbatim">impl Write</code> works with all of them and is easy to
+test.</li>
+<li>Files are closed when dropped. But a <code
+class="verbatim">drop</code> cannot report errors, and a <code
+class="verbatim">BufWriter</code> flushes in its destructor while
+ignoring failures. <strong>Call <code class="verbatim">flush()</code>
+(and for durability <code class="verbatim">sync_all()</code>) and check
+the result</strong> when the data matters.</li>
+<li><code class="verbatim">BufReader</code> / <code
+class="verbatim">BufWriter</code> batch syscalls; reading or writing a
+file byte by byte without them is slow.</li>
+<li><code class="verbatim">read_to_string</code> and <code
+class="verbatim">read</code> load everything into memory; stream large
+files.</li>
+</ul>
+<h3 id="standard-input-and-output">6. Standard input and output</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::io::</span><span class="op">{</span><span class="kw">self</span><span class="op">,</span> <span class="bu">BufRead</span><span class="op">,</span> BufWriter<span class="op">,</span> <span class="bu">Write</span><span class="op">};</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> line <span class="op">=</span> <span class="pp">String::</span>new()<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="pp">io::</span>stdin()<span class="op">.</span>read_line(<span class="op">&amp;</span><span class="kw">mut</span> line)<span class="op">?;</span>                   <span class="co">// includes the trailing newline</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> name <span class="op">=</span> line<span class="op">.</span>trim()<span class="op">;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> line <span class="kw">in</span> <span class="pp">io::</span>stdin()<span class="op">.</span>lock()<span class="op">.</span>lines() <span class="op">{</span> <span class="kw">let</span> line <span class="op">=</span> line<span class="op">?;</span> <span class="op">}</span>   <span class="co">// all lines</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">print!</span>(<span class="st">&quot;Name: &quot;</span>)<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="pp">io::</span>stdout()<span class="op">.</span>flush()<span class="op">?;</span>                               <span class="co">// stdout is line-buffered: flush before reading</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> stdout <span class="op">=</span> <span class="pp">io::</span>stdout()<span class="op">;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> out <span class="op">=</span> <span class="pp">BufWriter::</span>new(stdout<span class="op">.</span>lock())<span class="op">;</span>         <span class="co">// fast bulk output</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="pp">writeln!</span>(out<span class="op">,</span> <span class="st">&quot;{}&quot;</span><span class="op">,</span> <span class="dv">42</span>)<span class="op">?;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="pp">eprintln!</span>(<span class="st">&quot;warning: {}&quot;</span><span class="op">,</span> msg)<span class="op">;</span>                       <span class="co">// standard error, unbuffered</span></span></code></pre></div>
+<p><code class="verbatim">println!</code> panics if writing to stdout
+fails (for example a closed pipe); for tools used in pipelines, write
+with <code class="verbatim">writeln!</code> and handle the <code
+class="verbatim">BrokenPipe</code> error.</p>
+<h3 id="ioerror">7. io::Error</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::io::</span><span class="op">{</span><span class="kw">self</span><span class="op">,</span> ErrorKind<span class="op">};</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> <span class="pp">File::</span>open(path) <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(f) <span class="op">=&gt;</span> <span class="op">{</span> <span class="co">/* use f */</span> <span class="op">}</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(e) <span class="cf">if</span> e<span class="op">.</span>kind() <span class="op">==</span> <span class="pp">ErrorKind::</span>NotFound <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;no such file&quot;</span>)<span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(e) <span class="op">=&gt;</span> <span class="cf">return</span> <span class="cn">Err</span>(e)<span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> e <span class="op">=</span> <span class="pp">io::Error::</span>new(<span class="pp">ErrorKind::</span>InvalidData<span class="op">,</span> <span class="st">&quot;bad header&quot;</span>)<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>e<span class="op">.</span>raw_os_error()<span class="op">;</span>            <span class="co">// Some(errno) for OS errors</span></span></code></pre></div>
+<p>An <code class="verbatim">io::Error</code> wraps an OS error code
+(<code class="verbatim">errno</code>) or a custom error, and displays
+something like "No such file or directory (os error 2)".</p>
+<h3 id="paths-and-the-file-system">8. Paths and the file system</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::path::</span><span class="op">{</span><span class="dt">Path</span><span class="op">,</span> <span class="dt">PathBuf</span><span class="op">};</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> p <span class="op">=</span> <span class="pp">Path::</span>new(<span class="st">&quot;data/input.txt&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>p<span class="op">.</span>exists()<span class="op">;</span>   p<span class="op">.</span>is_file()<span class="op">;</span>   p<span class="op">.</span>extension()<span class="op">;</span>   p<span class="op">.</span>file_name()<span class="op">;</span>   p<span class="op">.</span>parent()<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> full<span class="op">:</span> <span class="dt">PathBuf</span> <span class="op">=</span> <span class="pp">Path::</span>new(<span class="st">&quot;data&quot;</span>)<span class="op">.</span>join(<span class="st">&quot;sub&quot;</span>)<span class="op">.</span>join(<span class="st">&quot;a.txt&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="pp">fs::</span>create_dir_all(<span class="st">&quot;out/cache&quot;</span>)<span class="op">?;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> entry <span class="kw">in</span> <span class="pp">fs::</span>read_dir(<span class="st">&quot;.&quot;</span>)<span class="op">?</span> <span class="op">{</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> entry <span class="op">=</span> entry<span class="op">?;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> entry<span class="op">.</span>path())<span class="op">;</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="pp">fs::</span>rename(<span class="st">&quot;tmp.txt&quot;</span><span class="op">,</span> <span class="st">&quot;final.txt&quot;</span>)<span class="op">?;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="pp">fs::</span>remove_file(<span class="st">&quot;old.txt&quot;</span>)<span class="op">?;</span></span></code></pre></div>
+<p><code class="verbatim">Path</code> and <code
+class="verbatim">PathBuf</code> are <code
+class="verbatim">&amp;str</code> and <code
+class="verbatim">String</code> for file names: they wrap OS strings,
+which may not be valid UTF-8, so conversion with <code
+class="verbatim">to_str()</code> returns an <code
+class="verbatim">Option</code>. Take <code
+class="verbatim">impl AsRef&lt;Path&gt;</code> in functions that accept
+paths.</p>
+<p>To update a file atomically, write a temporary file in the same
+directory, flush and <code class="verbatim">sync_all()</code> it, then
+<code class="verbatim">fs::rename</code> it over the original.</p>
+<h3 id="arguments-environment-exit-status">9. Arguments, environment,
+exit status</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>env<span class="op">;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::process::</span>ExitCode<span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> args<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">env::</span>args()<span class="op">.</span>collect()<span class="op">;</span>        <span class="co">// args[0] is the program name</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> home <span class="op">=</span> <span class="pp">env::</span>var(<span class="st">&quot;HOME&quot;</span>)<span class="op">;</span>                          <span class="co">// Result&lt;String, VarError&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> key <span class="op">=</span> <span class="pp">env::</span>var(<span class="st">&quot;API_KEY&quot;</span>)<span class="op">.</span>unwrap_or_default()<span class="op">;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> ExitCode <span class="op">{</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> run() <span class="op">{</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(()) <span class="op">=&gt;</span> <span class="pp">ExitCode::</span>SUCCESS<span class="op">,</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(e) <span class="op">=&gt;</span> <span class="op">{</span> <span class="pp">eprintln!</span>(<span class="st">&quot;error: {e}&quot;</span>)<span class="op">;</span> <span class="pp">ExitCode::</span>FAILURE <span class="op">}</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>For real command-line parsing use the <code
+class="verbatim">clap</code> crate. <code
+class="verbatim">std::env::args()</code> panics on arguments that are
+not valid Unicode; <code class="verbatim">args_os()</code> does not.</p>
+<h3 id="patterns-and-advice">10. Patterns and advice</h3>
+<ul>
+<li>Convert at boundaries: <code class="verbatim">map_err</code> (or
+<code class="verbatim">From</code>) where one layer's error becomes
+another's; add context (<code class="verbatim">anyhow</code> / <code
+class="verbatim">.context</code>) where a bare "No such file" would not
+tell the user which file.</li>
+<li>Do not discard errors silently. <code
+class="verbatim">let _ = f();</code> suppresses the <code
+class="verbatim">must_use</code> warning on purpose: comment why.</li>
+<li>Collect fallible results with <code
+class="verbatim">.collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()?</code>.</li>
+<li>Keep the <code class="verbatim">Ok</code> path unindented: return
+early with <code class="verbatim">?</code> rather than nesting <code
+class="verbatim">match</code>.</li>
+<li>Log with <code class="verbatim">eprintln!</code> for small tools;
+use <code class="verbatim">tracing</code> or <code
+class="verbatim">log</code> for services.</li>
+<li>Make error messages lowercase, without trailing punctuation, so they
+compose in chains ("reading config: no such file").</li>
+</ul>
+<h3 id="compared-to-c">11. Compared to C</h3>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Return code + <code class="verbatim">errno</code></td>
+<td><code class="verbatim">Result&lt;T, E&gt;</code>; the error value
+travels with the result</td>
+</tr>
+<tr>
+<td>Check each call by hand</td>
+<td><code class="verbatim">?</code>; ignoring a <code
+class="verbatim">Result</code> is a warning</td>
+</tr>
+<tr>
+<td><code class="verbatim">goto cleanup</code></td>
+<td><code class="verbatim">Drop</code> closes files and frees memory on
+every path</td>
+</tr>
+<tr>
+<td><code class="verbatim">fclose</code> result checked</td>
+<td><code class="verbatim">drop</code> ignores errors; call <code
+class="verbatim">flush()</code> / <code
+class="verbatim">sync_all()</code> yourself</td>
+</tr>
+<tr>
+<td><code class="verbatim">perror</code>, <code
+class="verbatim">strerror</code></td>
+<td><code class="verbatim">Display</code> of <code
+class="verbatim">io::Error</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">assert</code></td>
+<td><code class="verbatim">assert!</code>, <code
+class="verbatim">debug_assert!</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">setjmp</code> / <code
+class="verbatim">longjmp</code></td>
+<td>Panic unwinding (not for control flow)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Panics for bugs, <code class="verbatim">Result</code> for expected
+failures.</li>
+<li><code class="verbatim">?</code> propagates and converts through
+<code class="verbatim">From</code>; combinators handle the rest.</li>
+<li>Libraries define error enums (use <code
+class="verbatim">thiserror</code>); applications use <code
+class="verbatim">anyhow</code> with context.</li>
+<li>Wrap files and streams in <code class="verbatim">BufReader</code> /
+<code class="verbatim">BufWriter</code>; flush and check the result
+before you drop a writer.</li>
+<li>Write against <code class="verbatim">Read</code> / <code
+class="verbatim">Write</code> traits so code works with files, sockets,
+and test buffers.</li>
+<li>Do not swallow errors; add context where it helps the person reading
+them.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learn Rust</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/00-learn.html">
+  <meta property="og:title" content="Learn Rust">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/00-learn.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Learn Rust</h1>
+<h2 id="learn-rust-1">Learn Rust</h2>
+<h3 id="cargo-and-a-first-program">1. Cargo and a first program</h3>
+<div class="sourceCode" id="cb1" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> new hello</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> hello</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run          <span class="co"># build and run</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> check        <span class="co"># type-check without producing a binary</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clippy       <span class="co"># lints</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fmt</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code class="verbatim">println!</code> is a macro (the <code
+class="verbatim">!</code> marks it). Its format string is checked at
+compile time.</p>
+<h3 id="bindings-and-mutability">2. Bindings and mutability</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>          <span class="co">// immutable</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> y <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>      <span class="co">// mutable</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>y <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> x <span class="op">*</span> <span class="dv">2</span><span class="op">;</span>      <span class="co">// shadowing: a new binding that reuses the name</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="st">&quot;now a string&quot;</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="cn">MAX</span><span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>       <span class="co">// compile-time constant, type required</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> GREETING<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;hi&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>Bindings are immutable by default. Shadowing creates a new variable,
+so the type may change; <code class="verbatim">mut</code> changes the
+value of the same variable.</p>
+<h3 id="types">3. Types</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b<span class="op">:</span> <span class="dt">u8</span> <span class="op">=</span> <span class="dv">255</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> c<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>           <span class="co">// pointer-sized; used for indexing</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> d<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="dv">3.14</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> e<span class="op">:</span> <span class="dt">bool</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f<span class="op">:</span> <span class="dt">char</span> <span class="op">=</span> <span class="ch">&#39;z&#39;</span><span class="op">;</span>           <span class="co">// a Unicode scalar value, 4 bytes</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> t<span class="op">:</span> (<span class="dt">i32</span><span class="op">,</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">=</span> (<span class="dv">1</span><span class="op">,</span> <span class="st">&quot;a&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> arr<span class="op">:</span> [<span class="dt">i32</span><span class="op">;</span> <span class="dv">3</span>] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> slice<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">i32</span>] <span class="op">=</span> <span class="op">&amp;</span>arr[<span class="dv">0</span><span class="op">..</span><span class="dv">2</span>]<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> unit<span class="op">:</span> () <span class="op">=</span> ()<span class="op">;</span></span></code></pre></div>
+<ul>
+<li>Integers: <code class="verbatim">i8..i128</code>, <code
+class="verbatim">u8..u128</code>, <code class="verbatim">isize</code>,
+<code class="verbatim">usize</code>. Default integer type is <code
+class="verbatim">i32</code>, float is <code
+class="verbatim">f64</code>.</li>
+<li>Arithmetic overflow panics in debug builds and wraps in release
+builds by default. Use <code class="verbatim">checked_add</code>, <code
+class="verbatim">wrapping_add</code>, <code
+class="verbatim">saturating_add</code> to state the intent.</li>
+<li>There are no implicit numeric conversions. Write <code
+class="verbatim">x as u64</code> or <code
+class="verbatim">u64::from(x)</code> / <code
+class="verbatim">u8::try_from(x)</code>.</li>
+</ul>
+<h3 id="functions-and-expressions">4. Functions and expressions</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> square(x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">*</span> x              <span class="co">// no semicolon: this is the returned expression</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> early(x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> x <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    x</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Almost everything is an expression. Adding a semicolon turns an
+expression into a statement whose value is <code
+class="verbatim">()</code>, which is a common cause of "expected <code
+class="verbatim">i32</code>, found <code class="verbatim">()</code>"
+errors.</p>
+<h3 id="control-flow">5. Control flow</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> label <span class="op">=</span> <span class="cf">if</span> n <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span> <span class="st">&quot;pos&quot;</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="st">&quot;non-pos&quot;</span> <span class="op">};</span>   <span class="co">// if is an expression</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">loop</span> <span class="op">{</span>                       <span class="co">// infinite loop; break can return a value</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> n <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span> n <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">5</span> <span class="op">{</span> <span class="op">}</span>            <span class="co">// 0,1,2,3,4</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">5</span> <span class="op">{</span> <span class="op">}</span>           <span class="co">// 0..5 inclusive</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> <span class="op">&amp;</span>v <span class="op">{</span> <span class="op">}</span>              <span class="co">// iterate by reference</span></span></code></pre></div>
+<p>Conditions must be <code class="verbatim">bool</code>; there is no
+truthiness.</p>
+<h3 id="ownership">6. Ownership</h3>
+<p>Every value has one owner. When the owner goes out of scope, the
+value is dropped.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s1 <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hi&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s2 <span class="op">=</span> s1<span class="op">;</span>                 <span class="co">// ownership moves to s2</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// println!(&quot;{s1}&quot;);         // error: s1 was moved</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s3 <span class="op">=</span> s2<span class="op">.</span>clone()<span class="op">;</span>         <span class="co">// explicit deep copy</span></span></code></pre></div>
+<p>Types that are plain bit-copies implement <code
+class="verbatim">Copy</code> (integers, floats, <code
+class="verbatim">bool</code>, <code class="verbatim">char</code>, tuples
+and arrays of <code class="verbatim">Copy</code> types), so assignment
+copies instead of moving. Passing a value to a function moves it, unless
+it is <code class="verbatim">Copy</code>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> consume(s<span class="op">:</span> <span class="dt">String</span>) <span class="op">{</span> <span class="op">}</span>    <span class="co">// takes ownership</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>consume(s3)<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// s3 is no longer usable here</span></span></code></pre></div>
+<h3 id="borrowing">7. Borrowing</h3>
+<p>A reference borrows a value without taking ownership.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> len(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span> s<span class="op">.</span>len() <span class="op">}</span>        <span class="co">// shared (read-only) borrow</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> push(s<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="dt">String</span>) <span class="op">{</span> s<span class="op">.</span>push(<span class="ch">&#39;!&#39;</span>)<span class="op">;</span> <span class="op">}</span>       <span class="co">// exclusive (mutable) borrow</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hi&quot;</span>)<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>push(<span class="op">&amp;</span><span class="kw">mut</span> s)<span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> len(<span class="op">&amp;</span>s)<span class="op">;</span></span></code></pre></div>
+<p>At any moment a value may have either <strong>any number of shared
+references</strong> or <strong>exactly one mutable reference</strong>,
+never both. A reference may not outlive the value it points to. This
+rules out data races and use-after-free at compile time.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> r1 <span class="op">=</span> <span class="op">&amp;</span>s<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> r2 <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> s<span class="op">;</span>      <span class="co">// error if r1 is used afterwards</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{r1}&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Borrows end at their last use (non-lexical lifetimes), not at the end
+of the block.</p>
+<h3 id="lifetimes">8. Lifetimes</h3>
+<p>Lifetime annotations describe how the lifetimes of references relate.
+They do not change how long anything lives.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> longest<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(a<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span><span class="op">,</span> b<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a<span class="op">.</span>len() <span class="op">&gt;=</span> b<span class="op">.</span>len() <span class="op">{</span> a <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> b <span class="op">}</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The result cannot outlive either input. Most signatures need no
+annotation because of elision rules. Structs holding references need
+them:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Parser<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    input<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span><span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="structs-enums-and-impl">9. Structs, enums, and impl</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="at">)]</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    y<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Point <span class="op">{</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> new(x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> Point <span class="op">{</span> x<span class="op">,</span> y <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> norm(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span> (<span class="kw">self</span><span class="op">.</span>x <span class="op">*</span> <span class="kw">self</span><span class="op">.</span>x <span class="op">+</span> <span class="kw">self</span><span class="op">.</span>y <span class="op">*</span> <span class="kw">self</span><span class="op">.</span>y)<span class="op">.</span>sqrt() <span class="op">}</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> scale(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> k<span class="op">:</span> <span class="dt">f64</span>) <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>x <span class="op">*=</span> k<span class="op">;</span> <span class="kw">self</span><span class="op">.</span>y <span class="op">*=</span> k<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> p <span class="op">=</span> <span class="pp">Point::</span>new(<span class="dv">3.0</span><span class="op">,</span> <span class="dv">4.0</span>)<span class="op">;</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>p<span class="op">.</span>scale(<span class="dv">2.0</span>)<span class="op">;</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> p)<span class="op">;</span></span></code></pre></div>
+<p>Enums carry data per variant (they are sum types):</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Shape <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    Circle <span class="op">{</span> r<span class="op">:</span> <span class="dt">f64</span> <span class="op">},</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    Rect <span class="op">{</span> w<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> h<span class="op">:</span> <span class="dt">f64</span> <span class="op">},</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    Unit<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="pattern-matching">10. Pattern matching</h3>
+<p><code class="verbatim">match</code> must be exhaustive.</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> area(s<span class="op">:</span> <span class="op">&amp;</span>Shape) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> s <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Shape::</span>Circle <span class="op">{</span> r <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">std::f64::consts::</span>PI <span class="op">*</span> r <span class="op">*</span> r<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Shape::</span>Rect <span class="op">{</span> w<span class="op">,</span> h <span class="op">}</span> <span class="op">=&gt;</span> w <span class="op">*</span> h<span class="op">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Shape::</span>Unit <span class="op">=&gt;</span> <span class="dv">1.0</span><span class="op">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> n <span class="op">{</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span> <span class="op">=&gt;</span> <span class="st">&quot;zero&quot;</span><span class="op">,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span><span class="op">..=</span><span class="dv">9</span> <span class="op">=&gt;</span> <span class="st">&quot;small&quot;</span><span class="op">,</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    x <span class="cf">if</span> x <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">=&gt;</span> <span class="st">&quot;negative&quot;</span><span class="op">,</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=&gt;</span> <span class="st">&quot;large&quot;</span><span class="op">,</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(v) <span class="op">=</span> opt <span class="op">{</span> <span class="co">/* use v */</span> <span class="op">}</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="cn">Some</span>(v) <span class="op">=</span> opt <span class="cf">else</span> <span class="op">{</span> <span class="cf">return</span><span class="op">;</span> <span class="op">};</span>      <span class="co">// let-else</span></span></code></pre></div>
+<h3 id="option-and-result">11. Option and Result</h3>
+<p>There is no null and no exceptions. Absence and failure are
+values.</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="dt">Option</span><span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span> <span class="cn">Some</span>(T)<span class="op">,</span> <span class="cn">None</span> <span class="op">}</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="dt">Result</span><span class="op">&lt;</span>T<span class="op">,</span> E<span class="op">&gt;</span> <span class="op">{</span> <span class="cn">Ok</span>(T)<span class="op">,</span> <span class="cn">Err</span>(E) <span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::</span>ParseIntError<span class="op">;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> parse(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">,</span> ParseIntError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> n<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> s<span class="op">.</span>trim()<span class="op">.</span>parse()<span class="op">?;</span>      <span class="co">// ? returns early on Err</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(n <span class="op">*</span> <span class="dv">2</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> parse(<span class="st">&quot;21&quot;</span>)<span class="op">?;</span>                    <span class="co">// only inside a function returning Result</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> opt<span class="op">.</span>unwrap_or(<span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> m <span class="op">=</span> opt<span class="op">.</span>map(<span class="op">|</span>x<span class="op">|</span> x <span class="op">+</span> <span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<p><code class="verbatim">unwrap()</code> and <code
+class="verbatim">expect("msg")</code> panic on <code
+class="verbatim">None</code> / <code class="verbatim">Err</code>.
+Reserve them for tests, prototypes, and cases where failure is a
+bug.</p>
+<h3 id="traits-and-generics">12. Traits and generics</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Area <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> area(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span><span class="op">;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> describe(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span>              <span class="co">// default method</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">format!</span>(<span class="st">&quot;area = {}&quot;</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span>area())</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Area <span class="cf">for</span> Point <span class="op">{</span> <span class="kw">fn</span> area(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span> <span class="dv">0.0</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> total<span class="op">&lt;</span>T<span class="op">:</span> Area<span class="op">&gt;</span>(items<span class="op">:</span> <span class="op">&amp;</span>[T]) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    items<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>i<span class="op">|</span> i<span class="op">.</span>area())<span class="op">.</span>sum()</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> show(x<span class="op">:</span> <span class="op">&amp;</span><span class="kw">impl</span> <span class="pp">std::fmt::</span><span class="bu">Display</span>) <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{x}&quot;</span>)<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<p>Generics are monomorphized (one specialized copy per type, no runtime
+cost). For runtime polymorphism use trait objects: <code
+class="verbatim">Box&lt;dyn Area&gt;</code> or <code
+class="verbatim">&amp;dyn Area</code>.</p>
+<h3 id="collections-and-iterators">13. Collections and iterators</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">3</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">2</span>]<span class="op">;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>push(<span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>sort()<span class="op">;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::collections::</span>HashMap<span class="op">;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> m<span class="op">:</span> HashMap<span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">HashMap::</span>new()<span class="op">;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>m<span class="op">.</span>insert(<span class="st">&quot;a&quot;</span><span class="op">.</span>to_string()<span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>m<span class="op">.</span>entry(<span class="st">&quot;a&quot;</span><span class="op">.</span>to_string())<span class="op">.</span>or_insert(<span class="dv">0</span>) <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(n) <span class="op">=</span> m<span class="op">.</span>get(<span class="st">&quot;a&quot;</span>) <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> squares<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>x<span class="op">|</span> x <span class="op">*</span> x)<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> evens<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>filter(<span class="op">|</span>x<span class="op">|</span> <span class="op">**</span>x <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>)<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> sum<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>sum()<span class="op">;</span></span></code></pre></div>
+<p>Iterators are lazy; nothing runs until a consumer such as <code
+class="verbatim">collect</code>, <code class="verbatim">sum</code>, or a
+<code class="verbatim">for</code> loop. <code
+class="verbatim">iter()</code> yields references, <code
+class="verbatim">iter_mut()</code> mutable references, <code
+class="verbatim">into_iter()</code> takes ownership.</p>
+<h3 id="strings">14. Strings</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;hello&quot;</span><span class="op">;</span>               <span class="co">// borrowed, UTF-8 string slice</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> owned <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>owned<span class="op">.</span>push_str(<span class="st">&quot; world&quot;</span>)<span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> t <span class="op">=</span> <span class="pp">format!</span>(<span class="st">&quot;{owned}!&quot;</span>)<span class="op">;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">&amp;</span>owned[<span class="dv">0</span><span class="op">..</span><span class="dv">5</span>]<span class="op">;</span>                         <span class="co">// byte range; panics if not on a char boundary</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>owned<span class="op">.</span>chars()<span class="op">.</span>count()<span class="op">;</span>                <span class="co">// number of Unicode scalar values</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>owned<span class="op">.</span>len()<span class="op">;</span>                          <span class="co">// number of bytes</span></span></code></pre></div>
+<p>Strings are UTF-8, so they are not indexable by integer. Take <code
+class="verbatim">&amp;str</code> in parameters; own a <code
+class="verbatim">String</code> when you need to store or modify.</p>
+<h3 id="smart-pointers-and-interior-mutability">15. Smart pointers and
+interior mutability</h3>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b <span class="op">=</span> <span class="pp">Box::</span>new(<span class="dv">5</span>)<span class="op">;</span>                          <span class="co">// heap allocation, single owner</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::rc::</span>Rc<span class="op">;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::cell::</span>RefCell<span class="op">;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> shared <span class="op">=</span> <span class="pp">Rc::</span>new(<span class="pp">RefCell::</span>new(<span class="pp">vec!</span>[<span class="dv">1</span>]))<span class="op">;</span>  <span class="co">// single-threaded shared ownership</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>shared<span class="op">.</span>borrow_mut()<span class="op">.</span>push(<span class="dv">2</span>)<span class="op">;</span>                  <span class="co">// borrow rules checked at run time</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span><span class="op">{</span>Arc<span class="op">,</span> Mutex<span class="op">};</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> counter <span class="op">=</span> <span class="pp">Arc::</span>new(<span class="pp">Mutex::</span>new(<span class="dv">0</span>))<span class="op">;</span>        <span class="co">// thread-safe version</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>counter<span class="op">.</span>lock()<span class="op">.</span>unwrap() <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span></code></pre></div>
+<p><code class="verbatim">Rc</code> / <code class="verbatim">Arc</code>
+use reference counting. <code class="verbatim">RefCell</code> panics if
+you violate the borrow rules at run time. <code
+class="verbatim">Rc</code> is not <code class="verbatim">Send</code>, so
+the compiler rejects it across threads.</p>
+<h3 id="modules-and-crates">16. Modules and crates</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> geometry <span class="op">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">struct</span> Point <span class="op">{</span> <span class="kw">pub</span> x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> <span class="kw">pub</span> y<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> origin() <span class="op">-&gt;</span> Point <span class="op">{</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dv">0.0</span><span class="op">,</span> y<span class="op">:</span> <span class="dv">0.0</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">geometry::</span>origin<span class="op">;</span></span></code></pre></div>
+<p>Items are private by default; <code class="verbatim">pub</code>
+exposes them. A file <code class="verbatim">foo.rs</code> declared with
+<code class="verbatim">mod foo;</code> becomes a module. Dependencies go
+in <code class="verbatim">Cargo.toml</code>.</p>
+<h3 id="unsafe">17. unsafe</h3>
+<p><code class="verbatim">unsafe</code> unlocks a small set of
+operations the compiler cannot verify: dereferencing raw pointers,
+calling unsafe functions (including FFI), accessing mutable statics, and
+implementing unsafe traits.</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> p <span class="op">=</span> <span class="op">&amp;</span>x <span class="kw">as</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">i32</span><span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="op">*</span>p <span class="op">};</span></span></code></pre></div>
+<p>It does not turn off the borrow checker; it shifts the proof
+obligation to you. Keep unsafe blocks small and wrap them in a safe
+API.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Immutable by default; <code class="verbatim">mut</code> is
+explicit.</li>
+<li>One owner per value; assignment and function calls move unless the
+type is <code class="verbatim">Copy</code>.</li>
+<li>Many readers or one writer, never both, and references cannot
+outlive their referent.</li>
+<li>No null, no exceptions: use <code class="verbatim">Option</code> and
+<code class="verbatim">Result</code> with <code
+class="verbatim">?</code>.</li>
+<li><code class="verbatim">match</code> is exhaustive; enums carry
+data.</li>
+<li>Iterators are lazy and compile to tight loops.</li>
+<li>Run <code class="verbatim">cargo clippy</code> and read the compiler
+errors; they are usually precise.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

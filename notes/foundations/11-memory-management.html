@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memory Management</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/11-memory-management.html">
+  <meta property="og:title" content="Memory Management">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/11-memory-management.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Memory Management</h1>
+<h2 id="memory-management-1">Memory Management</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Most production incidents involving "performance" or "stability"
+touch memory: latency spikes from garbage collection, OOM kills, leaks
+that appear after a week, fragmentation, cache misses, and security bugs
+from memory unsafety. At Staff scope you will:</p>
+<ul>
+<li>understand the hardware path (caches, virtual memory) well enough to
+predict why one layout is 10x faster than another;</li>
+<li>choose and tune a memory-management strategy (manual, ownership,
+reference counting, tracing GC, arenas) for a service's latency and
+footprint targets;</li>
+<li>diagnose leaks and growth in production with the right tools and a
+clear mental model of what the process, the runtime, and the container
+each count;</li>
+<li>weigh the security cost of memory-unsafe code against
+alternatives.</li>
+</ul>
+<p>Companion files: <code class="verbatim">05_data-structures.org</code>
+(layouts), <code class="verbatim">03_data-representation.org</code>,
+<code class="verbatim">12_concurrency.org</code> (memory models), and
+the memory file in the C notes and the ownership file in the Rust
+notes.</p>
+<h3 id="the-memory-hierarchy">1. The memory hierarchy</h3>
+<p>Faster storage is smaller and costs more; programs run well when
+their working set stays in the faster levels. Orders of magnitude
+(hardware varies; use them for intuition, not for prediction):</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Typical latency</th>
+<th>Typical size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registers</td>
+<td>under 1 ns</td>
+<td>a few hundred bytes</td>
+</tr>
+<tr>
+<td>L1 cache</td>
+<td>about 1 ns</td>
+<td>tens of KB per core</td>
+</tr>
+<tr>
+<td>L2 cache</td>
+<td>a few ns</td>
+<td>hundreds of KB to MB</td>
+</tr>
+<tr>
+<td>L3 cache (shared)</td>
+<td>10 to 40 ns</td>
+<td>tens of MB</td>
+</tr>
+<tr>
+<td>Main memory (DRAM)</td>
+<td>about 100 ns</td>
+<td>GBs to TBs</td>
+</tr>
+<tr>
+<td>NVMe SSD</td>
+<td>50 to 100 microseconds</td>
+<td>TBs</td>
+</tr>
+<tr>
+<td>Network round trip, same datacenter</td>
+<td>about 0.5 ms</td>
+<td></td>
+</tr>
+<tr>
+<td>Spinning disk seek</td>
+<td>about 10 ms</td>
+<td>TBs</td>
+</tr>
+<tr>
+<td>Cross-continent network round trip</td>
+<td>100+ ms</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Data moves in <strong>cache lines</strong> (commonly 64 bytes).
+Sequential access benefits from hardware prefetching; random pointer
+chasing pays full DRAM latency for each hop.</li>
+<li><strong>Bandwidth versus latency</strong>: streaming loops are
+limited by bandwidth; pointer-heavy code by latency.</li>
+<li><strong>Multicore</strong>: each core has private caches; a
+<strong>cache-coherence protocol</strong> (MESI and relatives) keeps
+them consistent. Writing to a line another core has cached forces
+invalidations (<strong>false sharing</strong> when unrelated variables
+share a line).</li>
+<li><strong>NUMA</strong>: on multi-socket machines, memory attached to
+another socket is slower; pin threads and memory together for
+latency-sensitive services.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Traversal order changes speed by large factors: same work, different cache behavior. */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _POSIX_C_SOURCE </span><span class="dv">199309</span><span class="bu">L</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;time.h&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define N </span><span class="dv">4096</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">double</span> now<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> timespec t<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    clock_gettime<span class="op">(</span>CLOCK_MONOTONIC<span class="op">,</span> <span class="op">&amp;</span>t<span class="op">);</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">double</span><span class="op">)</span>t<span class="op">.</span>tv_sec <span class="op">+</span> <span class="op">(</span><span class="dt">double</span><span class="op">)</span>t<span class="op">.</span>tv_nsec <span class="op">*</span> <span class="fl">1e-9</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="op">*</span>a <span class="op">=</span> malloc<span class="op">(</span><span class="kw">sizeof</span><span class="op">(</span><span class="dt">int</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)</span>N <span class="op">*</span> N<span class="op">);</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>a <span class="op">==</span> NULL<span class="op">)</span> <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)</span>N <span class="op">*</span> N<span class="op">;</span> i<span class="op">++)</span> a<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">long</span> sum <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> t0 <span class="op">=</span> now<span class="op">();</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> N<span class="op">;</span> i<span class="op">++)</span>                 <span class="co">/* row-major: consecutive addresses */</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> N<span class="op">;</span> j<span class="op">++)</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>            sum <span class="op">+=</span> a<span class="op">[(</span><span class="dt">size_t</span><span class="op">)</span>i <span class="op">*</span> N <span class="op">+</span> j<span class="op">];</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> t1 <span class="op">=</span> now<span class="op">();</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> N<span class="op">;</span> j<span class="op">++)</span>                 <span class="co">/* column-major: stride of N ints */</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> N<span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>            sum <span class="op">+=</span> a<span class="op">[(</span><span class="dt">size_t</span><span class="op">)</span>i <span class="op">*</span> N <span class="op">+</span> j<span class="op">];</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> t2 <span class="op">=</span> now<span class="op">();</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;row </span><span class="sc">%.3f</span><span class="st"> s, column </span><span class="sc">%.3f</span><span class="st"> s (sum </span><span class="sc">%ld</span><span class="st">)</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> t1 <span class="op">-</span> t0<span class="op">,</span> t2 <span class="op">-</span> t1<span class="op">,</span> sum<span class="op">);</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    free<span class="op">(</span>a<span class="op">);</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Build with <code class="verbatim">cc -O1 -o trav trav.c</code> and
+run it; expect the column traversal to be several times slower on
+typical hardware. Try changing N and watch behavior at cache-size
+boundaries.</p>
+<h3 id="virtual-memory-and-the-process-address-space">2. Virtual memory
+and the process address space</h3>
+<ul>
+<li>Each process sees a private <strong>virtual address space</strong>;
+the MMU and OS map <em>pages</em> (typically 4 KiB) to physical frames
+through <strong>page tables</strong>, cached by the
+<strong>TLB</strong>. A TLB miss costs a page-table walk; huge pages (2
+MiB or 1 GiB) reduce misses for large working sets.</li>
+<li>A <strong>page fault</strong> occurs when a page is not mapped or
+resident: the OS allocates a zeroed page (minor fault), reads it from
+disk (major fault), or kills the process (invalid access).</li>
+<li>Typical layout: text (code), data and BSS (globals), heap (grows up
+via <code class="verbatim">brk</code> or <code
+class="verbatim">mmap</code>), memory-mapped regions and shared
+libraries, thread stacks (grow down). <strong>ASLR</strong> randomizes
+bases to hinder exploits.</li>
+<li><strong>Overcommit</strong>: Linux may promise more virtual memory
+than exists; allocation succeeds and the failure arrives later, when
+pages are touched, as an OOM kill. Memory limits in containers (cgroups)
+enforce a hard cap that kills the process when it is exceeded.</li>
+<li><strong>Measures</strong>: VSZ (virtual size) is rarely the useful
+number; RSS (resident set) counts physical pages including shared ones;
+PSS divides shared pages among processes; "working set" is the pages
+actively used. Container accounting may include page cache; read the
+platform's definition before alerting on it.</li>
+<li><code class="verbatim">mmap</code> maps files or anonymous memory;
+it supports shared memory between processes and zero-copy file access,
+with surprises (page faults on first touch, I/O errors surfacing as
+signals).</li>
+</ul>
+<h3 id="manual-allocation-and-allocators">3. Manual allocation and
+allocators</h3>
+<p><code class="verbatim">malloc</code> and <code
+class="verbatim">free</code> (C), <code class="verbatim">new</code> and
+<code class="verbatim">delete</code> (C++) hand control to the
+programmer. An allocator manages blocks obtained from the OS (<code
+class="verbatim">brk</code>, <code class="verbatim">mmap</code>):</p>
+<ul>
+<li><strong>Free lists and size classes</strong>: requests round up to a
+size class; each class keeps a list of free blocks (segregated fits).
+Large requests go directly to <code class="verbatim">mmap</code>.</li>
+<li><strong>Fragmentation</strong>: <em>internal</em> (wasted space
+inside blocks from rounding) and <em>external</em> (free memory split
+into pieces too small to satisfy a request). Long-running processes with
+mixed lifetimes suffer most.</li>
+<li><strong>Concurrency</strong>: global locks are slow; modern
+allocators use per-thread caches and per-core arenas (glibc ptmalloc
+arenas, jemalloc, tcmalloc, mimalloc). Choice of allocator can change
+throughput, footprint, and fragmentation by large factors for
+allocation-heavy services; measure before switching.</li>
+<li><strong>Alternatives to general-purpose allocation</strong>:
+<ul>
+<li><strong>Arena / region / bump allocators</strong>: allocate by
+advancing a pointer; free everything at once (per request, per frame,
+per compilation unit). Extremely fast; no per-object free; lifetime is
+the arena's.</li>
+<li><strong>Pool / slab allocators</strong>: fixed-size object pools
+with O(1) allocate/free and no external fragmentation (kernel slab
+caches).</li>
+<li><strong>Stack allocation</strong> and small-object optimizations
+(short-string and small-vector inline buffers).</li>
+</ul></li>
+<li><strong>Bug classes</strong>: leaks, use-after-free, double free,
+buffer overflow, uninitialized reads, invalid free. They are undefined
+behavior (see the C notes) and the main source of exploitable
+vulnerabilities in C and C++ code.</li>
+</ul>
+<h3 id="ownership-raii-and-regions">4. Ownership, RAII, and regions</h3>
+<ul>
+<li><strong>RAII</strong> (C++): a resource's lifetime is tied to an
+object's scope; destructors release it, including on exceptions. Smart
+pointers: <code class="verbatim">unique_ptr</code> (sole owner), <code
+class="verbatim">shared_ptr</code> (reference counted).</li>
+<li><strong>Ownership and borrowing</strong> (Rust): every value has one
+owner; references borrow under compile-time rules; the compiler inserts
+drops. No GC and no run-time overhead, and use-after-free, double free,
+and data races are rejected statically in safe code. Cost: some designs
+(graphs, intrusive structures, self-references) require indices, arenas,
+<code class="verbatim">Rc=/=Arc</code>, or <code
+class="verbatim">unsafe</code>.</li>
+<li><strong>Region-based memory management</strong> groups allocations
+by lifetime region; Rust lifetimes and arena crates are practical
+forms.</li>
+<li><strong>Escape analysis</strong> (JVM, Go): the compiler proves an
+object does not outlive its function and allocates it on the stack,
+removing GC work.</li>
+</ul>
+<h3 id="automatic-memory-management">5. Automatic memory management</h3>
+<p><strong>Reference counting</strong> (RC): each object stores a count
+of references; it is freed when the count hits zero (Swift ARC, Python,
+Rust <code class="verbatim">Rc=/=Arc</code>, C++ <code
+class="verbatim">shared_ptr</code>, COM, Objective-C).</p>
+<ul>
+<li>Pros: deterministic destruction, incremental cost, simple.</li>
+<li>Cons: counts cost time (atomic updates on shared objects are
+expensive and contended); <strong>cycles are never freed</strong>
+without a backup collector or weak references; cascading frees cause
+pauses; poor locality.</li>
+</ul>
+<p><strong>Tracing garbage collection</strong> finds live objects by
+reachability from <em>roots</em> (stack, registers, globals) and
+reclaims the rest:</p>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Idea</th>
+<th>Properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mark-sweep</td>
+<td>Mark reachable objects, sweep unmarked ones to free lists</td>
+<td>Simple; fragmentation; cost proportional to heap size</td>
+</tr>
+<tr>
+<td>Mark-compact</td>
+<td>Mark, then slide live objects together</td>
+<td>No fragmentation; extra passes</td>
+</tr>
+<tr>
+<td>Copying (semispace)</td>
+<td>Copy live objects to a fresh space; discard the old one</td>
+<td>Allocation is a pointer bump; cost proportional to live data; needs
+2x space</td>
+</tr>
+<tr>
+<td>Generational</td>
+<td>Young objects die young (<em>weak generational hypothesis</em>):
+collect a small young generation often, old generation rarely</td>
+<td>Big win for typical programs; needs write barriers to track
+old-to-young pointers</td>
+</tr>
+<tr>
+<td>Incremental / concurrent</td>
+<td>Interleave collection with the program (tri-color marking)</td>
+<td>Shorter pauses; needs read or write barriers; more overhead</td>
+</tr>
+<tr>
+<td>Reference counting plus cycle detection</td>
+<td>RC with a tracing backup</td>
+<td>Used by CPython</td>
+</tr>
+</tbody>
+</table>
+<p>Throughput, pause time, and footprint trade off against each other:
+you can usually improve two at the cost of the third. Modern production
+collectors (JVM's G1, ZGC, and Shenandoah; Go's concurrent collector;
+the .NET GC) emphasize low pauses with concurrent marking and sometimes
+concurrent compaction.</p>
+<p><strong>Practical GC engineering</strong>:</p>
+<ul>
+<li><strong>Allocation rate and live-set size</strong> drive GC cost.
+Reduce allocation in hot paths (reuse buffers, avoid boxing, use
+primitive arrays), and watch the live heap after full collections.</li>
+<li><strong>Pauses versus throughput</strong>: batch jobs want
+throughput; interactive services want bounded pauses. Match the
+collector and heap size to the container's memory limit and CPU
+quota.</li>
+<li>Leaks in GC languages are still leaks: unintentionally reachable
+objects (unbounded caches, listener registries, thread-local data,
+static collections, goroutines or tasks that never finish).</li>
+<li>Finalizers and weak references are for rare cases; do not use them
+to manage scarce resources (files, sockets); use explicit scoping (<code
+class="verbatim">try-with-resources</code>, <code
+class="verbatim">defer</code>, <code class="verbatim">with</code>).</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference counting leaks cycles; tracing finds them.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Heap:</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.objects, <span class="va">self</span>.roots, <span class="va">self</span>.next_id <span class="op">=</span> {}, <span class="bu">set</span>(), <span class="dv">0</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> alloc(<span class="va">self</span>, refs<span class="op">=</span>()):</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> <span class="va">self</span>.next_id</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_id <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.objects[i] <span class="op">=</span> <span class="bu">list</span>(refs)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> i</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> refcounts(<span class="va">self</span>):</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        rc <span class="op">=</span> {o: <span class="dv">0</span> <span class="cf">for</span> o <span class="kw">in</span> <span class="va">self</span>.objects}</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> refs <span class="kw">in</span> <span class="va">self</span>.objects.values():</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> r <span class="kw">in</span> refs:</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                rc[r] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> r <span class="kw">in</span> <span class="va">self</span>.roots:</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            rc[r] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> rc</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> mark_sweep(<span class="va">self</span>):</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        marked, stack <span class="op">=</span> <span class="bu">set</span>(), <span class="bu">list</span>(<span class="va">self</span>.roots)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> stack:</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            o <span class="op">=</span> stack.pop()</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> o <span class="kw">not</span> <span class="kw">in</span> marked:</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                marked.add(o)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>                stack.extend(<span class="va">self</span>.objects[o])</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        freed <span class="op">=</span> <span class="bu">sorted</span>(o <span class="cf">for</span> o <span class="kw">in</span> <span class="va">self</span>.objects <span class="cf">if</span> o <span class="kw">not</span> <span class="kw">in</span> marked)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> o <span class="kw">in</span> freed:</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            <span class="kw">del</span> <span class="va">self</span>.objects[o]</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> freed</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>h <span class="op">=</span> Heap()</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> h.alloc()</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> h.alloc([a])</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>h.objects[a].append(b)                  <span class="co"># cycle a &lt;-&gt; b</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>h.roots.add(a)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> h.refcounts()[a] <span class="op">==</span> <span class="dv">2</span>            <span class="co"># root + b</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>h.roots.discard(a)                      <span class="co"># drop the only external reference</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> h.refcounts()</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> rc[a] <span class="op">==</span> <span class="dv">1</span> <span class="kw">and</span> rc[b] <span class="op">==</span> <span class="dv">1</span>        <span class="co"># counts never reach zero: reference counting leaks the cycle</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> h.mark_sweep() <span class="op">==</span> [a, b]         <span class="co"># tracing sees both unreachable and frees them</span></span></code></pre></div>
+<h3 id="memory-safety-and-security">6. Memory safety and security</h3>
+<ul>
+<li><strong>Spatial safety</strong>: no access outside an object's
+bounds (buffer overflows). <strong>Temporal safety</strong>: no access
+after the object's lifetime ends (use-after-free). Memory-safe languages
+(Rust, Go, Java, Python, C#, Swift) enforce both in safe code.</li>
+<li>A large fraction of severe security vulnerabilities in large C and
+C++ codebases are memory-safety bugs (several vendors have published
+figures of roughly two thirds or more); this is a main reason for
+migrating critical components to memory-safe languages.</li>
+<li><strong>Mitigations</strong> for unsafe code: stack canaries,
+non-executable stacks (NX/DEP), ASLR, control-flow integrity, hardened
+allocators, bounds-checked containers, compiler hardening flags,
+sanitizers (ASan, UBSan, MSan, TSan) in testing, fuzzing, and hardware
+features (memory tagging, pointer authentication, CHERI
+capabilities).</li>
+<li><strong>Defense in depth</strong>: sandboxing, privilege separation,
+and memory-safe parsers for untrusted input.</li>
+</ul>
+<h3 id="performance-engineering-for-memory">7. Performance engineering
+for memory</h3>
+<ul>
+<li><strong>Locality</strong>: keep hot data contiguous and small;
+prefer arrays and indices to pointer graphs; split hot and cold fields
+(struct of arrays); compact structures (smaller integer types, packed
+flags); align to cache lines when needed.</li>
+<li><strong>Avoid false sharing</strong>: pad per-thread counters; shard
+hot counters.</li>
+<li><strong>Reduce allocation</strong>: pool or reuse objects,
+preallocate, use arenas for request-scoped data, avoid temporary strings
+and boxed numbers in loops.</li>
+<li><strong>Prefetching and batching</strong>: process data in batches
+that fit in cache; software prefetch only after measuring.</li>
+<li><strong>TLB and huge pages</strong>: large heaps benefit from huge
+pages (transparent huge pages can also cause latency spikes; test).</li>
+<li><strong>Measure</strong>: <code class="verbatim">perf stat</code>
+and <code class="verbatim">perf record</code> for cache-miss counters,
+<code class="verbatim">valgrind --tool=cachegrind</code> and <code
+class="verbatim">massif</code>, heap profilers (pprof for Go,
+async-profiler and JFR for the JVM, <code
+class="verbatim">heaptrack</code> and jemalloc profiling for native
+code), allocation tracers, and flame graphs. Establish a baseline,
+change one thing at a time.</li>
+</ul>
+<h3 id="diagnosing-leaks-and-growth-in-production">8. Diagnosing leaks
+and growth in production</h3>
+<ol>
+<li><strong>Define the symptom</strong>: steady growth, step growth,
+sawtooth, or fragmentation (RSS grows while live data does not).</li>
+<li><strong>Pick the right counter</strong>: process RSS, runtime heap
+in use, GC live-set after a full collection, native (off-heap) memory,
+mapped files, thread stacks, container working set.</li>
+<li><strong>Take two heap profiles</strong> some time apart and diff
+them; find the allocation sites and the retaining paths of the growing
+objects.</li>
+<li><strong>Common causes</strong>: unbounded caches or maps keyed by
+user or request, missing eviction, listeners or callbacks never
+unregistered, long-lived references to large buffers (a slice keeping a
+huge array alive), thread/goroutine/task leaks, connection pools without
+limits, fragmentation from mixed-lifetime allocations, a native library
+leaking outside the managed heap.</li>
+<li><strong>Mitigate and prevent</strong>: bound every cache and queue;
+add memory limits and alerts on the right metric; run soak tests;
+restart policies as a stopgap (not a fix); add heap-profile endpoints
+and ship runtime metrics.</li>
+<li><strong>Capacity</strong>: size memory limits from measured peak
+plus headroom; account for GC overhead (copying collectors need extra
+space); load-test at the limit.</li>
+</ol>
+<h3 id="self-check">9. Self-check</h3>
+<ol>
+<li>Explain why <code class="verbatim">for i, for j: a[i][j]</code> and
+<code class="verbatim">for j, for i: a[i][j]</code> differ in speed in a
+row-major language, and by roughly how much.</li>
+<li>A JVM service has p99 latency spikes every few minutes. How do you
+find out whether GC is responsible, and what would you tune?</li>
+<li>Compare arenas, reference counting, and tracing GC for a compiler's
+AST nodes.</li>
+<li>Why does reference counting leak cycles, and how do Python, Swift,
+and Rust each address it?</li>
+<li>What is the weak generational hypothesis, and what program behavior
+violates it?</li>
+<li>A container is OOM-killed though the heap profile shows 40% of the
+limit used. Name five places the rest may be.</li>
+<li>What is false sharing, how do you detect it, and how do you fix
+it?</li>
+</ol>
+<h3 id="exercises">10. Exercises</h3>
+<ul>
+<li>Warm-up: write the traversal benchmark above, plot time versus N,
+and find the cache-size boundaries.</li>
+<li>Core: implement an arena allocator and a fixed-size pool allocator
+in C or Rust; compare with <code class="verbatim">malloc</code> on an
+allocation-heavy workload.</li>
+<li>Core: implement a mark-sweep collector for a toy Lisp-like object
+model (see the garbage-collection chapter of <em>Crafting
+Interpreters</em>), then add a copying collector.</li>
+<li>Core: write a program with a deliberate leak in your favorite
+managed language; find it with a heap profiler.</li>
+<li>Stretch: add generational collection with a write barrier to the toy
+collector and measure pause times.</li>
+<li>Stretch: read the first chapters of the Garbage Collection Handbook
+and implement the tri-color invariant check as a test.</li>
+<li>Stretch: read the relevant sections of Drepper's paper and reproduce
+its false-sharing and cache-associativity experiments.</li>
+</ul>
+<h3 id="resources">11. Resources</h3>
+<ul>
+<li>Arpaci-Dusseau and Arpaci-Dusseau, <em>Operating Systems: Three Easy
+Pieces</em> (free; virtualization of memory: address spaces, paging,
+TLBs, swapping): <a
+href="https://pages.cs.wisc.edu/~remzi/OSTEP/">https://pages.cs.wisc.edu/~remzi/OSTEP/</a></li>
+<li>Drepper, <em>What Every Programmer Should Know About Memory</em>
+(CPU caches, virtual memory, NUMA, programmer-visible effects): <a
+href="http://people.redhat.com/drepper/cpumemory.pdf">http://people.redhat.com/drepper/cpumemory.pdf</a></li>
+<li>Jones, Hosking, Moss, <em>The Garbage Collection Handbook: The Art
+of Automatic Memory Management</em> (2nd ed., 2023; the standard
+reference on algorithms and engineering trade-offs).</li>
+<li>Nystrom, <em>Crafting Interpreters</em>, the chapter on garbage
+collection (a working mark-sweep collector in C): <a
+href="https://craftinginterpreters.com">https://craftinginterpreters.com</a></li>
+<li>Bryant and O'Hallaron, <em>Computer Systems: A Programmer's
+Perspective</em> (memory hierarchy, linking, dynamic allocation, virtual
+memory).</li>
+<li>ACM/IEEE-CS/AAAI <em>Computer Science Curricula 2023</em> for the
+systems and architecture knowledge areas: <a
+href="https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf">https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Cache lines and pages govern performance: locality first, then
+algorithms' constants.</li>
+<li>Manual, ownership, RC, and tracing GC trade determinism, pauses,
+throughput, and safety; arenas fit lifetime-grouped data.</li>
+<li>RC leaks cycles; tracing GC costs pauses or barriers; both can leak
+through unintended reachability.</li>
+<li>Diagnose with the right counter and heap-profile diffs, not with RSS
+alone.</li>
+<li>Memory unsafety is a security risk; sanitizers, fuzzing, and
+memory-safe languages reduce it.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

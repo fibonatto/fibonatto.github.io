@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Toolchain</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/14-toolchain.html">
+  <meta property="og:title" content="Rust Toolchain">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/14-toolchain.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Toolchain</h1>
+<h2 id="rust-toolchain-1">Rust Toolchain</h2>
+<h3 id="installing-and-managing-toolchains-with-rustup">1. Installing
+and managing toolchains with rustup</h3>
+<div class="sourceCode" id="cb1" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--proto</span> <span class="st">&#39;=https&#39;</span> <span class="at">--tlsv1.2</span> <span class="at">-sSf</span> https://sh.rustup.rs <span class="kw">|</span> <span class="fu">sh</span>     <span class="co"># install rustup, rustc, cargo</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> update                         <span class="co"># update stable</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> toolchain install nightly      <span class="co"># a second channel</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> default stable</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> show                           <span class="co"># what is installed and active</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> component add clippy rustfmt rust-src rust-analyzer</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add wasm32-unknown-unknown aarch64-unknown-linux-gnu</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> +nightly build                  <span class="co"># run one command with another toolchain</span></span></code></pre></div>
+<p>Channels: <code class="verbatim">stable</code> (every six weeks),
+<code class="verbatim">beta</code>, <code
+class="verbatim">nightly</code> (unstable features and tools such as
+Miri and sanitizers). Pin a project to a toolchain with a <code
+class="verbatim">rust-toolchain.toml</code> file at its root:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[toolchain]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">channel</span> <span class="op">=</span> <span class="st">&quot;1.85.0&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">components</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;clippy&quot;</span><span class="op">,</span> <span class="st">&quot;rustfmt&quot;</span><span class="op">]</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">targets</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;wasm32-unknown-unknown&quot;</span><span class="op">]</span></span></code></pre></div>
+<h3 id="everyday-cargo-commands">2. Everyday cargo commands</h3>
+<div class="sourceCode" id="cb3" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> new app            <span class="co"># a new binary package (add --lib for a library)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> init               <span class="co"># turn the current directory into a package</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> check              <span class="co"># type-check and borrow-check without producing a binary (fast)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build              <span class="co"># debug build in target/debug</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span>    <span class="co"># optimized build in target/release</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> arg1 arg2   <span class="co"># build and run, passing arguments after --</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test               <span class="co"># run unit, integration, and doc tests</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> bench              <span class="co"># run benchmarks</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> doc <span class="at">--open</span>         <span class="co"># build and open the documentation</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fmt                <span class="co"># format the code</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clippy             <span class="co"># lint</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> add serde          <span class="co"># add a dependency</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> update             <span class="co"># refresh Cargo.lock within the allowed versions</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> tree               <span class="co"># dependency tree</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clean              <span class="co"># delete target/</span></span></code></pre></div>
+<p>Iterate with <code class="verbatim">cargo check</code> (seconds) and
+run the full build only when you need to run the program. <code
+class="verbatim">cargo run --release</code> for anything
+performance-sensitive: debug builds can be tens of times slower.</p>
+<h3 id="cargo.toml">3. Cargo.toml</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[package]</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">&quot;app&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">version</span> <span class="op">=</span> <span class="st">&quot;0.1.0&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">edition</span> <span class="op">=</span> <span class="st">&quot;2021&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="dt">rust-version</span> <span class="op">=</span> <span class="st">&quot;1.75&quot;</span>                <span class="co"># minimum supported Rust version (MSRV)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="dt">serde</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">&quot;1&quot;</span><span class="op">, </span><span class="dt">features</span><span class="op"> =</span> <span class="op">[</span><span class="st">&quot;derive&quot;</span><span class="op">] }</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="dt">anyhow</span> <span class="op">=</span> <span class="st">&quot;1&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[dev-dependencies]</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="dt">proptest</span> <span class="op">=</span> <span class="st">&quot;1&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">[features]</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="dt">default</span> <span class="op">=</span> <span class="op">[]</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="dt">fast</span> <span class="op">=</span> <span class="op">[]</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="kw">[[bin]]</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">&quot;tool&quot;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="dt">path</span> <span class="op">=</span> <span class="st">&quot;src/bin/tool.rs&quot;</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="kw">[profile.release]</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="dt">opt-level</span> <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="dt">lto</span> <span class="op">=</span> <span class="st">&quot;thin&quot;</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="dt">codegen-units</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="dt">panic</span> <span class="op">=</span> <span class="st">&quot;abort&quot;</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="dt">strip</span> <span class="op">=</span> <span class="cn">true</span></span></code></pre></div>
+<p>Dependency versions follow semver: <code
+class="verbatim">"1.2"</code> means <code class="verbatim">^1.2</code>
+(any 1.x at least 1.2). <code class="verbatim">Cargo.lock</code> records
+exact versions (see <code class="verbatim">10_modules.org</code> for
+features and workspaces).</p>
+<h3 id="profiles-and-build-speed">4. Profiles and build speed</h3>
+<table>
+<thead>
+<tr>
+<th>Profile</th>
+<th>Defaults</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">dev</code></td>
+<td><code class="verbatim">opt-level = 0</code>, debug info, <code
+class="verbatim">debug-assertions</code>, <code
+class="verbatim">overflow-checks</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">release</code></td>
+<td><code class="verbatim">opt-level = 3</code>, no debug info,
+assertions and overflow checks off</td>
+</tr>
+</tbody>
+</table>
+<p>Useful settings in <code class="verbatim">[profile.*]</code>:</p>
+<ul>
+<li><code class="verbatim">opt-level = 3</code> (speed), <code
+class="verbatim">"s"</code> / <code class="verbatim">"z"</code> (size),
+<code class="verbatim">1</code> / <code class="verbatim">2</code>.</li>
+<li><code class="verbatim">lto = "thin"</code> or <code
+class="verbatim">true</code>: link-time optimization across crates;
+slower builds, faster code.</li>
+<li><code class="verbatim">codegen-units = 1</code>: better
+optimization, slower compile.</li>
+<li><code class="verbatim">panic = "abort"</code>: no unwinding; smaller
+and faster, but destructors do not run on panic.</li>
+<li><code class="verbatim">debug = true</code> in release for profiling
+with symbols; <code class="verbatim">strip = true</code> to shrink the
+binary.</li>
+<li><code class="verbatim">overflow-checks = true</code> to keep
+integer-overflow panics in release.</li>
+<li><code
+class="verbatim">[profile.dev.package."*"] opt-level = 3</code>
+optimizes dependencies in debug builds while keeping your own code easy
+to debug.</li>
+</ul>
+<p>Speeding up development builds: <code
+class="verbatim">cargo check</code>, incremental compilation (on by
+default for debug), a faster linker (<code class="verbatim">mold</code>,
+<code class="verbatim">lld</code>), a compiler cache (<code
+class="verbatim">sccache</code>), splitting large crates into a
+workspace, and avoiding heavy dependencies.</p>
+<h3 id="testing">5. Testing</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> add(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> a <span class="op">+</span> b <span class="op">}</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> tests <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="pp">super::</span><span class="op">*;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> adds() <span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert_eq!</span>(add(<span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">,</span> <span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert!</span>(add(<span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>) <span class="op">&gt;</span> <span class="dv">1</span><span class="op">,</span> <span class="st">&quot;sum was {}&quot;</span><span class="op">,</span> add(<span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>))<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert_ne!</span>(add(<span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>should_panic<span class="at">(</span>expected <span class="op">=</span> <span class="st">&quot;index out of bounds&quot;</span><span class="at">)]</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> out_of_bounds() <span class="op">{</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> v<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">Vec::</span>new()<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> _ <span class="op">=</span> v[<span class="pp">std::hint::</span>black_box(<span class="dv">0</span>)]<span class="op">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> returns_result() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> <span class="pp">std::num::</span>ParseIntError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> n<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> <span class="st">&quot;42&quot;</span><span class="op">.</span>parse()<span class="op">?;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert_eq!</span>(n<span class="op">,</span> <span class="dv">42</span>)<span class="op">;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><strong>Unit tests</strong> live next to the code in a <code
+class="verbatim">#[cfg(test)]</code> module and can see private
+items.</li>
+<li><strong>Integration tests</strong> are files in <code
+class="verbatim">tests/</code>; each one is a separate crate that uses
+only the public API.</li>
+<li><strong>Doc tests</strong> are the code blocks in <code
+class="verbatim">///</code> comments; they keep documentation
+honest.</li>
+<li>Output from passing tests is hidden; show it with <code
+class="verbatim">cargo test -- --nocapture</code>. Filter by name with
+<code class="verbatim">cargo test adds</code>; run one thread with <code
+class="verbatim">-- --test-threads=1</code>. <code
+class="verbatim">cargo test --release</code> tests the optimized build;
+ignored tests (<code class="verbatim">#[ignore]</code>) run with <code
+class="verbatim">-- --ignored</code>.</li>
+<li>Property-based tests (<code class="verbatim">proptest</code>, <code
+class="verbatim">quickcheck</code>) and fuzzing (<code
+class="verbatim">cargo fuzz</code>, with libFuzzer) find inputs you did
+not think of; benchmarks use <code class="verbatim">criterion</code>
+(stable) or the unstable built-in <code
+class="verbatim">#[bench]</code>.</li>
+</ul>
+<h3 id="linting-and-formatting">6. Linting and formatting</h3>
+<div class="sourceCode" id="cb6" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clippy                              <span class="co"># many useful lints</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clippy <span class="at">--all-targets</span> <span class="at">--</span> <span class="at">-D</span> warnings <span class="co"># treat every warning as an error (CI)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fmt                                 <span class="co"># format in place</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fmt <span class="at">--check</span>                         <span class="co"># fail if not formatted (CI)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fix                                 <span class="co"># apply compiler-suggested fixes</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fix <span class="at">--edition</span>                       <span class="co"># migrate to the next edition</span></span></code></pre></div>
+<p>Clippy lint groups: <code class="verbatim">clippy::all</code>
+(default), <code class="verbatim">clippy::pedantic</code> (stricter, opt
+in), <code class="verbatim">clippy::nursery</code>, and <code
+class="verbatim">clippy::perf</code>. Enable more in code with <code
+class="verbatim">#![warn(clippy::pedantic)]</code>. Configure formatting
+in <code class="verbatim">rustfmt.toml</code> (rarely needed; defaults
+are the community standard).</p>
+<h3 id="documentation">7. Documentation</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Adds two numbers.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// # Examples</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">/// ```</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">/// assert_eq!(demo::add(1, 2), 3);</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">/// ```</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">/// # Panics</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">/// Never.</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> add(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> a <span class="op">+</span> b <span class="op">}</span></span></code></pre></div>
+<p>Use the standard sections <code class="verbatim"># Examples</code>,
+<code class="verbatim"># Errors</code>, <code
+class="verbatim"># Panics</code>, and <code
+class="verbatim"># Safety</code>. <code
+class="verbatim">cargo doc --open --no-deps</code> builds the docs for
+your crate; docs.rs hosts them for published crates. The <code
+class="verbatim">#![warn(missing_docs)]</code> lint reminds you.</p>
+<h3 id="debugging">8. Debugging</h3>
+<div class="sourceCode" id="cb8" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="va">RUST_BACKTRACE</span><span class="op">=</span>1 <span class="ex">cargo</span> run                <span class="co"># backtrace on panic (=full= for everything)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rust-gdb</span> target/debug/app                 <span class="co"># gdb with Rust pretty-printers</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rust-lldb</span> target/debug/app</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> expand                              <span class="co"># show the code after macro expansion (cargo-expand)</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">dbg!(expr)</code> prints the file, line,
+expression, and value to stderr, and returns the value.</li>
+<li><code class="verbatim">println!("{x:?}")</code> and <code
+class="verbatim">eprintln!</code> remain the most common debugger.</li>
+<li>Debug builds contain debug info; add <code
+class="verbatim">debug = true</code> to <code
+class="verbatim">[profile.release]</code> to debug optimized code.</li>
+<li>For services, use the <code class="verbatim">tracing</code> crate
+with a subscriber and <code class="verbatim">RUST_LOG</code>.</li>
+<li>Read compiler errors top to bottom, and use <code
+class="verbatim">rustc --explain EXXXX</code>.</li>
+</ul>
+<h3 id="checking-unsafe-code-and-memory">9. Checking unsafe code and
+memory</h3>
+<div class="sourceCode" id="cb9" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> toolchain install nightly <span class="at">--component</span> miri</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> +nightly miri test                  <span class="co"># interprets your tests; detects UB, leaks, aliasing errors</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="va">RUSTFLAGS</span><span class="op">=</span><span class="st">&quot;-Zsanitizer=address&quot;</span> <span class="ex">cargo</span> +nightly run <span class="at">--target</span> x86_64-unknown-linux-gnu</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="va">RUSTFLAGS</span><span class="op">=</span><span class="st">&quot;-Zsanitizer=thread&quot;</span>  <span class="ex">cargo</span> +nightly run <span class="at">--target</span> x86_64-unknown-linux-gnu <span class="at">-Zbuild-std</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> target/debug/app</span></code></pre></div>
+<p>Miri runs much slower than native code and cannot call foreign
+functions, but it catches the subtle bugs that sanitizers miss. Use it
+on any crate with <code class="verbatim">unsafe</code>.</p>
+<h3 id="performance">10. Performance</h3>
+<ul>
+<li>Measure in <code class="verbatim">--release</code>, on realistic
+input; use <code class="verbatim">criterion</code> for micro-benchmarks
+and <code class="verbatim">std::hint::black_box</code> to stop the
+optimizer from deleting the work.</li>
+<li>Profile with <code class="verbatim">perf record</code> and <code
+class="verbatim">perf report</code>, or <code
+class="verbatim">cargo flamegraph</code>; build with <code
+class="verbatim">debug = true</code> so symbols are present.</li>
+<li>Find bloat with <code class="verbatim">cargo bloat</code> and
+compile-time hogs with <code
+class="verbatim">cargo build --timings</code>.</li>
+<li>Look at the generated code with Compiler Explorer or <code
+class="verbatim">cargo asm</code> (the <code
+class="verbatim">cargo-show-asm</code> tool).</li>
+<li>Typical wins come from algorithms, avoiding allocations (<code
+class="verbatim">Vec::with_capacity</code>, reusing buffers), iterators
+instead of repeated indexing, <code class="verbatim">lto</code> and
+<code class="verbatim">codegen-units = 1</code>, and a different
+allocator (<code class="verbatim">mimalloc</code>, <code
+class="verbatim">jemalloc</code>) for allocation-heavy programs.</li>
+<li><code class="verbatim">RUSTFLAGS</code>"-C target-cpu=native"=
+enables the host CPU's instructions; the result may not run on other
+machines.</li>
+</ul>
+<h3 id="cross-compiling-webassembly-and-embedded">11. Cross-compiling,
+WebAssembly, and embedded</h3>
+<div class="sourceCode" id="cb10" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add aarch64-unknown-linux-gnu</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--target</span> aarch64-unknown-linux-gnu   <span class="co"># needs a linker for that target (see below)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install cross                       <span class="co"># builds inside containers with the right toolchain</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cross</span> build <span class="at">--release</span> <span class="at">--target</span> aarch64-unknown-linux-gnu</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install cargo-zigbuild              <span class="co"># uses Zig as the cross linker</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> zigbuild <span class="at">--release</span> <span class="at">--target</span> x86_64-unknown-linux-musl   <span class="co"># static binary</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add wasm32-unknown-unknown</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--target</span> wasm32-unknown-unknown</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="ex">wasm-pack</span> build                           <span class="co"># package for the browser (wasm-bindgen)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> target add wasm32-wasip1           <span class="co"># WASI: run with a runtime such as wasmtime</span></span></code></pre></div>
+<p>Each target triple names architecture, vendor, OS, and ABI. Pure-Rust
+programs cross-compile easily; C dependencies need a C cross-toolchain.
+Embedded and kernel code use <code class="verbatim">#![no_std]</code>
+and a chip-specific target and runtime (the Embedded Rust book covers
+it).</p>
+<h3 id="publishing-and-supply-chain">12. Publishing and supply
+chain</h3>
+<div class="sourceCode" id="cb11" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> package                              <span class="co"># check what would be published</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> publish                              <span class="co"># upload to crates.io</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> yank <span class="at">--version</span> 0.1.2                 <span class="co"># discourage new use of a bad release</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> audit                                <span class="co"># known vulnerabilities in dependencies (cargo-audit)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> deny check                           <span class="co"># licenses, bans, advisories (cargo-deny)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> vet                                  <span class="co"># record dependency reviews</span></span></code></pre></div>
+<p>Set <code class="verbatim">rust-version</code> (MSRV), follow semver,
+and review what a dependency pulls in (<code
+class="verbatim">cargo tree</code>). A published version cannot be
+deleted, only yanked.</p>
+<h3 id="a-ci-baseline">13. A CI baseline</h3>
+<div class="sourceCode" id="cb12" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fmt <span class="at">--check</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clippy <span class="at">--all-targets</span> <span class="at">--all-features</span> <span class="at">--</span> <span class="at">-D</span> warnings</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--all-features</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> doc <span class="at">--no-deps</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> audit</span></code></pre></div>
+<p>Add a nightly job running <code
+class="verbatim">cargo +nightly miri test</code> if the crate uses <code
+class="verbatim">unsafe</code>, and a build of the MSRV toolchain if you
+promise one.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Install with rustup; pin a project's toolchain with <code
+class="verbatim">rust-toolchain.toml</code>.</li>
+<li><code class="verbatim">cargo check</code> to iterate, <code
+class="verbatim">cargo run --release</code> to measure, <code
+class="verbatim">cargo test</code> for unit, integration, and doc
+tests.</li>
+<li>Profiles control optimization, debug info, overflow checks, and
+panic behavior.</li>
+<li>Run <code class="verbatim">cargo fmt</code>, <code
+class="verbatim">cargo clippy -D warnings</code>, and the tests in
+CI.</li>
+<li>Use Miri and sanitizers on unsafe code; use <code
+class="verbatim">tracing</code> and <code
+class="verbatim">RUST_BACKTRACE</code> for diagnosis.</li>
+<li>Cross-compiling is a <code class="verbatim">rustup target add</code>
+plus a linker; WebAssembly is a target like any other.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

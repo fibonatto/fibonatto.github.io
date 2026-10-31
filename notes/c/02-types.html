@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Types</title>
+  <meta name="description" content="Technical reference on C type semantics covering integer types and widths, signed overflow, unsigned arithmetic, integer promotions, usual arithmetic conversions, casts, floating-point behavior, characters, strings, booleans, enumerations, bit-fields, type qualifiers, strict aliasing, type punning, endianness, alignment, structure layout, and formatted I/O.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/02-types.html">
+  <meta property="og:title" content="C Types">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/02-types.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C Types</h1>
+<h2 id="c-types-1">C Types</h2>
+<h3 id="integer-types-and-sizes">1. Integer types and sizes</h3>
+<p>The standard guarantees only minimum ranges:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Minimum width</th>
+<th>Typical (LP64: Linux/macOS 64-bit)</th>
+<th>Typical (LLP64: Windows 64-bit)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">char</code></td>
+<td>8 bits</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td><code class="verbatim">short</code></td>
+<td>16</td>
+<td>16</td>
+<td>16</td>
+</tr>
+<tr>
+<td><code class="verbatim">int</code></td>
+<td>16</td>
+<td>32</td>
+<td>32</td>
+</tr>
+<tr>
+<td><code class="verbatim">long</code></td>
+<td>32</td>
+<td>64</td>
+<td>32</td>
+</tr>
+<tr>
+<td><code class="verbatim">long long</code></td>
+<td>64</td>
+<td>64</td>
+<td>64</td>
+</tr>
+<tr>
+<td>pointer</td>
+<td>not specified</td>
+<td>64</td>
+<td>64</td>
+</tr>
+</tbody>
+</table>
+<p><code class="verbatim">CHAR_BIT</code> (<code
+class="verbatim">&lt;limits.h&gt;</code>) is the number of bits in a
+byte (8 on every mainstream platform). <code
+class="verbatim">sizeof</code> yields the size in bytes, as a <code
+class="verbatim">size_t</code>; <code
+class="verbatim">sizeof(char)</code> is 1 by definition.</p>
+<p>When the width matters, use <code
+class="verbatim">&lt;stdint.h&gt;</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int8_t</span>   a<span class="op">;</span>  <span class="dt">uint8_t</span>  b<span class="op">;</span>       <span class="co">/* exact width; optional types, present on all mainstream platforms */</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int32_t</span>  c<span class="op">;</span>  <span class="dt">uint32_t</span> d<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span>  e<span class="op">;</span>  <span class="dt">uint64_t</span> f<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int_least16_t</span> g<span class="op">;</span>               <span class="co">/* smallest type with at least 16 bits */</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int_fast32_t</span>  h<span class="op">;</span>               <span class="co">/* fastest type with at least 32 bits */</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="dt">intmax_t</span> i<span class="op">;</span>  <span class="dt">uintmax_t</span> j<span class="op">;</span>      <span class="co">/* widest types */</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">intptr_t</span> k<span class="op">;</span>  <span class="dt">uintptr_t</span> l<span class="op">;</span>      <span class="co">/* hold a pointer value (optional) */</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span>    m<span class="op">;</span>                   <span class="co">/* result of sizeof; unsigned */</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="dt">ptrdiff_t</span> n<span class="op">;</span>                   <span class="co">/* difference of two pointers; signed */</span></span></code></pre></div>
+<p>Limits: <code class="verbatim">INT_MAX</code>, <code
+class="verbatim">UINT_MAX</code>, <code
+class="verbatim">LONG_MAX</code>, <code
+class="verbatim">LLONG_MAX</code> (<code
+class="verbatim">&lt;limits.h&gt;</code>); <code
+class="verbatim">INT32_MAX</code>, <code
+class="verbatim">UINT64_MAX</code>, <code
+class="verbatim">SIZE_MAX</code> (<code
+class="verbatim">&lt;stdint.h&gt;</code>).</p>
+<p>Since C23, signed integers must use two's complement. Before that, it
+was nearly universal in practice.</p>
+<h3 id="signed-overflow-and-unsigned-wrap">2. Signed overflow and
+unsigned wrap</h3>
+<ul>
+<li>Signed integer overflow is <strong>undefined behavior</strong>. The
+compiler may assume it never happens, which can delete your overflow
+checks.</li>
+<li>Unsigned arithmetic is defined modulo 2<sup>N</sup> and wraps.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> INT_MAX<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span>                          <span class="co">/* UB */</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">unsigned</span> u <span class="op">=</span> UINT_MAX<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>u <span class="op">+</span> <span class="dv">1</span><span class="op">;</span>                          <span class="co">/* 0, well defined */</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>a <span class="op">&gt;</span> INT_MAX <span class="op">-</span> b<span class="op">)</span> <span class="op">{</span> <span class="co">/* would overflow */</span> <span class="op">}</span>   <span class="co">/* check before adding, for non-negative b */</span></span></code></pre></div>
+<p>Safe options: check before the operation, use wider types, or use
+<code class="verbatim">&lt;stdckdint.h&gt;</code> (C23) / <code
+class="verbatim">__builtin_add_overflow</code> (GCC/Clang):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> r<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>__builtin_add_overflow<span class="op">(</span>a<span class="op">,</span> b<span class="op">,</span> <span class="op">&amp;</span>r<span class="op">))</span> <span class="op">{</span> <span class="co">/* overflow */</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">/* C23: if (ckd_add(&amp;r, a, b)) { ... } */</span></span></code></pre></div>
+<h3 id="integer-promotions-and-the-usual-arithmetic-conversions">3.
+Integer promotions and the usual arithmetic conversions</h3>
+<p>Operands narrower than <code class="verbatim">int</code> are first
+<em>promoted</em> to <code class="verbatim">int</code> (or <code
+class="verbatim">unsigned int</code> if <code
+class="verbatim">int</code> cannot hold all values). Then, for a binary
+operator with different types, the <em>usual arithmetic conversions</em>
+bring both to a common type:</p>
+<ol>
+<li>If either is floating point, convert to the wider floating
+type.</li>
+<li>Otherwise promote both. If the types match, done.</li>
+<li>If both are signed or both unsigned, convert to the one with greater
+rank.</li>
+<li>If the unsigned one has rank at least that of the signed one,
+convert to the unsigned type.</li>
+<li>If the signed type can represent all values of the unsigned type,
+convert to the signed type.</li>
+<li>Otherwise convert both to the unsigned version of the signed
+type.</li>
+</ol>
+<p>Consequences:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">-</span><span class="dv">1</span> <span class="op">&lt;</span> <span class="dv">1</span><span class="bu">u</span>                         <span class="co">/* false: -1 becomes UINT_MAX */</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span> a <span class="op">=</span> <span class="dv">200</span><span class="op">,</span> b <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>a <span class="op">+</span> b<span class="op">;</span>                          <span class="co">/* 300, an int: no wrap */</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">uint8_t</span><span class="op">)(</span>a <span class="op">+</span> b<span class="op">);</span>               <span class="co">/* 44 */</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> n <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>n <span class="op">-</span> <span class="dv">1</span><span class="op">;</span>                          <span class="co">/* SIZE_MAX, not -1 */</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> n <span class="op">-</span> <span class="dv">1</span><span class="op">;</span> i <span class="op">&gt;=</span> <span class="dv">0</span><span class="op">;</span> i<span class="op">--)</span> <span class="op">{</span> <span class="op">}</span>   <span class="co">/* infinite loop: i &gt;= 0 is always true */</span></span></code></pre></div>
+<p>Use the same signedness on both sides of comparisons. <code
+class="verbatim">-Wsign-compare</code> and <code
+class="verbatim">-Wconversion</code> help.</p>
+<h3 id="casts-and-conversions">4. Casts and conversions</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">unsigned</span><span class="op">)-</span><span class="dv">1</span><span class="op">;</span>                   <span class="co">/* UINT_MAX: converting to unsigned is always defined (modulo) */</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">int</span><span class="op">)</span><span class="fl">3.99</span><span class="op">;</span>                      <span class="co">/* 3: truncates toward zero */</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">int</span><span class="op">)</span><span class="fl">1e20</span><span class="op">;</span>                      <span class="co">/* UB: value out of range of int */</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">signed</span> <span class="dt">char</span><span class="op">)</span><span class="dv">200</span><span class="op">;</span>               <span class="co">/* implementation-defined (usually -56) */</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">double</span><span class="op">)</span>a <span class="op">/</span> b<span class="op">;</span>                  <span class="co">/* cast before dividing to get a floating-point result */</span></span></code></pre></div>
+<ul>
+<li>Converting a value to a signed type that cannot hold it is
+implementation-defined (or raises a signal).</li>
+<li>Converting a floating value to an integer whose range it exceeds is
+undefined.</li>
+<li><code>a / b</code> with two integers is integer division even if the
+result is assigned to a <code class="verbatim">double</code>.</li>
+<li>Casting between pointer types and integers is possible (<code
+class="verbatim">uintptr_t</code>) but the result is
+implementation-defined.</li>
+<li>Converting between function pointers and object pointers is not
+guaranteed by the standard (POSIX requires it for <code
+class="verbatim">dlsym</code>).</li>
+</ul>
+<h3 id="floating-point">5. Floating point</h3>
+<p><code class="verbatim">float</code> (usually 32-bit), <code
+class="verbatim">double</code> (usually 64-bit), <code
+class="verbatim">long double</code> (varies: 64, 80, or 128 bits). On
+mainstream platforms <code class="verbatim">float</code> and <code
+class="verbatim">double</code> follow IEEE 754.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;float.h&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;math.h&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fl">0.1</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">==</span> <span class="fl">0.3</span><span class="op">;</span>               <span class="co">/* false: binary fractions are inexact */</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>fabs<span class="op">(</span>a <span class="op">-</span> b<span class="op">)</span> <span class="op">&lt;</span> <span class="fl">1e-9</span><span class="op">;</span>             <span class="co">/* compare with a tolerance (choose it for your scale) */</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> nan <span class="op">=</span> NAN<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>nan <span class="op">==</span> nan<span class="op">;</span>                     <span class="co">/* false: NaN is unequal to everything, itself included */</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>isnan<span class="op">(</span>x<span class="op">);</span>  isinf<span class="op">(</span>x<span class="op">);</span>            <span class="co">/* the correct tests */</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fl">1.0</span> <span class="op">/</span> <span class="fl">0.0</span><span class="op">;</span>                      <span class="co">/* +inf (no trap by default) */</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%.17g\n</span><span class="st">&quot;</span><span class="op">,</span> x<span class="op">);</span>           <span class="co">/* enough digits to round-trip a double */</span></span></code></pre></div>
+<ul>
+<li><code>1 / 2</code> is <code class="verbatim">0</code>; write <code
+class="verbatim">1.0 / 2</code> or <code
+class="verbatim">1 / 2.0</code>.</li>
+<li>A floating literal without a suffix is <code
+class="verbatim">double</code>; <code class="verbatim">1.5f</code> is
+<code class="verbatim">float</code>.</li>
+<li><code class="verbatim">float</code> arguments to variadic functions
+(<code class="verbatim">printf</code>) are promoted to <code
+class="verbatim">double</code>, so <code class="verbatim">%f</code>
+takes a <code class="verbatim">double</code>.</li>
+<li><code class="verbatim">DBL_EPSILON</code> is the gap between 1.0 and
+the next representable double.</li>
+<li><code class="verbatim">-ffast-math</code> breaks IEEE semantics (NaN
+checks, associativity). Avoid it unless you understand the effects.</li>
+</ul>
+<h3 id="characters-and-strings">6. Characters and strings</h3>
+<ul>
+<li><code class="verbatim">char</code> may be signed or unsigned,
+depending on the platform (signed on x86, unsigned on many ARM ABIs).
+<code class="verbatim">signed char</code> and <code
+class="verbatim">unsigned char</code> are explicit.</li>
+<li><code class="verbatim">unsigned char</code> is the type for raw
+bytes. Character classification functions take an <code
+class="verbatim">int</code> that is either <code
+class="verbatim">EOF</code> or a value representable as <code
+class="verbatim">unsigned char</code>:</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;ctype.h&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>isalpha<span class="op">((</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)</span>c<span class="op">);</span>      <span class="co">/* cast: passing a negative char is UB */</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> ch <span class="op">=</span> getchar<span class="op">();</span>             <span class="co">/* int, not char: it must hold EOF as well as 0..255 */</span></span></code></pre></div>
+<ul>
+<li>A character constant such as <code class="verbatim">'a'</code> has
+type <code class="verbatim">int</code> in C (it has type <code
+class="verbatim">char</code> in C++).</li>
+<li><code class="verbatim">wchar_t</code>, <code
+class="verbatim">char16_t</code>, <code class="verbatim">char32_t</code>
+(<code class="verbatim">&lt;uchar.h&gt;</code>) exist, but <code
+class="verbatim">char</code> strings holding UTF-8 are the practical
+choice. C does not know about Unicode: <code
+class="verbatim">strlen</code> counts bytes, and <code
+class="verbatim">toupper</code> works on single bytes.</li>
+</ul>
+<h3 id="booleans">7. Booleans</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdbool.h&gt;</span><span class="pp">            </span><span class="co">/* bool, true, false (keywords in C23) */</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> ok <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>                    <span class="co">/* true: any nonzero converts to 1 */</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dt">_Bool</span> flag <span class="op">=</span> <span class="fl">0.1</span><span class="op">;</span>               <span class="co">/* also 1 */</span></span></code></pre></div>
+<p>Conditions in <code class="verbatim">if</code>, <code
+class="verbatim">while</code>, and <code
+class="verbatim">&amp;&amp;=/=||</code> accept any scalar: zero is
+false, anything else is true. Comparisons yield an <code
+class="verbatim">int</code> that is 0 or 1.</p>
+<h3 id="enums">8. Enums</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> color <span class="op">{</span> RED<span class="op">,</span> GREEN <span class="op">=</span> <span class="dv">5</span><span class="op">,</span> BLUE <span class="op">};</span>    <span class="co">/* 0, 5, 6 */</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> color c <span class="op">=</span> BLUE<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> color d <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>                      <span class="co">/* allowed: not range-checked */</span></span></code></pre></div>
+<p>The enumeration constants have type <code
+class="verbatim">int</code>. The enum type itself is compatible with an
+implementation-chosen integer type (C23 lets you pick:
+<code>enum flags : uint8_t { ... }</code>). Enums are named integers,
+not a closed type; use <code class="verbatim">switch</code> with all
+cases and <code class="verbatim">-Wswitch</code> to catch missing
+ones.</p>
+<h3 id="bit-fields">9. Bit-fields</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> flags <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">unsigned</span> ready <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">unsigned</span> mode  <span class="op">:</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">unsigned</span>       <span class="op">:</span> <span class="dv">4</span><span class="op">;</span>           <span class="co">/* unnamed padding */</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>The order of fields in storage, the allocation unit, and the
+signedness of plain <code class="verbatim">int</code> bit-fields are
+implementation-defined, and you cannot take their address. Do not use
+bit-fields for file formats, network protocols, or hardware registers
+that must be portable; use shifts and masks on fixed-width unsigned
+types.</p>
+<h3 id="type-qualifiers">10. Type qualifiers</h3>
+<table>
+<thead>
+<tr>
+<th>Qualifier</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">const</code></td>
+<td>The object is not to be modified through this lvalue</td>
+</tr>
+<tr>
+<td><code class="verbatim">volatile</code></td>
+<td>Every access is a visible side effect; the compiler may not elide or
+reorder it relative to other volatile accesses (memory-mapped I/O, <code
+class="verbatim">sig_atomic_t</code> handlers)</td>
+</tr>
+<tr>
+<td><code class="verbatim">restrict</code></td>
+<td>Pointer is the only way to access the object (promise to the
+compiler)</td>
+</tr>
+<tr>
+<td><code class="verbatim">_Atomic</code></td>
+<td>Atomic access (see <code
+class="verbatim">11_concurrency.org</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code class="verbatim">volatile</code> does not make code thread-safe
+and gives no atomicity or ordering between threads. Modifying a <code
+class="verbatim">const</code> object (not just a const-qualified pointer
+to a non-const object) is undefined behavior.</p>
+<p><code>T *</code> converts implicitly to <code>const T *</code>, but
+<code>T **</code> does not convert to <code>const T **</code> (this
+would allow storing a pointer to const into a non-const pointer).</p>
+<h3 id="type-punning-and-representation">11. Type punning and
+representation</h3>
+<p>Reading an object through an incompatible pointer type violates the
+aliasing rules (see <code class="verbatim">04_memory.org</code>). The
+portable way to reinterpret bytes is <code
+class="verbatim">memcpy</code>, which compilers optimize to a register
+move:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> f <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> u<span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>memcpy<span class="op">(&amp;</span>u<span class="op">,</span> <span class="op">&amp;</span>f<span class="op">,</span> <span class="kw">sizeof</span> u<span class="op">);</span>       <span class="co">/* well defined */</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* u = *(uint32_t *)&amp;f;            undefined: strict-aliasing violation */</span></span></code></pre></div>
+<p>Reading a union member other than the last written is permitted in C
+(it reinterprets the bytes), unlike C++.</p>
+<h4 id="endianness">Endianness</h4>
+<p>Multi-byte integers are stored in the host byte order. Never write a
+struct or an integer to a file or socket as raw memory if the data must
+be portable; encode explicitly:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> put_u32_be<span class="op">(</span><span class="dt">unsigned</span> <span class="dt">char</span> <span class="op">*</span>p<span class="op">,</span> <span class="dt">uint32_t</span> v<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    p<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="op">(</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)(</span>v <span class="op">&gt;&gt;</span> <span class="dv">24</span><span class="op">);</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    p<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> <span class="op">(</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)(</span>v <span class="op">&gt;&gt;</span> <span class="dv">16</span><span class="op">);</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    p<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">=</span> <span class="op">(</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)(</span>v <span class="op">&gt;&gt;</span> <span class="dv">8</span><span class="op">);</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    p<span class="op">[</span><span class="dv">3</span><span class="op">]</span> <span class="op">=</span> <span class="op">(</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)</span>v<span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">uint32_t</span> get_u32_be<span class="op">(</span><span class="dt">const</span> <span class="dt">unsigned</span> <span class="dt">char</span> <span class="op">*</span>p<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">((</span><span class="dt">uint32_t</span><span class="op">)</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">&lt;&lt;</span> <span class="dv">24</span><span class="op">)</span> <span class="op">|</span> <span class="op">((</span><span class="dt">uint32_t</span><span class="op">)</span>p<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">&lt;&lt;</span> <span class="dv">16</span><span class="op">)</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>         <span class="op">|</span> <span class="op">((</span><span class="dt">uint32_t</span><span class="op">)</span>p<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span><span class="op">)</span>  <span class="op">|</span>  <span class="op">(</span><span class="dt">uint32_t</span><span class="op">)</span>p<span class="op">[</span><span class="dv">3</span><span class="op">];</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This works on any host byte order and avoids alignment and padding
+problems.</p>
+<h3 id="alignment-and-layout">12. Alignment and layout</h3>
+<p>Each type has an alignment requirement; the compiler pads structs to
+satisfy it. <code class="verbatim">_Alignof(T)</code> (C23: <code
+class="verbatim">alignof</code>) gives it, and <code
+class="verbatim">offsetof(T, member)</code> gives a member's offset.
+Accessing a misaligned object through a pointer is undefined behavior
+(it may fault on some CPUs). Do not cast an arbitrary <code
+class="verbatim">char *</code> into an <code
+class="verbatim">int *</code> or <code class="verbatim">struct *</code>;
+copy with <code class="verbatim">memcpy</code> instead.</p>
+<h3 id="printf-and-scanf-format-specifiers">13. printf and scanf format
+specifiers</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>printf</th>
+<th>scanf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">int</code></td>
+<td><code class="verbatim">%d</code></td>
+<td><code class="verbatim">%d</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">unsigned</code></td>
+<td><code class="verbatim">%u</code>, <code class="verbatim">%x</code>,
+<code class="verbatim">%o</code></td>
+<td><code class="verbatim">%u</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">long</code>, <code
+class="verbatim">long long</code></td>
+<td><code class="verbatim">%ld</code>, <code
+class="verbatim">%lld</code></td>
+<td><code class="verbatim">%ld</code>, <code
+class="verbatim">%lld</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">size_t</code></td>
+<td><code class="verbatim">%zu</code></td>
+<td><code class="verbatim">%zu</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">ptrdiff_t</code></td>
+<td><code class="verbatim">%td</code></td>
+<td><code class="verbatim">%td</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">intmax_t</code></td>
+<td><code class="verbatim">%jd</code></td>
+<td><code class="verbatim">%jd</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">double</code></td>
+<td><code class="verbatim">%f</code>, <code class="verbatim">%e</code>,
+<code class="verbatim">%g</code></td>
+<td><code class="verbatim">%lf</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">long double</code></td>
+<td><code class="verbatim">%Lf</code></td>
+<td><code class="verbatim">%Lf</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">char</code></td>
+<td><code class="verbatim">%c</code></td>
+<td><code class="verbatim">%c</code></td>
+</tr>
+<tr>
+<td>string</td>
+<td><code class="verbatim">%s</code></td>
+<td><code class="verbatim">%s</code> (always give a width)</td>
+</tr>
+<tr>
+<td>pointer</td>
+<td><code class="verbatim">%p</code> (cast to <code
+class="verbatim">void *</code>)</td>
+<td><code class="verbatim">%p</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">int32_t</code>, <code
+class="verbatim">uint64_t</code></td>
+<td><code class="verbatim">PRId32</code>, <code
+class="verbatim">PRIu64</code> (<code
+class="verbatim">&lt;inttypes.h&gt;</code>)</td>
+<td><code class="verbatim">SCNd32</code>, <code
+class="verbatim">SCNu64</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb13"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;inttypes.h&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;%&quot;</span> PRIu64 <span class="st">&quot; bytes</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> total<span class="op">);</span></span></code></pre></div>
+<p>A wrong specifier is undefined behavior; GCC and Clang check format
+strings with <code class="verbatim">-Wformat</code>.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Only minimum widths are guaranteed; use <code
+class="verbatim">&lt;stdint.h&gt;</code> when width matters.</li>
+<li>Signed overflow is undefined, unsigned wraps.</li>
+<li>Mixed signed/unsigned arithmetic converts to unsigned.</li>
+<li>Cast before dividing; compare floating values with a tolerance and
+use <code class="verbatim">isnan</code>.</li>
+<li><code class="verbatim">char</code> signedness varies; cast to <code
+class="verbatim">unsigned char</code> for <code
+class="verbatim">&lt;ctype.h&gt;</code>; <code
+class="verbatim">getchar</code> returns <code
+class="verbatim">int</code>.</li>
+<li>Use <code class="verbatim">memcpy</code> for type punning; serialize
+multi-byte values byte by byte.</li>
+<li>Enums and bit-fields are less portable and less safe than they
+look.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C++ Templates</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/cpp/templates.html">
+  <meta property="og:title" content="C++ Templates">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/cpp/templates.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C++ Templates</h1>
+<h2 id="c-templates-1">C++ Templates</h2>
+<p>Templates are C++'s compile-time code generation. The compiler
+produces a separate specialized function or class for each set of
+template arguments (<em>instantiation</em>). Unlike C macros, templates
+are parsed and type-checked, but they are not the same thing as macros:
+they cannot define new syntax or capture source text.</p>
+<h3 id="function-templates">1. Function templates</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>T max_of<span class="op">(</span>T a<span class="op">,</span> T b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">&lt;</span> b <span class="op">?</span> b <span class="op">:</span> a<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>max_of<span class="op">(</span><span class="dv">3</span><span class="op">,</span> <span class="dv">4</span><span class="op">);</span>            <span class="co">// T = int, deduced</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>max_of<span class="op">(</span><span class="fl">2.5</span><span class="op">,</span> <span class="fl">1.0</span><span class="op">);</span>        <span class="co">// T = double</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>max_of<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span><span class="dv">3</span><span class="op">,</span> <span class="fl">4.5</span><span class="op">);</span>  <span class="co">// T given explicitly; 3 converts to double</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// max_of(3, 4.5);       // error: conflicting deductions (int vs double)</span></span></code></pre></div>
+<p>The body is checked when it is instantiated with a particular type.
+Using <code class="verbatim">&lt;</code> on a type without it is an
+error at the point of instantiation, often with a long message.</p>
+<h3 id="class-templates">2. Class templates</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Stack <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> push<span class="op">(</span>T x<span class="op">)</span> <span class="op">{</span> <span class="va">items_</span><span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>x<span class="op">));</span> <span class="op">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    T pop<span class="op">()</span> <span class="op">{</span>                                     <span class="co">// precondition: not empty</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        T x <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span><span class="va">items_</span><span class="op">.</span>back<span class="op">());</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">items_</span><span class="op">.</span>pop_back<span class="op">();</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> empty<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> <span class="va">items_</span><span class="op">.</span>empty<span class="op">();</span> <span class="op">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="va">items_</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>Stack<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> s<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>push<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector v<span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span>      <span class="co">// class template argument deduction (C++17): vector&lt;int&gt;</span></span></code></pre></div>
+<p>Member functions of a class template are instantiated only when
+used.</p>
+<h3 id="non-type-template-parameters">3. Non-type template
+parameters</h3>
+<p>Templates can take values as parameters.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="bu">std::</span>size_t N<span class="op">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="bu">std::</span>size_t size<span class="op">(</span><span class="at">const</span> T <span class="op">(&amp;)[</span>N<span class="op">])</span> <span class="op">{</span> <span class="cf">return</span> N<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a<span class="op">[</span><span class="dv">7</span><span class="op">];</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">static_assert</span><span class="op">(</span>size<span class="op">(</span>a<span class="op">)</span> <span class="op">==</span> <span class="dv">7</span><span class="op">);</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dv">4</span><span class="op">&gt;</span> arr<span class="op">;</span>              <span class="co">// N is part of the type</span></span></code></pre></div>
+<h3 id="constraints-with-concepts-c20">4. Constraints with concepts
+(C++20)</h3>
+<p>A concept states what a template argument must support. Violations
+are reported at the call, not deep inside the body.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;concepts&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>integral T<span class="op">&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>T twice<span class="op">(</span>T x<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> x <span class="op">*</span> <span class="dv">2</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> Addable <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>T a<span class="op">,</span> T b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> a <span class="op">+</span> b <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>convertible_to<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>Addable T<span class="op">&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>T add<span class="op">(</span>T a<span class="op">,</span> T b<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">requires</span> <span class="bu">std::</span>is_trivially_copyable_v<span class="op">&lt;</span>T<span class="op">&gt;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> raw_copy<span class="op">(</span><span class="at">const</span> T <span class="op">&amp;</span>src<span class="op">,</span> T <span class="op">&amp;</span>dst<span class="op">);</span></span></code></pre></div>
+<p>Before C++20 the same effect was achieved with SFINAE (<code
+class="verbatim">std::enable_if_t</code>), which produces much harder
+error messages. Prefer concepts in new code.</p>
+<h3 id="specialization">5. Specialization</h3>
+<p>Give a different implementation for particular arguments.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span> <span class="kw">struct</span> Name <span class="op">{</span> <span class="at">static</span> <span class="kw">constexpr</span> <span class="at">const</span> <span class="dt">char</span> <span class="op">*</span>value <span class="op">=</span> <span class="st">&quot;other&quot;</span><span class="op">;</span> <span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;&gt;</span>           <span class="kw">struct</span> Name<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> <span class="op">{</span> <span class="at">static</span> <span class="kw">constexpr</span> <span class="at">const</span> <span class="dt">char</span> <span class="op">*</span>value <span class="op">=</span> <span class="st">&quot;int&quot;</span><span class="op">;</span> <span class="op">};</span>   <span class="co">// full</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span> <span class="kw">struct</span> Name<span class="op">&lt;</span>T <span class="op">*&gt;</span> <span class="op">{</span> <span class="at">static</span> <span class="kw">constexpr</span> <span class="at">const</span> <span class="dt">char</span> <span class="op">*</span>value <span class="op">=</span> <span class="st">&quot;pointer&quot;</span><span class="op">;</span> <span class="op">};</span>  <span class="co">// partial</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>Name<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;::</span>value<span class="op">;</span>       <span class="co">// &quot;int&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>Name<span class="op">&lt;</span><span class="dt">char</span> <span class="op">*&gt;::</span>value<span class="op">;</span>    <span class="co">// &quot;pointer&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>Name<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;::</span>value<span class="op">;</span>    <span class="co">// &quot;other&quot;</span></span></code></pre></div>
+<p>Class templates support partial specialization; function templates do
+not (use overloading or <code class="verbatim">if constexpr</code>
+instead).</p>
+<h3 id="variadic-templates-and-fold-expressions">6. Variadic templates
+and fold expressions</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span><span class="op">...</span> Ts<span class="op">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> sum<span class="op">(</span>Ts<span class="op">...</span> xs<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span>xs <span class="op">+</span> <span class="op">...</span> <span class="op">+</span> <span class="dv">0</span><span class="op">);</span>          <span class="co">// binary right fold with initial value 0</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>sum<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span>                       <span class="co">// 6</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>sum<span class="op">();</span>                              <span class="co">// 0</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span><span class="op">...</span> Ts<span class="op">&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> print_all<span class="op">(</span>Ts <span class="op">&amp;&amp;...</span>xs<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">((</span><span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> xs <span class="op">&lt;&lt;</span> <span class="ch">&#39; &#39;</span><span class="op">),</span> <span class="op">...);</span>   <span class="co">// comma fold: run for each argument</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="ch">&#39;</span><span class="sc">\n</span><span class="ch">&#39;</span><span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A unary fold with an empty pack is an error for most operators; the
+binary form with an initial value avoids that.</p>
+<h3 id="perfect-forwarding">7. Perfect forwarding</h3>
+<p>In a template, <code class="verbatim">T &amp;&amp;</code> is a
+<em>forwarding reference</em>: it binds to lvalues and rvalues and
+remembers which. <code class="verbatim">std::forward</code> passes it on
+with the same category.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="kw">typename</span><span class="op">...</span> Args<span class="op">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> make<span class="op">(</span>Args <span class="op">&amp;&amp;...</span>args<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>T<span class="op">&gt;(</span><span class="kw">new</span> T<span class="op">(</span><span class="bu">std::</span>forward<span class="op">&lt;</span>Args<span class="op">&gt;(</span>args<span class="op">)...));</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This is how <code class="verbatim">std::make_unique</code> and <code
+class="verbatim">emplace_back</code> avoid extra copies. Outside a
+deduced template parameter, <code class="verbatim">T &amp;&amp;</code>
+is just an rvalue reference.</p>
+<h3 id="if-constexpr-and-type-traits">8. <code
+class="verbatim">if constexpr</code> and type traits</h3>
+<p><code class="verbatim">if constexpr</code> discards the untaken
+branch at compile time, so each branch may use operations the other type
+lacks.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;type_traits&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string describe<span class="op">(</span><span class="at">const</span> T <span class="op">&amp;</span>x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_integral_v<span class="op">&lt;</span>T<span class="op">&gt;)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&quot;int &quot;</span> <span class="op">+</span> <span class="bu">std::</span>to_string<span class="op">(</span>x<span class="op">);</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_same_v<span class="op">&lt;</span>T<span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&quot;string &quot;</span> <span class="op">+</span> x<span class="op">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&quot;other&quot;</span><span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code class="verbatim">&lt;type_traits&gt;</code> provides <code
+class="verbatim">is_integral_v</code>, <code
+class="verbatim">is_same_v</code>, <code
+class="verbatim">remove_reference_t</code>, <code
+class="verbatim">decay_t</code>, and many others.</p>
+<h3 id="where-templates-live">9. Where templates live</h3>
+<p>The compiler needs the full definition at the point of instantiation,
+so templates are usually defined in headers. Putting a template's
+definition in a <code class="verbatim">.cpp</code> file leads to linker
+errors unless you explicitly instantiate the types you need:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="kw">class</span> Stack<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;;</span>                         <span class="co">// explicit instantiation</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">int</span> max_of<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">int</span><span class="op">);</span></span></code></pre></div>
+<p>Heavy template use increases compile time and binary size (<em>code
+bloat</em>).</p>
+<h3 id="reading-template-errors">10. Reading template errors</h3>
+<ul>
+<li>Read the first error and the line that mentions your code ("required
+from here"); ignore the middle of the instantiation chain.</li>
+<li>Add <code class="verbatim">static_assert</code> (or a concept) at
+the entry point so the failure is clear.</li>
+<li>Test small instantiations; the Compiler Explorer site is
+convenient.</li>
+<li>GCC: <code class="verbatim">-ftemplate-backtrace-limit=N</code>
+limits the printed chain. Clang usually prints more readable
+diagnostics.</li>
+</ul>
+<h3 id="when-to-write-a-template">11. When to write a template</h3>
+<p>Prefer an ordinary function or class when the types are known.
+Consider a template when you need to:</p>
+<ul>
+<li>write an algorithm or container independent of the element
+type;</li>
+<li>accept any callable without type-erasure cost;</li>
+<li>select an implementation by type at compile time;</li>
+<li>compute values or types at compile time.</li>
+</ul>
+<p>Do not make something a template just to avoid writing two
+overloads.</p>
+<h3 id="recommended-learning-sequence">12. Recommended learning
+sequence</h3>
+<ol>
+<li>Write a <code class="verbatim">max_of</code> and a <code
+class="verbatim">Stack&lt;T&gt;</code>; read the errors from a wrong
+use.</li>
+<li>Learn deduction rules, including why <code
+class="verbatim">max_of(3, 4.5)</code> fails.</li>
+<li>Learn concepts and <code class="verbatim">requires</code>.</li>
+<li>Learn forwarding references and <code
+class="verbatim">std::forward</code>.</li>
+<li>Learn variadic templates and fold expressions.</li>
+<li>Learn <code class="verbatim">if constexpr</code> and <code
+class="verbatim">&lt;type_traits&gt;</code>.</li>
+<li>Explore specialization and SFINAE only when reading older code.</li>
+</ol>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

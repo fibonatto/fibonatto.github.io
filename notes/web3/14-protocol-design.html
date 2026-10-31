@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Protocol Design</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/14-protocol-design.html">
+  <meta property="og:title" content="Protocol Design">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/14-protocol-design.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Protocol Design</h1>
+<h2 id="protocol-design-1">Protocol Design</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>A protocol is a set of rules, code, incentives, and governance that
+other people build on and put money into. Protocol design combines
+software engineering, mechanism design, security, and economics, in an
+environment where participants are adversarial and capital is mobile. At
+Staff and Principal scope you are expected to:</p>
+<ul>
+<li>specify a protocol precisely (actors, assets, state, transitions,
+invariants, trust assumptions, parameters, governance powers);</li>
+<li>reason about incentives and adversarial behavior, including
+coalitions, manipulation, and composability with other protocols;</li>
+<li>design economic parameters and governance with bounds, safeguards,
+and a plan for stress;</li>
+<li>recognize recurring designs (AMMs, lending, vaults, staking,
+stablecoins, DAOs) and their known failure modes.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">03_smart-contract-security.org</code>, <code
+class="verbatim">07_tokens-and-standards.org</code>, <code
+class="verbatim">10_oracles-and-mev.org</code>, <code
+class="verbatim">15_deployment-and-upgrades.org</code>, <code
+class="verbatim">18_architecture-decisions.org</code>. Foundations:
+discrete mathematics (probability), complexity (cost models), logic and
+proofs (invariants).</p>
+<h3 id="principles">1. Principles</h3>
+<ul>
+<li><strong>Credible neutrality and permissionlessness</strong>: rules
+apply equally to all participants and do not name specific actors; fewer
+privileged roles make the protocol easier to trust and to compose
+with.</li>
+<li><strong>Simplicity and minimal trust</strong>: every feature adds
+attack surface; every privileged role is a trust assumption; prefer
+fewer, orthogonal mechanisms.</li>
+<li><strong>Incentive compatibility</strong>: honest behavior should be
+the best response for rational participants; where it is not, penalties,
+bonds, or redesign are needed.</li>
+<li><strong>Robustness to adversaries</strong>: assume participants
+optimize for profit and some are malicious; assume they can borrow
+capital for a block, reorder transactions, and coordinate.</li>
+<li><strong>Composability awareness</strong>: other contracts will
+integrate yours; interfaces, token behavior, and oracle outputs become
+dependencies; systemic risk emerges from stacks of protocols.</li>
+<li><strong>Parameterization with bounds</strong>: parameters (fees,
+collateral factors, interest rates) will be changed; define ranges,
+change delays, and stress limits.</li>
+<li><strong>Graceful degradation and recoverability</strong>: emergency
+stops, caps, and orderly wind-down paths; design for the bad day.</li>
+<li><strong>Transparency</strong>: public specs, invariants, parameter
+values, admin powers, and risk disclosures.</li>
+</ul>
+<h3 id="specifying-a-protocol">2. Specifying a protocol</h3>
+<p>Write a specification before code and keep it current:</p>
+<ol>
+<li><strong>Purpose and scope</strong>: what problem the protocol solves
+and what it does not.</li>
+<li><strong>Actors and roles</strong>: users, liquidity providers,
+liquidators, keepers, governors, operators; their capabilities and
+incentives.</li>
+<li><strong>Assets and state</strong>: tokens, balances, positions,
+parameters; state variables and their meaning.</li>
+<li><strong>Transitions</strong>: each user operation, its
+preconditions, effects, and failure behavior; fees and accounting.</li>
+<li><strong>Invariants</strong>: conservation, solvency, monotonicity,
+access constraints; each expressed as a checkable property.</li>
+<li><strong>Trust assumptions and threat model</strong>: oracles,
+admins, upgrade paths, dependencies, adversary capabilities.</li>
+<li><strong>Parameters and bounds</strong>: initial values, allowed
+ranges, who may change them, with what delay.</li>
+<li><strong>Governance and upgrades</strong>: decision process, powers,
+timelocks, emergency actions, decentralization roadmap.</li>
+<li><strong>Failure and emergency procedures</strong>: pausing,
+shutdown, recovery, communication.</li>
+<li><strong>Economic model</strong>: sources of revenue and costs,
+incentive analysis, stress scenarios.</li>
+</ol>
+<p>The specification feeds tests, audits, and monitoring (see files 04,
+16, 17).</p>
+<h3 id="canonical-mechanisms">3. Canonical mechanisms</h3>
+<h4 id="automated-market-makers">3.1 Automated market makers</h4>
+<ul>
+<li><strong>Constant product</strong> (Uniswap v2 style): reserves x and
+y satisfy x times y = k (fees increase k). The spot price is y / x. A
+swap of dx in with fee fraction f yields dy = y * (1-f) * dx / (x +
+(1-f) * dx).</li>
+<li><strong>Worked example</strong>: a pool holds 100 ETH and 200,000
+USDC (spot 2,000 USDC per ETH, k = 20,000,000). Selling 10 ETH with a
+0.3 percent fee gives dy = 200,000 * 0.997 * 10 / (100 + 9.97), about
+18,132 USDC, an average price near 1,813, roughly 9 percent below spot:
+price impact grows with trade size relative to reserves.</li>
+<li><strong>Impermanent loss</strong>: liquidity providers hold a
+rebalancing position; if the price ratio between the assets changes by a
+factor r, the LP value relative to holding is 2 * sqrt(r) / (1 + r) - 1.
+For r = 2 (one asset doubles against the other) that is about -5.7
+percent. Fees must compensate.</li>
+<li><strong>Variants</strong>: concentrated liquidity (providers choose
+price ranges, increasing capital efficiency and active management
+needs), stable-swap curves (low slippage near the peg), weighted pools,
+hooks and programmable pools, and batch or intent-based execution (see
+<code class="verbatim">10_oracles-and-mev.org</code>).</li>
+</ul>
+<h4 id="lending-markets">3.2 Lending markets</h4>
+<ul>
+<li><strong>Mechanics</strong>: users deposit collateral and borrow
+assets; interest rates adjust with utilization (borrowed over supplied),
+often through a kinked curve (gentle slope up to an optimal utilization,
+steep beyond it).</li>
+<li><strong>Health and liquidation</strong>: health factor = (collateral
+value times liquidation threshold) divided by debt. Example: 10 ETH at
+2,000 USD with an 80 percent threshold supports 16,000 USD of debt; with
+12,000 USD borrowed the factor is 1.33; it reaches 1 when ETH falls to
+1,500. Below 1, liquidators repay part of the debt and receive
+collateral at a bonus.</li>
+<li><strong>Risks</strong>: oracle manipulation and staleness;
+liquidation cascades in fast markets (collateral price drops,
+liquidations sell more collateral, prices drop further), bad debt when
+collateral value falls below debt faster than liquidation can act,
+correlated collateral, illiquid collateral, interest rate model
+mis-tuning, governance changing parameters unsafely, and cross-market
+contagion.</li>
+<li><strong>Mitigations</strong>: conservative loan-to-value and
+thresholds by asset liquidity, supply and borrow caps, isolated markets,
+liquidation auction design, safety modules or reserves, and circuit
+breakers.</li>
+</ul>
+<h4 id="stablecoins-and-synthetic-assets">3.3 Stablecoins and synthetic
+assets</h4>
+<p>Designs and risks are summarized in <code
+class="verbatim">07_tokens-and-standards.org</code>. Engineering
+requirements: reserve or collateral transparency, redemption mechanics
+under stress, peg defense mechanisms with bounded power, oracle
+robustness, and clear emergency shutdown.</p>
+<h4 id="staking-liquid-staking-and-restaking">3.4 Staking, liquid
+staking, and restaking</h4>
+<ul>
+<li><strong>Staking</strong> secures a chain or service; rewards
+compensate for opportunity cost and slashing risk. <strong>Liquid
+staking</strong> tokens represent staked positions and tradeable claims;
+<strong>restaking</strong> reuses staked collateral to secure additional
+services, increasing capital efficiency and correlated slashing and
+systemic risk.</li>
+<li><strong>Design questions</strong>: operator selection and
+performance, slashing conditions and who bears them, withdrawal queues
+and liquidity, concentration limits, governance over operators, and the
+cap on shared risk.</li>
+</ul>
+<h4 id="vaults-yield-aggregators-and-strategies">3.5 Vaults, yield
+aggregators, and strategies</h4>
+<p>Automate deposits into external protocols; hazards are strategy risk
+(external protocol failures), harvest and rebalance MEV, accounting
+precision, share price manipulation, and admin powers over strategies (a
+malicious strategy swap drains the vault). Constrain strategies by
+allowlists, caps, and timelocks.</p>
+<h4 id="derivatives-options-and-perpetuals">3.6 Derivatives, options,
+and perpetuals</h4>
+<p>Require reliable pricing, funding rates, margin and liquidation
+engines, and counterparty risk; on-chain order books and oracle design
+dominate security; many designs use off-chain matching with on-chain
+settlement (see <code
+class="verbatim">09_on-chain-and-off-chain.org</code>).</p>
+<h3 id="mechanism-design-and-cryptoeconomic-security">4. Mechanism
+design and cryptoeconomic security</h3>
+<ul>
+<li><strong>Cost of corruption versus profit from corruption</strong>: a
+system is economically secure when attacking it costs more than the
+attacker can gain (including future value and reputation). Quantify: how
+much capital must an attacker control, how long, and what do they lose
+if detected?</li>
+<li><strong>Collusion and bribery</strong>: voting and oracle systems
+are vulnerable to vote buying and cartels; design with commitment,
+randomization, and penalties where possible.</li>
+<li><strong>Sybil resistance</strong>: identity-free systems need cost
+per identity (stake, work, fee) or reputation; airdrops and incentive
+programs attract farmers; measure who actually uses the product.</li>
+<li><strong>Griefing and denial of service</strong>: attackers may spend
+a little to impose large costs (spam, dust, locking a shared resource);
+consider minimums, bonds, and permissionless recovery.</li>
+<li><strong>Reflexivity and feedback loops</strong>: collateral values
+depend on protocol success, which depends on collateral values; stable
+assets backed by volatile native tokens can spiral; test with stress
+scenarios.</li>
+<li><strong>Incentive programs</strong>: emissions bring capital that
+leaves when they end; design to attract durable users; measure retention
+and net revenue, not only total value locked.</li>
+<li><strong>Fee design</strong>: fees fund security and development and
+affect behavior; protocol-owned liquidity, buybacks, and fee switches
+change token value accrual and regulatory exposure.</li>
+<li><strong>Simulation and analysis</strong>: agent-based models of
+users, arbitrageurs, liquidators, and attackers; stress tests with
+historical price paths (for example the March 2020 crash for lending)
+and synthetic worst cases; formal analysis of invariants; economic
+audits alongside code audits.</li>
+</ul>
+<h3 id="governance">5. Governance</h3>
+<ul>
+<li><strong>What governance controls</strong>: parameters, upgrades,
+treasury, listing of assets, risk limits, emergency powers. Each power
+should have a bound, a delay, and an owner.</li>
+<li><strong>Mechanisms</strong>: token-weighted voting (simple,
+plutocratic, vulnerable to concentration and vote buying), delegation,
+quorum and thresholds, time-weighted or locked voting (vote-escrow),
+quadratic or conviction voting (Sybil-prone without identity),
+optimistic governance (proposals pass unless vetoed), off-chain
+signaling (for example Snapshot) with on-chain execution through a
+governor contract and timelock.</li>
+<li><strong>Attack surface</strong>: flash-loan voting power (mitigated
+by snapshots at past blocks), low-turnout capture, proposals that hide
+malicious calls (simulate and review actions, use proposal-diff
+tooling), treasury drains, delegate corruption, governance token market
+concentration, and cross-chain governance message attacks.</li>
+<li><strong>Safeguards</strong>: timelocks long enough for users to exit
+and for monitoring to react, guardian or security council vetoes with
+narrow powers (and their own risk), emergency actions limited to pausing
+and risk reduction, parameter change bounds, and separate roles for
+operations versus upgrades.</li>
+<li><strong>Operational reality</strong>: low participation, delegate
+fatigue, and the need for professional risk management (risk stewards or
+service providers acting within caps); define accountability and
+compensation for contributors.</li>
+<li><strong>Progressive decentralization</strong>: publish the roadmap
+with measurable milestones for removing admin powers; keep the promises
+or explain the change.</li>
+<li><strong>Legal and social layer</strong>: DAOs face legal entity
+questions and real-world accountability; involve counsel, and be
+explicit about who can be held responsible.</li>
+</ul>
+<h3 id="composability-and-systemic-risk">6. Composability and systemic
+risk</h3>
+<ul>
+<li><strong>Dependency graph</strong>: map every protocol you depend on
+(oracles, tokens, AMMs, lending markets, bridges); each can fail or be
+governed against you; limit exposure with caps and allowlists.</li>
+<li><strong>Rehypothecation and leverage loops</strong>: assets reused
+as collateral in several layers amplify shocks.</li>
+<li><strong>Shared oracles and liquidity</strong>: correlated failures
+(a feed error affects every protocol using it).</li>
+<li><strong>Permissionless integration</strong>: others can call your
+functions in unintended ways; design for hostile integrators.</li>
+<li><strong>Contagion planning</strong>: stress scenarios where a major
+dependency depegs or halts; define automated responses (freeze, reduce
+caps, move to safe assets) and governance escalation.</li>
+</ul>
+<h3 id="from-design-to-code">7. From design to code</h3>
+<ul>
+<li>Keep the on-chain core small; push heavy computation off-chain with
+verification.</li>
+<li>Encode invariants as assertions in tests (fuzz and invariant tests)
+and in monitoring (see <code
+class="verbatim">04_smart-contract-testing.org</code>, <code
+class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+<li>Use fixed-point math with explicit rounding rules; test extreme
+parameters.</li>
+<li>Make parameters changeable only through bounded, delayed, observable
+processes.</li>
+<li>Plan upgrade and migration paths from the start (see <code
+class="verbatim">15_deployment-and-upgrades.org</code>).</li>
+<li>Launch in stages: caps, allowlists, bug bounty, monitoring, then
+expansion.</li>
+</ul>
+<h3 id="self-check">8. Self-check</h3>
+<ol>
+<li>Derive the price impact of a trade in a constant-product pool as a
+function of trade size over reserves, and explain why liquidity depth
+matters for oracle manipulation.</li>
+<li>Compute the price at which a loan becomes liquidatable for a given
+collateral, threshold, and debt; explain why liquidation cascades
+occur.</li>
+<li>What is the cost of corruption of a protocol whose governance token
+can be borrowed for a block? How do snapshots and timelocks change
+it?</li>
+<li>Identify the privileged roles in a protocol you know and what each
+can do in the worst case.</li>
+<li>Design an interest rate model for a lending pool and explain the
+effects of the kink and the steep slope.</li>
+<li>A protocol's incentives double total value locked in a month. What
+would you measure to know whether the growth is durable?</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: implement a constant-product pool with fees in a test and
+verify the invariant and the price-impact formula; compute impermanent
+loss for several price paths.</li>
+<li>Core: implement a simple lending market with a kinked interest model
+and liquidations; write invariants (solvency, accounting) and fuzz
+them.</li>
+<li>Core: write a protocol specification document (the ten sections
+above) for a small protocol; derive tests from its invariants.</li>
+<li>Core: build an agent-based simulation of a lending market with a
+price shock and liquidators with limited capital; measure bad debt as
+parameters vary.</li>
+<li>Stretch: implement a governor with timelock; simulate a proposal
+attack with flash-loaned voting power and show your mitigations.</li>
+<li>Stretch: analyze a real protocol's failure (from a post-mortem) as a
+mechanism design problem: what incentive or assumption failed and what
+would have prevented it?</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>Documentation and whitepapers of foundational protocols: Uniswap
+(v2, v3, v4), Aave, Compound, Maker, Curve, Lido; their audits and risk
+frameworks.</li>
+<li>Adams, Zinsmeister, Robinson, <em>Uniswap v2 Core</em>; Angeris and
+Chitra, <em>Improved Price Oracles: Constant Function Market
+Makers</em>; Gauntlet and Chaos Labs risk research on lending
+parameters.</li>
+<li>Buterin, essays on governance, credible neutrality, and mechanism
+design; Roughgarden, lectures on algorithmic game theory and blockchain
+economics.</li>
+<li>Governor and timelock contracts (OpenZeppelin Governor): <a
+href="https://docs.openzeppelin.com/contracts/5.x/governance">https://docs.openzeppelin.com/contracts/5.x/governance</a></li>
+<li>Foundations notes: discrete mathematics (probability and counting),
+complexity, and logic and proofs (invariants).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Specify actors, state, transitions, invariants, parameters, trust
+assumptions, and governance before coding.</li>
+<li>Incentives and adversaries decide security; quantify cost of
+corruption and stress the economics.</li>
+<li>Parameter changes, governance, and composability are attack
+surfaces; bound and delay them.</li>
+<li>Learn the canonical mechanisms and their failure modes (impact and
+slippage, liquidation cascades, depegs, reflexivity).</li>
+<li>Stage launches, cap exposure, and plan for the bad day.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

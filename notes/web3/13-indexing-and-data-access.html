@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Indexing and Data Access</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/13-indexing-and-data-access.html">
+  <meta property="og:title" content="Indexing and Data Access">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/13-indexing-and-data-access.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Indexing and Data Access</h1>
+<h2 id="indexing-and-data-access-1">Indexing and Data Access</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Chains are poor databases: they answer a few questions cheaply (the
+current state of a known key) and most questions badly (history,
+aggregates, search, joins). Every real product therefore runs an
+indexing and data-access layer, and that layer is a distributed system
+with chain-specific hazards (reorgs, provider limits, ABI drift, huge
+backfills). At Staff and Principal scope you are expected to:</p>
+<ul>
+<li>design the data pipeline (ingest, decode, transform, store, serve)
+so that it is correct under reorgs, replayable, observable, and
+affordable;</li>
+<li>choose between building, buying, and using shared indexers, with
+their trust and lock-in implications;</li>
+<li>decide which data must be verified against the chain and which can
+be trusted from an index;</li>
+<li>shape APIs and caches so frontends and services get consistent, fast
+reads.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">09_on-chain-and-off-chain.org</code>, <code
+class="verbatim">12_distributed-systems.org</code>, <code
+class="verbatim">17_reliability-and-monitoring.org</code>, <code
+class="verbatim">02_evm-and-solidity.org</code> (events and ABI).
+Foundations: data structures (storage engines, indexes) and data
+representation (encodings).</p>
+<h3 id="what-the-chain-gives-you">1. What the chain gives you</h3>
+<ul>
+<li><strong>Blocks, transactions, receipts, logs</strong>: raw history.
+Logs (events) are the cheap structured output emitted by contracts; they
+cannot be read by contracts but are efficient to filter off-chain by
+address and topics.</li>
+<li><strong>State</strong>: <code>eth_getBalance</code>,
+<code>eth_getStorageAt</code>, <code>eth_call</code> (execute a view
+function at a block), and proofs (<code>eth_getProof</code>, EIP-1186)
+for verifiable reads.</li>
+<li><strong>Traces</strong>: internal calls, value transfers, and revert
+traces via debug and trace methods (client-specific); needed to see ETH
+moved by contracts, which emits no logs, and to analyze incidents.</li>
+<li><strong>JSON-RPC methods commonly used</strong>:
+<code>eth_blockNumber</code>, <code>eth_getBlockByNumber</code> (with or
+without full transactions), <code>eth_getBlockReceipts</code> (efficient
+bulk receipts where supported), <code>eth_getLogs</code>,
+<code>eth_call</code>, <code>eth_subscribe</code> (newHeads, logs;
+WebSocket), <code>eth_feeHistory</code>,
+<code>eth_getTransactionReceipt</code>.</li>
+<li><strong>Limits</strong>: providers cap block ranges and result sizes
+for <code>eth_getLogs</code>, rate limit requests, and meter compute
+units; archive access (state at old blocks) costs more; subscriptions
+drop connections.</li>
+<li><strong>Node choices</strong>: self-hosted full or archive nodes
+(Geth, Nethermind, Erigon, Reth, Besu) give control and predictable cost
+at the price of operations; managed providers are convenient but a
+dependency and a cost line. Archive efficiency varies by client.</li>
+</ul>
+<h3 id="indexing-approaches">2. Indexing approaches</h3>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Description</th>
+<th>Strengths</th>
+<th>Weaknesses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Direct RPC reads</td>
+<td>Frontend or backend calls the node for what it needs
+(multicall)</td>
+<td>No extra infrastructure; fresh</td>
+<td>Poor for history and aggregates; rate limits; load</td>
+</tr>
+<tr>
+<td>Hosted indexing (subgraphs)</td>
+<td>Define mappings from events to entities; query by GraphQL</td>
+<td>Fast to build; ecosystem tooling</td>
+<td>Constrained model; vendor or network dependency; reindex cost</td>
+</tr>
+<tr>
+<td>Code-first indexers (for example Ponder, Envio, Subsquid)</td>
+<td>TypeScript or similar handlers write to a database</td>
+<td>Flexibility; your own database; local dev</td>
+<td>You operate or pay for it</td>
+</tr>
+<tr>
+<td>Custom ETL pipeline</td>
+<td>Ingest blocks, receipts, and traces into Postgres, ClickHouse, or a
+warehouse</td>
+<td>Full control; analytics-grade</td>
+<td>Engineering effort; reorg and decoding logic yours</td>
+</tr>
+<tr>
+<td>Public analytics datasets and platforms</td>
+<td>SQL over decoded chain data (BigQuery public datasets, Dune, and
+others)</td>
+<td>Exploration, dashboards, research</td>
+<td>Latency; not for transactional product paths</td>
+</tr>
+<tr>
+<td>Streaming data (for example Substreams, firehose-style)</td>
+<td>Deterministic, parallel extraction of chain data</td>
+<td>High throughput backfills</td>
+<td>Specialized tooling</td>
+</tr>
+<tr>
+<td>Client-embedded extensions (for example Reth execution
+extensions)</td>
+<td>Run indexing inside the node process</td>
+<td>Efficient, consistent with the node</td>
+<td>Tied to one client</td>
+</tr>
+</tbody>
+</table>
+<p>Tool landscapes change quickly; evaluate by data model flexibility,
+reorg handling, multi-chain support, backfill speed, hosting and
+portability, cost model, observability, and exit path (can you move your
+data and logic elsewhere?).</p>
+<h3 id="designing-an-indexer">3. Designing an indexer</h3>
+<ul>
+<li><strong>Ingest</strong>: follow the chain head with a persistent
+cursor (last processed block number and hash); fetch blocks and receipts
+(or logs by block range); handle pagination limits; use WebSocket
+subscriptions for latency but fall back to polling and range backfill to
+repair gaps.</li>
+<li><strong>Decode</strong>: use ABIs to decode logs and calldata;
+manage ABI versions for upgradeable contracts (the implementation ABI
+behind a proxy; ABI changes over upgrades); handle unknown events
+without crashing; preserve raw data so you can re-decode later.</li>
+<li><strong>Transform</strong>: deterministic, idempotent handlers that
+map events to entity changes; avoid external calls inside handlers where
+possible (non-determinism and slowness); when you must call
+<code>eth_call</code> at the event's block to read state, pin the block
+number.</li>
+<li><strong>Store</strong>: relational schema with natural keys (chain
+id, block number, transaction index, log index); store block hashes for
+reorg detection; keep raw tables (blocks, logs, transactions) separate
+from derived tables (balances, positions, orders); index for the queries
+you serve; consider partitioning by time or block range.</li>
+<li><strong>Reorg handling</strong>: keep unfinalized blocks in a buffer
+with their hashes; for each new block, check that its parent hash equals
+the stored head; on mismatch find the common ancestor, delete or rewind
+derived rows above it (with undo logs or by recomputing from raw
+tables), and replay the new branch. Mark data as unfinalized until the
+block is safe or finalized and expose that in APIs.</li>
+<li><strong>Backfill</strong>: split block ranges, run in parallel
+within provider limits, checkpoint progress, and make backfills
+resumable and idempotent; reprocess from raw tables when logic changes;
+keep deployment blocks of contracts to avoid scanning from genesis.</li>
+<li><strong>Multi-chain</strong>: separate cursors and finality policies
+per chain; include chain id in every key.</li>
+<li><strong>Data quality</strong>: reconcile derived values with
+on-chain state (for example balances from Transfer events versus
+<code>balanceOf</code> at a block); alert on drift; unit-test handlers
+with recorded logs; fuzz against edge cases (zero amounts,
+self-transfers, mints and burns, rebasing tokens, fee-on-transfer).</li>
+<li><strong>Performance</strong>: batch RPC requests, cache immutable
+data (finalized blocks, ABIs), avoid wide <code>eth_getLogs</code>
+queries without address filters, and use bloom filters where available
+through the node.</li>
+<li><strong>Observability</strong>: lag in blocks and seconds behind
+head, processing rate, error counts, reorg depth and frequency, RPC
+latency and error rate per provider, queue depth, and last finalized
+block indexed.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Minimal reorg-aware storage (sketch).</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> blocks (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  chain_id     <span class="dt">integer</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">number</span>       bigint  <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">hash</span>         bytea   <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  parent_hash  bytea   <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">timestamp</span>    timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  finalized    <span class="dt">boolean</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">false</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (chain_id, <span class="dt">number</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> logs (</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  chain_id     <span class="dt">integer</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  block_number bigint  <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  block_hash   bytea   <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  tx_hash      bytea   <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  log_index    <span class="dt">integer</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  address      bytea   <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  topics       bytea[] <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span>         bytea   <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (chain_id, block_number, log_index)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> logs_address_topic0 <span class="kw">ON</span> logs (chain_id, address, (topics[<span class="dv">1</span>]));</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Reorg-aware ingestion loop (pseudocode-level sketch).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">step</span>(chainId<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> head <span class="op">=</span> <span class="cf">await</span> store<span class="op">.</span><span class="fu">getHead</span>(chainId)                 <span class="co">// last processed block (number, hash)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> next <span class="op">=</span> <span class="cf">await</span> rpc<span class="op">.</span><span class="fu">getBlockByNumber</span>(head<span class="op">.</span><span class="at">number</span> <span class="op">+</span> <span class="dv">1</span>n)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>next) <span class="cf">return</span>                                          <span class="co">// not produced yet</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (next<span class="op">.</span><span class="at">parentHash</span> <span class="op">!==</span> head<span class="op">.</span><span class="at">hash</span>) {                       <span class="co">// reorg detected</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> ancestor <span class="op">=</span> <span class="cf">await</span> <span class="fu">findCommonAncestor</span>(chainId<span class="op">,</span> head) <span class="co">// walk back until hashes match</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> store<span class="op">.</span><span class="fu">rollbackTo</span>(chainId<span class="op">,</span> ancestor<span class="op">.</span><span class="at">number</span>)         <span class="co">// delete/rewind derived data above</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> logs <span class="op">=</span> <span class="cf">await</span> rpc<span class="op">.</span><span class="fu">getLogsForBlock</span>(next<span class="op">.</span><span class="at">hash</span>)          <span class="co">// by block hash, not number, for consistency</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">await</span> store<span class="op">.</span><span class="fu">transaction</span>(<span class="kw">async</span> (tx) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> handlers<span class="op">.</span><span class="fu">process</span>(tx<span class="op">,</span> next<span class="op">,</span> logs)                   <span class="co">// idempotent, deterministic</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tx<span class="op">.</span><span class="fu">setHead</span>(chainId<span class="op">,</span> next<span class="op">.</span><span class="at">number</span><span class="op">,</span> next<span class="op">.</span><span class="at">hash</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="data-access-for-applications">4. Data access for
+applications</h3>
+<ul>
+<li><strong>Read patterns</strong>: balances and simple state through
+<code>eth_call</code> batched with Multicall3 (deployed at the same
+address on most EVM chains); history, lists, search, and aggregates
+through the index; real-time updates through subscriptions with fallback
+polling.</li>
+<li><strong>Consistency between indexer and chain</strong>: after a user
+transaction confirms, the index may lag; frontends should combine the
+transaction receipt (which is immediate) with optimistic updates and
+reconcile when the indexer catches up; some systems expose "indexed up
+to block N" so clients can wait.</li>
+<li><strong>Caching</strong>: cache finalized data aggressively; short
+TTLs for latest data; use request deduplication and client-side
+libraries for query caching and invalidation on new blocks.</li>
+<li><strong>API design</strong>: GraphQL for flexible graphs of
+entities; REST for simple resources; include chain id and block context
+in responses; version APIs; paginate with cursors, not offsets; expose
+finalized and unfinalized states clearly.</li>
+<li><strong>Verification and trust</strong>: an index is a trusted third
+party. Critical decisions (large transfers, liquidations, permissions)
+should re-read on-chain state, ideally through multiple providers;
+light-client approaches (verifying headers and state proofs, for example
+with projects like Helios) can reduce trust in RPC providers for
+sensitive flows.</li>
+<li><strong>Frontend infrastructure</strong>: handle chain switches,
+wallet account changes, pending transactions, failed transactions, and
+replaced transactions in UI state; libraries such as viem and wagmi
+manage much of this with hooks and caching.</li>
+<li><strong>Identity and naming</strong>: resolve ENS names and reverse
+records carefully (cache, validate, handle off-chain resolution with
+CCIP-Read); display addresses with checksums and warn on
+lookalikes.</li>
+<li><strong>Off-chain content</strong>: NFT and token metadata through
+IPFS gateways or pinning services; cache and validate; handle slow or
+unavailable gateways; sanitize untrusted metadata (SVG and HTML can
+carry scripts).</li>
+</ul>
+<h3 id="data-modeling-for-blockchain-data">5. Data modeling for
+blockchain data</h3>
+<ul>
+<li><strong>Events as facts</strong>: model an append-only log of domain
+events with their block and log coordinates; derive current state as
+projections; this matches event sourcing and makes replays
+straightforward (see the patterns notes in the Software Architecture
+folder).</li>
+<li><strong>Token balances</strong>: derive from Transfer events (mints
+and burns included) or snapshot by <code>balanceOf</code>; rebasing,
+fee-on-transfer, and non-standard tokens break event-based accounting;
+decide the source of truth per token class and verify.</li>
+<li><strong>Prices and valuations</strong>: store prices with their
+source and timestamp; historical valuation requires historical prices,
+which are themselves data pipelines.</li>
+<li><strong>Positions and aggregates</strong>: maintain materialized
+views updated incrementally; recompute from raw data when handlers
+change.</li>
+<li><strong>Multi-contract entities</strong>: map factory-created
+instances (track the factory's creation events to discover addresses
+dynamically).</li>
+<li><strong>Proxies and upgrades</strong>: events come from the proxy
+address with the implementation's ABI; track implementation changes to
+decode correctly across versions.</li>
+<li><strong>Schema evolution</strong>: version derived schemas, support
+reindexing, and keep raw data so that new questions can be answered
+later.</li>
+<li><strong>Privacy and compliance</strong>: indexed data is public
+chain data, but joining it with off-chain identity creates personal data
+subject to regulation; control access and retention.</li>
+</ul>
+<h3 id="cost-scale-and-operations">6. Cost, scale, and operations</h3>
+<ul>
+<li><strong>Cost drivers</strong>: RPC calls and compute units, archive
+access, storage of raw and derived data, backfill compute, and
+engineering time. Estimate per chain; multi-chain multiplies it.</li>
+<li><strong>Scale limits</strong>: high-throughput chains produce
+enormous volumes; filter at ingestion (only contracts you care about),
+compress and partition, and archive cold data.</li>
+<li><strong>Reliability</strong>: run more than one ingestion path and
+compare; keep raw data durable; practice restoring from backups and
+reindexing within a known time.</li>
+<li><strong>Security</strong>: protect RPC keys, validate untrusted
+event data (user-controlled strings can be huge or malicious), and
+rate-limit public APIs.</li>
+<li><strong>Ownership</strong>: assign an owner and an on-call for the
+data layer; define SLOs for freshness and correctness (see <code
+class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+</ul>
+<h3 id="self-check">7. Self-check</h3>
+<ol>
+<li>A subgraph or indexer shows a balance that differs from
+<code>balanceOf</code>. List five possible causes and how you diagnose
+them.</li>
+<li>Explain a reorg-aware ingestion algorithm and what state you must
+store to implement it.</li>
+<li>When should an application trust the index, and when should it
+re-read the chain?</li>
+<li>How do you design a backfill that is resumable, parallel, and
+respects provider limits?</li>
+<li>A token upgrades its implementation and adds a new event version.
+How does your indexer keep working and keep history correct?</li>
+<li>Choose between a hosted subgraph and a code-first indexer for a
+product with complex aggregations; state criteria and risks.</li>
+</ol>
+<h3 id="exercises">8. Exercises</h3>
+<ul>
+<li>Warm-up: query logs for a popular token's Transfer events over a
+block range with viem; decode them and compute balances for a few
+addresses; compare with <code>balanceOf</code> at the end block.</li>
+<li>Core: build a small indexer (TypeScript or another language) with a
+Postgres schema, cursor, and handlers for one contract; run it against a
+local node.</li>
+<li>Core: add reorg handling and test it with a local node by creating a
+reorg (snapshot and revert) and verifying that derived tables roll back
+correctly.</li>
+<li>Core: write a reconciliation job comparing indexed balances with
+on-chain values at a pinned block; add alerts.</li>
+<li>Stretch: implement parallel backfill with checkpoints, rate
+limiting, and a retry policy; measure throughput against provider
+limits.</li>
+<li>Stretch: add a verification layer that re-reads critical values
+on-chain through two providers before an API returns them as
+"verified".</li>
+</ul>
+<h3 id="resources">9. Resources</h3>
+<ul>
+<li>Ethereum JSON-RPC API documentation and the execution API
+specification: <a
+href="https://ethereum.org/en/developers/docs/apis/json-rpc/">https://ethereum.org/en/developers/docs/apis/json-rpc/</a></li>
+<li>viem and wagmi documentation (public clients, logs, multicall,
+caching); The Graph, Ponder, Envio, and Subsquid documentation; client
+documentation for trace and debug APIs (Geth, Erigon, Reth,
+Nethermind).</li>
+<li>EIP-1186 (state proofs) and EIP-3668 (CCIP-Read): <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a></li>
+<li>Kleppmann, <em>Designing Data-Intensive Applications</em> (event
+sourcing, derived data, stream processing).</li>
+<li>Foundations notes: data structures (indexes and storage engines) and
+the Software Architecture patterns notes (event sourcing, CQRS).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>The chain is a log and a state machine, not a query engine; build a
+derived data layer.</li>
+<li>Make ingestion deterministic, idempotent, reorg-aware, and
+replayable from raw data.</li>
+<li>Distinguish finalized from unfinalized data in storage and
+APIs.</li>
+<li>Verify critical reads against the chain; an index is a trusted
+party.</li>
+<li>Monitor lag, drift, and reorg handling; budget RPC and storage
+costs.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

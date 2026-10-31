@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Web3 Lead Developer / Architect Interview Preparation</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/web3-lead-developer-architect-study-plan.html">
+  <meta property="og:title" content="Web3 Lead Developer / Architect Interview Preparation">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/web3-lead-developer-architect-study-plan.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Web3 Lead Developer / Architect Interview Preparation</h1>
+<h2 id="objective">Objective</h2>
+<p>Prepare to discuss Web3 architecture, smart-contract engineering,
+security, production operations, technical leadership, and engineering
+decisions in fluent English.</p>
+<p>The recruiter message does not include the full job description.
+Treat this as a role-oriented baseline, then reprioritize after
+receiving the job description and confirmed tech stack.</p>
+<h2 id="clarify-the-role">0. Clarify the Role</h2>
+<h3 id="request-from-the-recruiter">Request from the recruiter</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Full job description and success
+criteria.</label></li>
+<li><label><input type="checkbox" />Required blockchain ecosystem and
+target networks.</label></li>
+<li><label><input type="checkbox" />Smart-contract languages and
+frameworks in use.</label></li>
+<li><label><input type="checkbox" />Whether the role is primarily
+protocol engineering, dApp development, infrastructure, or technical
+leadership.</label></li>
+<li><label><input type="checkbox" />Team structure, reporting line, and
+expected hands-on coding.</label></li>
+<li><label><input type="checkbox" />Interview stages and
+topics.</label></li>
+<li><label><input type="checkbox" />Whether production ownership,
+audits, or incident response are part of the role.</label></li>
+</ul>
+<h3 id="establish-the-scope">Establish the scope</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Separate confirmed requirements from
+assumptions.</label></li>
+<li><label><input type="checkbox" />Prioritize the actual stack and
+responsibilities once confirmed.</label></li>
+<li><label><input type="checkbox" />Do not spend time learning unrelated
+tools merely because they are common in Web3.</label></li>
+</ul>
+<h2 id="smart-contracts-and-evm">1. Smart Contracts and EVM</h2>
+<h3 id="transaction-and-execution-model">Transaction and execution
+model</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Transaction lifecycle, receipts,
+logs, revert behavior, and transaction fees.</label></li>
+<li><label><input type="checkbox" />EVM execution model, opcodes at a
+conceptual level, and call stack.</label></li>
+<li><label><input type="checkbox" />Account model: externally owned
+accounts and contract accounts.</label></li>
+<li><label><input type="checkbox" />Gas accounting, out-of-gas behavior,
+and denial-of-service implications.</label></li>
+<li><label><input type="checkbox" />Block timestamps, block numbers,
+transaction ordering, and their limitations.</label></li>
+<li><label><input type="checkbox" />Events and logs: what they can and
+cannot be used for.</label></li>
+</ul>
+<h3 id="solidity-semantics">Solidity semantics</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" /><code
+class="verbatim">storage</code>, <code class="verbatim">memory</code>,
+and <code class="verbatim">calldata</code>.</label></li>
+<li><label><input type="checkbox" />Value types, reference types, data
+locations, and copying behavior.</label></li>
+<li><label><input type="checkbox" />Storage layout, slot calculation,
+packing, and upgrade compatibility.</label></li>
+<li><label><input type="checkbox" />Visibility, mutability, inheritance,
+interfaces, and abstract contracts.</label></li>
+<li><label><input type="checkbox" />Custom errors, revert data, and
+error propagation.</label></li>
+<li><label><input type="checkbox" />Low-level calls and return-value
+handling.</label></li>
+<li><label><input type="checkbox" /><code class="verbatim">call</code>,
+<code class="verbatim">delegatecall</code>, and <code
+class="verbatim">staticcall</code>, including trust
+boundaries.</label></li>
+<li><label><input type="checkbox" />Fallback and receive
+functions.</label></li>
+<li><label><input type="checkbox" />External calls, callbacks, and
+control-flow risks.</label></li>
+<li><label><input type="checkbox" />Integer arithmetic, precision,
+rounding, and fixed-point representations.</label></li>
+</ul>
+<h3 id="standards-and-common-patterns">Standards and common
+patterns</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />ERC-20, ERC-721, and ERC-165 at the
+level relevant to the role.</label></li>
+<li><label><input type="checkbox" />Permit-style approvals and EIP-712
+typed-data signatures.</label></li>
+<li><label><input type="checkbox" />Checks-Effects-Interactions and
+pull-payment patterns.</label></li>
+<li><label><input type="checkbox" />Access-control patterns, roles,
+ownership, and least privilege.</label></li>
+<li><label><input type="checkbox" />Pausing, emergency controls, and
+recovery procedures.</label></li>
+<li><label><input type="checkbox" />Proxy patterns and upgradeability,
+if relevant to the target system.</label></li>
+<li><label><input type="checkbox" />Initializers, implementation
+locking, storage collisions, and upgrade authority.</label></li>
+<li><label><input type="checkbox" />Timelocks, multisigs, and governance
+assumptions.</label></li>
+</ul>
+<h2 id="smart-contract-security">2. Smart-Contract Security</h2>
+<h3 id="threat-modeling">Threat modeling</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Identify assets, actors, privileges,
+trust boundaries, and external dependencies.</label></li>
+<li><label><input type="checkbox" />Define invariants and security
+properties before reviewing implementation.</label></li>
+<li><label><input type="checkbox" />Distinguish threats prevented by
+code from risks delegated to operators or governance.</label></li>
+<li><label><input type="checkbox" />Consider compromised keys, malicious
+tokens, malicious integrations, and unavailable
+dependencies.</label></li>
+</ul>
+<h3 id="common-vulnerabilities">Common vulnerabilities</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Reentrancy, including cross-function
+and cross-contract reentrancy.</label></li>
+<li><label><input type="checkbox" />Broken access control and privilege
+escalation.</label></li>
+<li><label><input type="checkbox" />Replay attacks, nonce management,
+and domain separation.</label></li>
+<li><label><input type="checkbox" />Signature validation errors and
+incorrect EIP-712 domain construction.</label></li>
+<li><label><input type="checkbox" />Front-running, transaction ordering,
+sandwich attacks, and MEV.</label></li>
+<li><label><input type="checkbox" />Oracle manipulation and stale or
+invalid price data.</label></li>
+<li><label><input type="checkbox" />Flash-loan-assisted
+attacks.</label></li>
+<li><label><input type="checkbox" />Precision loss, rounding errors, and
+accounting inconsistencies.</label></li>
+<li><label><input type="checkbox" />Denial of service, gas griefing, and
+unbounded loops.</label></li>
+<li><label><input type="checkbox" />Unsafe assumptions about external
+contract behavior.</label></li>
+<li><label><input type="checkbox" />Proxy initialization bugs and
+storage-layout incompatibility.</label></li>
+<li><label><input type="checkbox" />Bridge and cross-chain message
+verification failures, if applicable.</label></li>
+</ul>
+<h3 id="testing-and-verification">Testing and verification</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Unit tests for expected behavior and
+failure paths.</label></li>
+<li><label><input type="checkbox" />Integration tests across contract
+boundaries.</label></li>
+<li><label><input type="checkbox" />Property-based testing and
+fuzzing.</label></li>
+<li><label><input type="checkbox" />Invariant testing for accounting and
+authorization properties.</label></li>
+<li><label><input type="checkbox" />Fork testing against realistic chain
+state, where appropriate.</label></li>
+<li><label><input type="checkbox" />Static analysis and its
+limitations.</label></li>
+<li><label><input type="checkbox" />Understand the role and limits of
+formal verification.</label></li>
+<li><label><input type="checkbox" />Build a regression test from a
+hypothetical or historical exploit.</label></li>
+<li><label><input type="checkbox" />Explain what a test suite does not
+prove.</label></li>
+</ul>
+<h3 id="audit-and-incident-readiness">Audit and incident readiness</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Review threat models, privileged
+functions, and upgrade paths.</label></li>
+<li><label><input type="checkbox" />Understand audit scope, findings,
+severity, remediation, and retesting.</label></li>
+<li><label><input type="checkbox" />Prepare an incident response
+sequence: contain, assess, communicate, recover, learn.</label></li>
+<li><label><input type="checkbox" />Understand the trade-offs and limits
+of pause mechanisms.</label></li>
+<li><label><input type="checkbox" />Distinguish an audited codebase from
+a system that is guaranteed secure.</label></li>
+</ul>
+<h2 id="web3-system-architecture">3. Web3 System Architecture</h2>
+<h3 id="on-chain-and-off-chain-boundaries">On-chain and off-chain
+boundaries</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Decide which invariants must be
+enforced on-chain.</label></li>
+<li><label><input type="checkbox" />Identify responsibilities suitable
+for off-chain services.</label></li>
+<li><label><input type="checkbox" />Define trust assumptions for
+relayers, indexers, oracles, and administrators.</label></li>
+<li><label><input type="checkbox" />Understand the cost, latency,
+privacy, and availability trade-offs of on-chain execution.</label></li>
+<li><label><input type="checkbox" />Design interfaces and failure
+behavior between contracts and services.</label></li>
+</ul>
+<h3 id="nodes-and-rpc">Nodes and RPC</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Nodes, clients, JSON-RPC, and
+provider dependencies.</label></li>
+<li><label><input type="checkbox" />Reads versus writes, signing,
+transaction submission, and receipt polling.</label></li>
+<li><label><input type="checkbox" />Rate limits, retries, timeouts, and
+provider failover.</label></li>
+<li><label><input type="checkbox" />Nonce management for
+transaction-sending services.</label></li>
+<li><label><input type="checkbox" />Confirmation policies and
+chain-specific finality assumptions.</label></li>
+<li><label><input type="checkbox" />Handling dropped, replaced,
+reverted, or delayed transactions.</label></li>
+</ul>
+<h3 id="events-and-indexing">Events and indexing</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Event-driven indexing and database
+projections.</label></li>
+<li><label><input type="checkbox" />Idempotent event processing and
+duplicate delivery.</label></li>
+<li><label><input type="checkbox" />Reorganizations, removed logs, and
+rollback/reconciliation.</label></li>
+<li><label><input type="checkbox" />Backfills, checkpoints, replay, and
+recovery from indexer outages.</label></li>
+<li><label><input type="checkbox" />Distinguish chain state from an
+eventually consistent index.</label></li>
+<li><label><input type="checkbox" />Design consistency expectations for
+APIs and user interfaces.</label></li>
+</ul>
+<h3 id="wallets-and-signatures">Wallets and signatures</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />EOA versus contract accounts and
+smart-account concepts.</label></li>
+<li><label><input type="checkbox" />Transaction signing versus message
+signing.</label></li>
+<li><label><input type="checkbox" />Nonces, chain IDs, domain
+separation, and replay protection.</label></li>
+<li><label><input type="checkbox" />Key custody, rotation, recovery, and
+operational controls.</label></li>
+<li><label><input type="checkbox" />Wallet connection and
+transaction-confirmation UX, where relevant.</label></li>
+</ul>
+<h3 id="scaling-and-cross-chain-systems">Scaling and cross-chain
+systems</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />L1 versus L2
+trade-offs.</label></li>
+<li><label><input type="checkbox" />Optimistic and zero-knowledge
+rollups at a conceptual level.</label></li>
+<li><label><input type="checkbox" />Sequencers, data availability,
+withdrawal/finality assumptions.</label></li>
+<li><label><input type="checkbox" />Cross-chain messaging and bridge
+trust models.</label></li>
+<li><label><input type="checkbox" />Replay protection and message
+authentication across chains.</label></li>
+<li><label><input type="checkbox" />Understand why cross-chain systems
+add significant security assumptions.</label></li>
+</ul>
+<h2 id="distributed-systems">4. Distributed Systems</h2>
+<h3 id="failure-models">Failure models</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Partial failure, process crashes,
+network partitions, and unavailable dependencies.</label></li>
+<li><label><input type="checkbox" />Timeouts do not prove that an
+operation failed.</label></li>
+<li><label><input type="checkbox" />At-most-once, at-least-once, and
+effectively-once processing.</label></li>
+<li><label><input type="checkbox" />Idempotency keys, deduplication, and
+safe retries.</label></li>
+<li><label><input type="checkbox" />Ordering guarantees and their
+costs.</label></li>
+<li><label><input type="checkbox" />Backpressure, queues, and overload
+behavior.</label></li>
+</ul>
+<h3 id="consistency-and-coordination">Consistency and coordination</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Strong consistency versus eventual
+consistency.</label></li>
+<li><label><input type="checkbox" />Replication lag and stale
+reads.</label></li>
+<li><label><input type="checkbox" />Database transactions and concurrent
+updates.</label></li>
+<li><label><input type="checkbox" />Distributed locks, leases, and
+fencing tokens when relevant.</label></li>
+<li><label><input type="checkbox" />Sagas, compensating actions, and
+transactional outbox patterns.</label></li>
+<li><label><input type="checkbox" />Reconciliation when on-chain and
+off-chain state diverge.</label></li>
+</ul>
+<h3 id="resilience-patterns">Resilience patterns</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Deadlines, exponential backoff,
+jitter, and retry budgets.</label></li>
+<li><label><input type="checkbox" />Circuit breakers and
+bulkheads.</label></li>
+<li><label><input type="checkbox" />Rate limiting and load
+shedding.</label></li>
+<li><label><input type="checkbox" />Graceful degradation and recovery
+procedures.</label></li>
+<li><label><input type="checkbox" />Avoid retry storms and duplicate
+side effects.</label></li>
+</ul>
+<h2 id="architecture-and-design-decisions">5. Architecture and Design
+Decisions</h2>
+<h3 id="architecture-fundamentals">Architecture fundamentals</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Modularity, cohesion, coupling, and
+dependency direction.</label></li>
+<li><label><input type="checkbox" />Component boundaries and stable
+interfaces.</label></li>
+<li><label><input type="checkbox" />Monolith, modular monolith, and
+microservices trade-offs.</label></li>
+<li><label><input type="checkbox" />Architectural styles and patterns
+relevant to the actual system.</label></li>
+<li><label><input type="checkbox" />Quality attributes: security,
+reliability, latency, throughput, cost, maintainability.</label></li>
+<li><label><input type="checkbox" />Data ownership and boundaries
+between services.</label></li>
+<li><label><input type="checkbox" />Avoid abstraction without a clear
+purpose.</label></li>
+</ul>
+<h3 id="design-process">Design process</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Convert requirements into explicit
+constraints and quality attributes.</label></li>
+<li><label><input type="checkbox" />Identify alternatives and compare
+their costs and risks.</label></li>
+<li><label><input type="checkbox" />Document assumptions, non-goals,
+failure modes, and migration strategy.</label></li>
+<li><label><input type="checkbox" />Write Architecture Decision Records
+(ADRs).</label></li>
+<li><label><input type="checkbox" />Plan backward-compatible changes and
+incremental migrations.</label></li>
+<li><label><input type="checkbox" />Evaluate technical debt by risk,
+cost, and future constraints.</label></li>
+<li><label><input type="checkbox" />Review designs for operability,
+observability, security, and recoverability.</label></li>
+</ul>
+<h3 id="system-design-practice">System-design practice</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Design a transaction-submission
+service.</label></li>
+<li><label><input type="checkbox" />Design a blockchain event indexer
+that handles reorganizations.</label></li>
+<li><label><input type="checkbox" />Design an API that reads contract
+state through an indexer and RPC fallback.</label></li>
+<li><label><input type="checkbox" />Design a secure upgrade process for
+a protocol, if upgradeability is in scope.</label></li>
+<li><label><input type="checkbox" />Design a resilient service that
+reconciles on-chain and off-chain state.</label></li>
+<li><label><input type="checkbox" />For each design, state requirements,
+interfaces, data flow, failure modes, security boundaries,
+observability, and trade-offs.</label></li>
+</ul>
+<h2 id="reliability-and-production-operations">6. Reliability and
+Production Operations</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Define SLIs and SLOs for relevant
+APIs and background workers.</label></li>
+<li><label><input type="checkbox" />Understand error budgets and how
+they affect release decisions.</label></li>
+<li><label><input type="checkbox" />Monitor transaction submission,
+confirmation latency, revert rates, RPC errors, and indexing
+lag.</label></li>
+<li><label><input type="checkbox" />Track service latency distributions,
+throughput, saturation, and queue depth.</label></li>
+<li><label><input type="checkbox" />Alert on user-visible symptoms and
+actionable failure conditions.</label></li>
+<li><label><input type="checkbox" />Design runbooks and safe operational
+procedures.</label></li>
+<li><label><input type="checkbox" />Plan capacity, rate limits, provider
+failover, and degraded modes.</label></li>
+<li><label><input type="checkbox" />Conduct incident reviews focused on
+causes and corrective actions.</label></li>
+<li><label><input type="checkbox" />Understand release safety, rollback
+limits, and contract deployment constraints.</label></li>
+</ul>
+<h2 id="technical-leadership">7. Technical Leadership</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Explain how to lead an architecture
+review.</label></li>
+<li><label><input type="checkbox" />Explain how to evaluate and resolve
+technical disagreements.</label></li>
+<li><label><input type="checkbox" />Give examples of mentoring and
+raising engineering quality.</label></li>
+<li><label><input type="checkbox" />Explain how to prioritize
+reliability, security, features, and technical debt.</label></li>
+<li><label><input type="checkbox" />Show how to align technical
+decisions with product and business constraints.</label></li>
+<li><label><input type="checkbox" />Describe how to split work while
+maintaining architectural coherence.</label></li>
+<li><label><input type="checkbox" />Explain how to communicate risks and
+uncertainty to non-specialists.</label></li>
+<li><label><input type="checkbox" />Distinguish a decision that needs
+consensus from one that needs a clear owner.</label></li>
+<li><label><input type="checkbox" />Prepare examples of a decision you
+changed after receiving evidence.</label></li>
+<li><label><input type="checkbox" />Prepare examples of a failure, what
+you learned, and what changed afterward.</label></li>
+</ul>
+<h2 id="english-interview-preparation">8. English Interview
+Preparation</h2>
+<h3 id="technical-explanations">Technical explanations</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Explain a system architecture
+without relying on diagrams alone.</label></li>
+<li><label><input type="checkbox" />Explain a security threat, exploit
+path, and mitigation.</label></li>
+<li><label><input type="checkbox" />Explain a difficult trade-off and
+why the chosen option was appropriate.</label></li>
+<li><label><input type="checkbox" />Explain a production failure and the
+recovery process.</label></li>
+<li><label><input type="checkbox" />Ask clarifying questions before
+designing a system.</label></li>
+<li><label><input type="checkbox" />State assumptions explicitly and
+identify unknown requirements.</label></li>
+<li><label><input type="checkbox" />Discuss disagreement respectfully
+and defend a technical position with evidence.</label></li>
+</ul>
+<h3 id="practice-questions">Practice questions</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />How would you design a secure and
+upgradeable smart-contract protocol?</label></li>
+<li><label><input type="checkbox" />How do you prevent replay attacks
+and reentrancy?</label></li>
+<li><label><input type="checkbox" />What happens when an RPC provider
+returns stale data or becomes unavailable?</label></li>
+<li><label><input type="checkbox" />How would you make a blockchain
+indexer resilient to chain reorganizations?</label></li>
+<li><label><input type="checkbox" />How do you ensure retries do not
+create duplicate side effects?</label></li>
+<li><label><input type="checkbox" />How do you choose between on-chain
+and off-chain execution?</label></li>
+<li><label><input type="checkbox" />How would you assess whether a
+system is ready for production?</label></li>
+<li><label><input type="checkbox" />Tell me about an architectural
+decision with significant trade-offs.</label></li>
+<li><label><input type="checkbox" />Tell me about a security issue or
+failure you investigated.</label></li>
+<li><label><input type="checkbox" />How do you improve the work of a
+team without becoming a bottleneck?</label></li>
+</ul>
+<h2 id="project-deep-dive">9. Project Deep Dive</h2>
+<p>Choose one project that best demonstrates relevant experience. Use
+only claims you can substantiate.</p>
+<h3 id="prepare-the-narrative">Prepare the narrative</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Problem, users, and
+constraints.</label></li>
+<li><label><input type="checkbox" />Your actual responsibilities and
+contributions.</label></li>
+<li><label><input type="checkbox" />Architecture and important
+interfaces.</label></li>
+<li><label><input type="checkbox" />Alternatives considered and why they
+were rejected.</label></li>
+<li><label><input type="checkbox" />Security model, trust assumptions,
+and threat mitigations.</label></li>
+<li><label><input type="checkbox" />Tests performed and what they
+established.</label></li>
+<li><label><input type="checkbox" />Deployment and production status,
+stated accurately.</label></li>
+<li><label><input type="checkbox" />Hardest technical decision and its
+trade-offs.</label></li>
+<li><label><input type="checkbox" />Known limitations and what you would
+change next.</label></li>
+<li><label><input type="checkbox" />A concise two-minute explanation in
+English.</label></li>
+<li><label><input type="checkbox" />A deeper ten-minute explanation with
+technical details.</label></li>
+</ul>
+<h3 id="keep-evidence-precise">Keep evidence precise</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Distinguish implemented, tested,
+audited, deployed, and production-validated.</label></li>
+<li><label><input type="checkbox" />Do not imply that tests or an audit
+guarantee security.</label></li>
+<li><label><input type="checkbox" />Do not claim production impact,
+scale, or outcomes without evidence.</label></li>
+<li><label><input type="checkbox" />Be ready to explain the code and
+reasoning behind every claim.</label></li>
+</ul>
+<h2 id="suggested-study-order">10. Suggested Study Order</h2>
+<h3 id="first-pass-highest-expected-value">First pass: highest expected
+value</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Obtain the full job description and
+confirm the stack.</label></li>
+<li><label><input type="checkbox" />Prepare the project deep
+dive.</label></li>
+<li><label><input type="checkbox" />Review smart-contract security and
+threat modeling.</label></li>
+<li><label><input type="checkbox" />Review EVM execution, Solidity
+semantics, and upgradeability if relevant.</label></li>
+<li><label><input type="checkbox" />Review on-chain/off-chain
+architecture, events, indexing, and reorg handling.</label></li>
+<li><label><input type="checkbox" />Practice system-design questions
+aloud in English.</label></li>
+<li><label><input type="checkbox" />Prepare leadership examples based on
+real experience.</label></li>
+</ul>
+<h3 id="second-pass-based-on-the-role">Second pass: based on the
+role</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Deepen distributed-systems concepts
+used by the target architecture.</label></li>
+<li><label><input type="checkbox" />Review the required framework,
+tooling, and testing stack.</label></li>
+<li><label><input type="checkbox" />Review L2, cross-chain, DeFi,
+wallets, or other domain-specific topics only if relevant.</label></li>
+<li><label><input type="checkbox" />Review production operations and
+reliability expectations.</label></li>
+<li><label><input type="checkbox" />Run a mock interview covering
+architecture, security, and leadership.</label></li>
+</ul>
+<h2 id="exit-criteria">11. Exit Criteria</h2>
+<p>You are prepared to interview when you can:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />Explain the architecture of a
+relevant project clearly in English.</label></li>
+<li><label><input type="checkbox" />Defend major design decisions and
+articulate alternatives.</label></li>
+<li><label><input type="checkbox" />Identify key threats, trust
+assumptions, and failure modes.</label></li>
+<li><label><input type="checkbox" />Explain how you test security
+properties and the limits of those tests.</label></li>
+<li><label><input type="checkbox" />Design a resilient
+on-chain/off-chain integration.</label></li>
+<li><label><input type="checkbox" />Discuss production monitoring,
+incident handling, and recovery.</label></li>
+<li><label><input type="checkbox" />Lead a technical discussion without
+hiding uncertainty or overstating evidence.</label></li>
+<li><label><input type="checkbox" />Answer questions with concrete
+examples rather than only naming concepts.</label></li>
+</ul>
+<h2 id="references">References</h2>
+<p>Start with primary documentation for the confirmed stack:</p>
+<ul>
+<li>Solidity documentation: <a
+href="https://docs.soliditylang.org/">https://docs.soliditylang.org/</a></li>
+<li>Ethereum developer documentation: <a
+href="https://ethereum.org/developers/docs/">https://ethereum.org/developers/docs/</a></li>
+<li>Ethereum Execution APIs: <a
+href="https://github.com/ethereum/execution-apis">https://github.com/ethereum/execution-apis</a></li>
+<li>OpenZeppelin Contracts documentation: <a
+href="https://docs.openzeppelin.com/contracts/">https://docs.openzeppelin.com/contracts/</a></li>
+<li>Foundry book: <a
+href="https://book.getfoundry.sh/">https://book.getfoundry.sh/</a></li>
+<li>OWASP Smart Contract Security: <a
+href="https://scs.owasp.org/">https://scs.owasp.org/</a></li>
+<li>Ethernaut security wargame: <a
+href="https://ethernaut.openzeppelin.com/">https://ethernaut.openzeppelin.com/</a></li>
+<li>Solidity security considerations: <a
+href="https://docs.soliditylang.org/en/latest/security-considerations.html">https://docs.soliditylang.org/en/latest/security-considerations.html</a></li>
+</ul>
+<p>Use these references selectively. Confirm tool versions and framework
+requirements against the job description rather than studying every tool
+in advance.</p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

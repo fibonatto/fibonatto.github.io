@@ -39,41 +39,18 @@ body {
   max-width: 44em;
   margin: 0 auto;
   padding: 2em 1.5em;
-
   display: flex;
   flex-direction: column;
-
   overflow-wrap: break-word;
-
   font-family: "Times New Roman", Times, serif;
   font-size: 17px;
   line-height: 1.5;
 }
 
-main {
-  flex: 1;
-}
+main { flex: 1; }
+a { color: #BD7948; }
 
-a {
-  color: #BD7948;
-}
-
-pre {
-  max-width: 100%;
-  margin: 1.5em 0;
-
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-
-  line-height: 1.35;
-}
-
-pre code {
-  white-space: inherit;
-}
-
-img,
-svg {
+img, svg {
   max-width: 100%;
   height: auto;
 }
@@ -91,12 +68,73 @@ footer {
   text-align: center;
 }
 
-.post-list h3 {
-  margin-bottom: 0;
+.post-list h3 { margin-bottom: 0; }
+.post-list p { margin-top: 0.25em; }
+
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
 }
 
-.post-list p {
-  margin-top: 0.25em;
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
 }
   </style>
 
@@ -117,6 +155,7 @@ footer {
 
 <nav aria-label="Primary navigation">
   <a href="/" aria-current="page">Home</a>
+  <a href="/notes/">Notes</a>
   <a href="/rss.xml">RSS</a>
 </nav>
 

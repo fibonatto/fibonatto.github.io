@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture Review</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/software-architecture/10-architecture-review.html">
+  <meta property="og:title" content="Architecture Review">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/software-architecture/10-architecture-review.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Architecture Review</h1>
+<h2 id="architecture-review-1">Architecture Review</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Reviews are where architecture is tested before reality tests it. A
+good review finds the risks the author could not see, spreads context,
+and improves the decision; a bad one is a ritual that delays work and
+approves what was already decided. At Staff and Principal scope you are
+expected to:</p>
+<ul>
+<li>review designs efficiently and kindly, finding the few things that
+matter most;</li>
+<li>facilitate reviews so that the right people raise the right concerns
+at the right time;</li>
+<li>identify risks and unknowns, compare alternatives on evidence, and
+recommend decisions with clear reasoning;</li>
+<li>design a review system that scales (tiers, checklists, guardrails)
+instead of becoming a bottleneck;</li>
+<li>close the loop: record decisions and follow-ups, and learn from
+outcomes.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">06_quality-attributes-and-tradeoffs.org</code> (what to
+evaluate against), <code
+class="verbatim">07_architecture-decision-records.org</code> (recording
+outcomes), <code
+class="verbatim">08_evolutionary-architecture.org</code> (fitness
+functions and guardrails), and <code
+class="verbatim">09_technical-debt.org</code> (accepted risks and
+shortcuts).</p>
+<h3 id="kinds-of-reviews">1. Kinds of reviews</h3>
+<p>Match the review to the risk, the stage, and the question.</p>
+<table>
+<thead>
+<tr>
+<th>Review</th>
+<th>When</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Peer design review (RFC or design document)</td>
+<td>Before implementation</td>
+<td>Improve a proposal; share context; find problems early</td>
+</tr>
+<tr>
+<td>Architecture review board (ARB) or council</td>
+<td>For high-impact or cross-cutting decisions</td>
+<td>Governance, consistency, risk acceptance</td>
+</tr>
+<tr>
+<td>Quality-attribute evaluation (ATAM-style)</td>
+<td>For major systems or redesigns</td>
+<td>Evaluate how the architecture satisfies prioritized scenarios; find
+trade-offs and risks</td>
+</tr>
+<tr>
+<td>Security design review / threat model</td>
+<td>When trust boundaries, data, or auth change</td>
+<td>Identify threats and mitigations</td>
+</tr>
+<tr>
+<td>Privacy and data review</td>
+<td>New personal-data flows</td>
+<td>Compliance, retention, minimization</td>
+</tr>
+<tr>
+<td>Production readiness review (PRR)</td>
+<td>Before launch or ownership transfer</td>
+<td>Operability: SLOs, alerts, runbooks, capacity, rollback</td>
+</tr>
+<tr>
+<td>Pre-mortem</td>
+<td>Before committing to a plan</td>
+<td>Imagine failure and list causes</td>
+</tr>
+<tr>
+<td>Post-implementation review</td>
+<td>After delivery or an incident</td>
+<td>Did the design hold? Calibrate estimates and predictions</td>
+</tr>
+<tr>
+<td>Periodic architecture health review</td>
+<td>On a schedule</td>
+<td>Drift, debt, risks, and whether decisions still hold</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tiering</strong>: not everything needs a heavy review. Define
+tiers by risk, with triggers: a new data store or messaging backbone, a
+public or cross-team API, personal or regulated data, an irreversible or
+costly-to-reverse choice, a change in availability or security tier, a
+new critical dependency or vendor, a large cost, or a migration of a
+core system. Low-risk changes get a lightweight peer review (or none);
+high-risk ones get a structured review with named reviewers.</p>
+<h3 id="preparing-a-design-for-review-the-author">2. Preparing a design
+for review (the author)</h3>
+<p>The quality of the review depends on the quality of the document. A
+reviewable design describes:</p>
+<ol>
+<li><strong>Context and problem</strong>: who is affected, why now, and
+what happens if nothing is done.</li>
+<li><strong>Goals and non-goals</strong>, and success measures.</li>
+<li><strong>Requirements</strong> with quality attribute scenarios and
+numbers (load, latency, availability, data volume, growth,
+compliance).</li>
+<li><strong>Current state</strong> briefly, and what must stay
+compatible.</li>
+<li><strong>Proposal</strong>: the design at the right level of detail,
+with diagrams of context, containers or components, key flows, and data
+model (see the C4 and arc42 notes in <code
+class="verbatim">07_architecture-decision-records.org</code>).</li>
+<li><strong>Alternatives considered</strong>, including doing nothing,
+with honest trade-offs.</li>
+<li><strong>Interfaces and contracts</strong>: APIs, events, schemas,
+versioning and compatibility, ownership.</li>
+<li><strong>Failure modes and mitigations</strong>: what happens when
+each dependency fails, slows down, or lies; retries, idempotency,
+degradation, data loss, recovery.</li>
+<li><strong>Security and privacy</strong>: trust boundaries,
+authentication and authorization, secrets, data classification, tenant
+isolation.</li>
+<li><strong>Operability</strong>: observability, SLOs and alerts,
+deployment, configuration, runbooks, on-call ownership.</li>
+<li><strong>Capacity and cost</strong>: estimates and the assumptions
+behind them.</li>
+<li><strong>Rollout, migration, and rollback</strong>: steps, safe
+stopping points, compatibility.</li>
+<li><strong>Testing strategy</strong>: functional, load, failure
+injection, contract tests.</li>
+<li><strong>Risks and open questions</strong>: what you are least sure
+about.</li>
+<li><strong>Questions for reviewers</strong>: the decisions where you
+most want input.</li>
+</ol>
+<p>Keep it as short as the stakes allow, lead with the decision and the
+reasons, and put detail in appendices. Share early enough that feedback
+can change the design, not only polish it.</p>
+<h3 id="the-reviewers-method">3. The reviewer's method</h3>
+<ol>
+<li><strong>Understand the problem first</strong>: restate the goals and
+constraints. Is it the right problem? Are the goals measurable? Are
+non-goals explicit? Many design flaws are requirement flaws.</li>
+<li><strong>Find the key decisions</strong>: the two to five choices
+that are costly to reverse. Spend your attention there.</li>
+<li><strong>Check the alternatives</strong>: were credible options
+considered fairly? Is there a simpler one? What is the strongest
+argument against the proposal?</li>
+<li><strong>Trace the critical paths and the data</strong>: how does a
+request flow, where does state live, who owns what, where are the
+consistency boundaries?</li>
+<li><strong>Ask "what happens when…" questions</strong> (below); look
+for assumptions that are not stated.</li>
+<li><strong>Check evidence</strong>: benchmarks, prototypes, production
+numbers, and prior art, not opinions. Ask how recent and representative
+they are.</li>
+<li><strong>Look for hidden coupling and one-way doors</strong>: shared
+data, shared deploys, lock-in, public contracts.</li>
+<li><strong>Consider the organization</strong>: does the team have the
+skills and capacity? Is ownership clear? Who is on call?</li>
+<li><strong>Consider evolution</strong>: how does the design change when
+requirements change? How will it be migrated, versioned, and eventually
+retired?</li>
+<li><strong>Calibrate severity</strong> and give actionable feedback
+(section 6).</li>
+</ol>
+<p><strong>Question bank</strong> (use the ones that matter for the
+design):</p>
+<ul>
+<li>Dependencies and failure: What if a dependency is down, slow, or
+returns wrong data? What if a message is duplicated, delayed, or
+reordered? What if two instances run at once? What if a deployment is
+half done? What if a region or zone fails? What are the timeouts,
+retries, and their budgets?</li>
+<li>Load and scale: What is 10x the load? Which component saturates
+first? What are the hot keys? What is the worst-case input size? What if
+a client misbehaves?</li>
+<li>Data: Who owns each dataset? How is it backed up and restored (and
+has restore been tested)? How long is it retained, and how is it
+deleted? What is the consistency model, and what do users see in
+between? How do schemas change?</li>
+<li>Security and privacy: What are the trust boundaries? How are
+identity and permissions propagated? What is the blast radius of a
+stolen credential? Is sensitive data encrypted and minimized? How are
+secrets rotated?</li>
+<li>Operations: How will we know it is broken (before customers do)?
+What are the SLOs? Who is paged, and can they act with the runbook? How
+do we roll back, and how long does it take? What does a bad day
+cost?</li>
+<li>Change: How does the API evolve? How do we migrate? What does
+decommissioning look like?</li>
+<li>Cost: What is the cost per unit of work at current and 10x scale?
+What dominates?</li>
+<li>People: Who maintains this in two years? What skills does it
+require?</li>
+</ul>
+<h3 id="identifying-and-recording-risks">4. Identifying and recording
+risks</h3>
+<ul>
+<li><strong>Vocabulary</strong> (from ATAM): a <strong>risk</strong> is
+a decision that may lead to an undesirable consequence in light of the
+quality goals; a <strong>non-risk</strong> is a decision judged safe; a
+<strong>sensitivity point</strong> is a property of a component critical
+to a quality attribute; a <strong>trade-off point</strong> is a decision
+that affects several attributes in opposite directions.</li>
+<li><strong>Risk register entries</strong>: description, cause,
+likelihood, impact, detectability, mitigation or acceptance, owner,
+trigger for action, and review date. Rank by risk (likelihood times
+impact) and by how hard it is to detect before it hurts.</li>
+<li><strong>Unknowns</strong>: separate known risks from open questions;
+convert the riskiest unknowns into spikes, prototypes, or a tracer
+bullet with a deadline and a decision rule.</li>
+<li><strong>Pre-mortem</strong> (Klein): assume the project has failed a
+year from now; each participant writes the reasons; cluster and rank
+them; add mitigations to the plan. It surfaces concerns people hesitate
+to raise in a normal review.</li>
+<li><strong>Failure modes and effects analysis (lightweight)</strong>:
+list components and interactions; for each, the failure mode, the
+effect, how it is detected, and the mitigation. Even an hour of this on
+the critical path finds gaps.</li>
+<li><strong>Red-team the design</strong>: assign someone to attack it
+(security, scale, operations) and report.</li>
+<li><strong>Accepting risk is a decision</strong>: name the person who
+accepts it, record the reason, and set an expiry or revisit trigger (see
+<code class="verbatim">09_technical-debt.org</code>).</li>
+</ul>
+<h3 id="evaluating-alternatives">5. Evaluating alternatives</h3>
+<ul>
+<li><strong>Derive criteria from the drivers</strong> (quality attribute
+scenarios, cost, time, team capability, strategic fit), in priority
+order, before looking at the options.</li>
+<li><strong>Trade-off analysis</strong>: for each option, what it gains
+and loses on each criterion; the cost of being wrong; reversibility; and
+what would have to be true for it to be best.</li>
+<li><strong>Weighted decision matrices</strong> help structure a
+discussion but hide disagreement behind numbers; use them to expose
+weights, test sensitivity (does the winner change if a weight moves?),
+and never as the decision.</li>
+<li><strong>Build versus buy versus reuse</strong>: total cost of
+ownership including integration, operation, upgrades, licensing,
+support, and exit; fit to the need (80% fit may be the trap of the last
+20%); vendor viability and lock-in; security and compliance; control of
+the roadmap.</li>
+<li><strong>Evidence hierarchy</strong>: production data from your own
+system, then benchmarks on realistic workload and data, then credible
+third-party measurements, then reasoning from first principles, then
+opinion and fashion. Time-box experiments.</li>
+<li><strong>Include the null option</strong>: do nothing or do the
+minimum, and its consequences.</li>
+<li><strong>Beware</strong>: familiarity bias (the known tool wins by
+default), novelty bias, sunk cost, anchoring on the first option, and
+authority bias; structured criteria and written alternatives help.</li>
+</ul>
+<h3 id="giving-feedback-and-reaching-approval">6. Giving feedback and
+reaching approval</h3>
+<p><strong>Feedback</strong>:</p>
+<ul>
+<li>Critique the design, not the person; assume competence and good
+intent.</li>
+<li>Be specific and evidence-based: the scenario, the consequence, a
+suggestion or a question.</li>
+<li>Label severity so authors know what must change:
+<strong>blocker</strong> (must be resolved before proceeding),
+<strong>major</strong> (should be addressed; justify if not),
+<strong>minor</strong>, <strong>question</strong> (need understanding),
+and <strong>nit</strong> or <strong>FYI</strong>. Do not bury a blocker
+among nits.</li>
+<li>Separate preferences from risks: "I would do it differently" is not
+a finding. Offer alternatives, not just objections.</li>
+<li>Write concerns once, in a place the author can track (the document
+comments or a review summary); avoid scattered chat feedback.</li>
+</ul>
+<p><strong>Example comments</strong>:</p>
+<pre class="text"><code>[blocker] Payment confirmation is published after the database commit in a separate step.
+  If the process crashes in between, orders are paid but never confirmed (dual write). Suggest
+  the transactional outbox, or document why loss is acceptable and how reconciliation detects it.
+[major] The design assumes the inventory service answers within 50 ms at p99, but its current
+  p99 is 220 ms (dashboard link). What is the fallback when the budget is exceeded?
+[question] Who owns the &quot;customer segments&quot; table after the split? Two modules write to it today.
+[minor] The diagram shows a cache but the text does not say who invalidates it.
+</code></pre>
+<p><strong>Approval criteria</strong> (adapt to the tier). A design is
+ready to proceed when:</p>
+<ul>
+<li>the problem, goals, non-goals, and success measures are clear;</li>
+<li>the quality attribute scenarios that drive the design are addressed,
+with evidence (estimates, prototypes, numbers);</li>
+<li>alternatives were considered and the decision is recorded with
+reasons and consequences (an ADR);</li>
+<li>failure modes were analyzed and mitigations or accepted risks are
+explicit and owned;</li>
+<li>security and privacy reviews required for the tier are done;</li>
+<li>operability is planned: SLOs, alerts, dashboards, runbooks, and
+on-call ownership;</li>
+<li>the rollout, migration, compatibility, and rollback plans are
+credible and tested where possible;</li>
+<li>capacity and cost are estimated with assumptions;</li>
+<li>dependencies and contracts are agreed with their owners;</li>
+<li>the testing strategy covers failure and load, not only the happy
+path;</li>
+<li>the team has the skills and capacity, and ownership is
+assigned;</li>
+<li>remaining open questions are tracked with owners and dates.</li>
+</ul>
+<p><strong>Outcomes</strong>: approve; approve with conditions
+(specific, owned, dated); revise and re-review (with a clear list);
+defer (insufficient information; define what would unblock); reject
+(with reasons and a path forward, if any). The outcome is recorded where
+the team will find it. <strong>Avoid approval theater</strong>: rubber
+stamps because the work is already built; late reviews that can only
+bless; checklists filled without thought; reviewers who never see
+production consequences.</p>
+<h3 id="running-the-process">7. Running the process</h3>
+<ul>
+<li><strong>Timing</strong>: review early and iteratively ("shift
+left"): a rough direction with options costs little to change; a
+finished build is expensive. For large designs, hold a short early
+review on the problem and the key decisions, and a later one on details
+and rollout.</li>
+<li><strong>Async first</strong>: authors share the document; reviewers
+comment in writing within a deadline; a synchronous session (30 to 60
+minutes) handles the open and contentious points. This respects time and
+gives quieter voices room.</li>
+<li><strong>Roles</strong>: author (owns the design), reviewers (cover
+required areas: security, data, operations, relevant domains),
+facilitator (keeps time and focus), scribe (records outcomes), decider
+(accountable for the final decision).</li>
+<li><strong>Meeting hygiene</strong>: pre-read required (some teams read
+silently at the start), agenda focused on decisions and risks, explicit
+time-boxes, decisions and action items recorded before the meeting
+ends.</li>
+<li><strong>Psychological safety</strong>: junior engineers and
+dissenters must feel able to raise concerns; the most senior person
+speaks last; invite the "who sees a risk here?" question; thank people
+for finding problems.</li>
+<li><strong>Diversity of perspective</strong>: include operations (SRE),
+security, data, product, and the teams that consume or are affected by
+the design.</li>
+<li><strong>Handling disagreement</strong>: separate facts, values, and
+risk appetite; seek evidence for facts; let the decider resolve values;
+the owner of the risk decides on risk; record dissent and the reasoning;
+escalate only with options laid out.</li>
+<li><strong>Scaling reviews</strong>: tiers, templates, self-service
+checklists, office hours, rotating reviewers, delegating to domain
+leads, and automated checks (fitness functions) for rules that can be
+enforced mechanically. A central board that sees every change becomes a
+bottleneck and loses touch with reality; keep it for decisions that are
+truly cross-cutting or irreversible, and provide guardrails so that most
+decisions need no board (see <code
+class="verbatim">08_evolutionary-architecture.org</code>).</li>
+<li><strong>Advice process alternative</strong>: the decision owner
+seeks advice from those affected and from experts, decides, and records
+it; reviews become consultations, not permissions.</li>
+</ul>
+<h3 id="after-the-review">8. After the review</h3>
+<ul>
+<li><strong>Track follow-ups</strong>: action items with owners and
+dates; conditions of approval verified before launch.</li>
+<li><strong>Record the decision</strong> (ADR) with the final design,
+alternatives, accepted risks, and revisit triggers.</li>
+<li><strong>Re-review triggers</strong>: changes in scale, scope,
+dependencies, or assumptions listed in the record.</li>
+<li><strong>Post-implementation review</strong>: after launch or after
+the first incident, compare predictions and reality (latency, cost,
+effort, failure behavior). This calibrates your reviewers and estimates
+and improves checklists.</li>
+<li><strong>Learn from incidents</strong>: each postmortem should ask
+"which review question would have caught this?" and update the
+checklists.</li>
+<li><strong>Measure the process lightly</strong>: time in review, rework
+after review, incidents traced to risks that were identified (accepted)
+or missed, reviewer load, and author satisfaction. Avoid targets that
+reward speed or volume of comments.</li>
+</ul>
+<h3 id="checklists">9. Checklists</h3>
+<p>Checklists support judgment; they do not replace it. Keep them short,
+tied to incidents, and revised.</p>
+<p><strong>Quick version (ten questions)</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />What problem does this solve, and
+how will we know it worked?</label></li>
+<li><label><input type="checkbox" />What are the two or three decisions
+that are hardest to reverse?</label></li>
+<li><label><input type="checkbox" />What alternatives were considered,
+and why was each rejected?</label></li>
+<li><label><input type="checkbox" />What happens when each dependency
+fails or is slow?</label></li>
+<li><label><input type="checkbox" />Who owns the data, and what is the
+consistency model?</label></li>
+<li><label><input type="checkbox" />What is the load model, and what
+breaks first at 10x?</label></li>
+<li><label><input type="checkbox" />How is it secured, and what is the
+blast radius of a compromise?</label></li>
+<li><label><input type="checkbox" />How do we deploy, observe, and roll
+it back?</label></li>
+<li><label><input type="checkbox" />How does it evolve and eventually
+get retired?</label></li>
+<li><label><input type="checkbox" />Who is accountable, and does the
+team have what it needs?</label></li>
+</ul>
+<p><strong>Production readiness</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />SLIs and SLOs defined; alerts tied
+to symptoms; dashboards for the four golden signals.</label></li>
+<li><label><input type="checkbox" />On-call ownership and escalation;
+runbooks for known failures; tested rollback.</label></li>
+<li><label><input type="checkbox" />Capacity and load tests at expected
+and peak load; autoscaling limits and quotas checked.</label></li>
+<li><label><input type="checkbox" />Timeouts, retries, backoff, and
+limits on every dependency; graceful degradation defined.</label></li>
+<li><label><input type="checkbox" />Backups configured, restore tested,
+retention and deletion defined.</label></li>
+<li><label><input type="checkbox" />Security review done; secrets
+managed; least privilege; audit logging.</label></li>
+<li><label><input type="checkbox" />Rollout plan with canary or
+progressive delivery and feature flags; kill switch.</label></li>
+<li><label><input type="checkbox" />Dependencies' owners informed;
+contracts and quotas agreed.</label></li>
+</ul>
+<p><strong>Data and migration</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />Ownership, schema, and compatibility
+rules defined; migration is expand-and-contract.</label></li>
+<li><label><input type="checkbox" />Backfill is idempotent, resumable,
+throttled, and verified; reconciliation exists.</label></li>
+<li><label><input type="checkbox" />Cutover and rollback steps
+rehearsed; point of no return identified.</label></li>
+</ul>
+<p><strong>API and contracts</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />Contract documents semantics,
+errors, idempotency, ordering, limits, and versioning
+policy.</label></li>
+<li><label><input type="checkbox" />Compatibility tests and
+breaking-change checks in CI; consumers identified.</label></li>
+<li><label><input type="checkbox" />Pagination, timeouts, and
+partial-failure behavior specified.</label></li>
+</ul>
+<h3 id="anti-patterns">10. Anti-patterns</h3>
+<ul>
+<li><strong>Review as audit or approval theater</strong>: late,
+symbolic, and unable to change outcomes.</li>
+<li><strong>The central bottleneck</strong>: one board reviewing
+everything, with a queue measured in weeks.</li>
+<li><strong>Bikeshedding</strong>: debating naming and trivia while
+ignoring the decisions that matter.</li>
+<li><strong>Seagull architecture</strong>: swooping in, dropping
+criticism, and leaving without owning consequences.</li>
+<li><strong>Reviewing a diagram, not the system</strong>: no discussion
+of failure, data, operations, or cost.</li>
+<li><strong>Checklists as ritual</strong>: ticking boxes without
+thought, or never updating them from incidents.</li>
+<li><strong>Review by the loudest voice or the highest title</strong>:
+opinions beat evidence.</li>
+<li><strong>Vague feedback</strong> ("this seems risky") with no
+scenario or suggestion.</li>
+<li><strong>Gatekeeping preferences</strong>: forcing personal style and
+tools as requirements.</li>
+<li><strong>No follow-up</strong>: conditions never verified; risks
+accepted without owners; decisions not recorded.</li>
+<li><strong>One-sided process</strong>: reviewers who never run
+production and cannot judge operability.</li>
+</ul>
+<h3 id="self-check">11. Self-check</h3>
+<ol>
+<li>Take a design document you wrote; what would a skeptical reviewer
+attack first? Write three questions you hope nobody asks, and answer
+them.</li>
+<li>Define review tiers and triggers for your organization. What is
+reviewed lightly, and what needs a board?</li>
+<li>Write five "what happens when…" questions specific to a system with
+a message broker and a relational database.</li>
+<li>A design depends on a new vendor. List the evidence and the
+questions you would require before approval.</li>
+<li>A reviewer insists on an approach as a blocker; the author
+disagrees. How do you resolve it?</li>
+<li>After an outage, how do you turn the root cause into a review
+question?</li>
+</ol>
+<h3 id="exercises">12. Exercises</h3>
+<ul>
+<li>Warm-up: review a short design (yours or a public one) using the
+ten-question checklist; write the comments with severity labels.</li>
+<li>Core: run a pre-mortem on an upcoming project with your team;
+convert the top five failure causes into plan changes or checks.</li>
+<li>Core: write a one-page design-review guide for your team: tiers,
+triggers, document template, roles, timeline, and approval
+criteria.</li>
+<li>Core: do a lightweight failure-mode analysis of one critical request
+path (components, failure modes, effects, detection, mitigations).</li>
+<li>Stretch: facilitate a quality-attribute workshop for a system: build
+the utility tree with stakeholders, rate scenarios by importance and
+difficulty, and list sensitivity points, trade-off points, risks, and
+non-risks.</li>
+<li>Stretch: run a post-implementation review on a launched design:
+compare predicted and actual load, latency, cost, and failures, and
+update your checklist.</li>
+</ul>
+<h3 id="resources">13. Resources</h3>
+<ul>
+<li>Kazman, Klein, Clements, <em>ATAM: Method for Architecture
+Evaluation</em> (Software Engineering Institute technical report); Bass,
+Clements, Kazman, <em>Software Architecture in Practice</em> (evaluating
+architectures); Rozanski and Woods, <em>Software Systems
+Architecture</em> (viewpoints and perspectives).</li>
+<li>Beyer et al., <em>Site Reliability Engineering</em>: the chapter on
+reliable product launches (launch checklists) and the production
+readiness material: <a
+href="https://sre.google/sre-book/launch-checklist/">https://sre.google/sre-book/launch-checklist/</a></li>
+<li>AWS Well-Architected Framework and its review process: <a
+href="https://aws.amazon.com/architecture/well-architected/">https://aws.amazon.com/architecture/well-architected/</a>
+; Azure Well-Architected Framework: <a
+href="https://learn.microsoft.com/en-us/azure/architecture/">https://learn.microsoft.com/en-us/azure/architecture/</a></li>
+<li>Klein, <em>Performing a Project Premortem</em> (Harvard Business
+Review, 2007).</li>
+<li>Harmel-Law, <em>Facilitating Software Architecture</em> (advice
+process, guardrails, decision records).</li>
+<li>Nygard, <em>Release It!</em> (failure modes and stability patterns);
+Shostack, <em>Threat Modeling</em>.</li>
+<li>ISO/IEC/IEEE 42010 (architecture description, stakeholders and
+concerns); the C4 model and arc42 for review-friendly documentation: <a
+href="https://c4model.com">https://c4model.com</a> and <a
+href="https://arc42.org">https://arc42.org</a></li>
+<li>StaffEng guides on technical decision-making and reviews: <a
+href="https://staffeng.com/guides/">https://staffeng.com/guides/</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Match the review to the risk; tier it so that most work flows and
+the few high-stakes decisions get depth.</li>
+<li>Review early, async first, with a written design that states goals,
+alternatives, failure modes, and operations.</li>
+<li>Focus on the decisions that are costly to reverse; ask failure-mode
+questions; demand evidence.</li>
+<li>Label severity, give actionable feedback, and make approval criteria
+explicit with named owners for accepted risks.</li>
+<li>Record outcomes, track conditions, and review the review: calibrate
+against what actually happened.</li>
+<li>Replace gates with guardrails wherever a rule can be automated.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

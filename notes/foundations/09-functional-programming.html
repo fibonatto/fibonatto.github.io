@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Functional Programming</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/09-functional-programming.html">
+  <meta property="og:title" content="Functional Programming">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/09-functional-programming.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Functional Programming</h1>
+<h2 id="functional-programming-1">Functional Programming</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Functional programming (FP) is less a language choice than a set of
+habits that pay off in every language: immutability, pure functions,
+explicit effects, composition, and data modeled with sum types. At Staff
+scope you will:</p>
+<ul>
+<li>apply FP principles to make large systems easier to test, reason
+about, and run concurrently, even in an object-oriented or imperative
+codebase;</li>
+<li>recognize the cost model of immutability (allocation, GC pressure,
+copying) and when to localize mutation;</li>
+<li>read and design abstractions such as Option/Result, map/flat-map
+pipelines, and effect boundaries;</li>
+<li>evaluate languages (Haskell, OCaml, Scala, Lean, Clojure, Elixir,
+Rust's functional subset, TypeScript with fp libraries) for the right
+problems.</li>
+</ul>
+<p>Companion files: <code class="verbatim">10_type-systems.org</code>
+(the types that make FP safe), <code
+class="verbatim">08_paradigms.org</code>, <code
+class="verbatim">12_concurrency.org</code>, <code
+class="verbatim">07_theory-of-computation.org</code> (lambda
+calculus).</p>
+<h3 id="core-ideas">1. Core ideas</h3>
+<ul>
+<li><strong>Pure function</strong>: its result depends only on its
+arguments, and it has no observable side effects. <strong>Referential
+transparency</strong>: a call can be replaced by its value without
+changing behavior.</li>
+<li><strong>Immutability</strong>: values do not change; "updating"
+produces a new value. Eliminates a class of aliasing and ordering
+bugs.</li>
+<li><strong>First-class and higher-order functions</strong>: functions
+are values, passed to and returned from other functions (map, filter,
+fold, compose).</li>
+<li><strong>Algebraic data types and pattern matching</strong>: model
+data as sums (one of several variants) and products (several fields);
+consume it by exhaustive matching.</li>
+<li><strong>Recursion and folds</strong> replace loops;
+<strong>laziness</strong> (optional) separates producing from
+consuming.</li>
+<li><strong>Effects at the edges</strong>: keep the core pure; push I/O,
+time, randomness, and mutation to a thin outer layer ("functional core,
+imperative shell").</li>
+</ul>
+<h3 id="lambda-calculus">2. Lambda calculus</h3>
+<p>The lambda calculus is the smallest universal programming language
+(equivalent in power to Turing machines): terms are variables,
+abstractions (lambda x. e), and applications (e1 e2). Computation is
+<em>beta-reduction</em>: (lambda x. e) a reduces to e with a substituted
+for x (renaming bound variables to avoid capture:
+<em>alpha-conversion</em>).</p>
+<ul>
+<li><strong>Evaluation strategies</strong>: normal order
+(leftmost-outermost), call-by-name, call-by-value (arguments evaluated
+first; most languages), call-by-need (lazy with sharing; Haskell).</li>
+<li><strong>Church encodings</strong>: numbers, booleans, and pairs can
+be encoded as functions; a numeral n is "apply f n times".</li>
+<li><strong>Fixed-point combinators</strong> (Y, and its strict-language
+variant Z) give recursion without named recursion.</li>
+<li>The <em>Church-Rosser theorem</em> says reduction order does not
+change the normal form when one exists. The <em>simply typed</em> lambda
+calculus is strongly normalizing but not Turing-complete (see <code
+class="verbatim">10_type-systems.org</code>).</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>zero <span class="op">=</span> <span class="kw">lambda</span> f: <span class="kw">lambda</span> x: x</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>succ <span class="op">=</span> <span class="kw">lambda</span> n: <span class="kw">lambda</span> f: <span class="kw">lambda</span> x: f(n(f)(x))</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>add <span class="op">=</span> <span class="kw">lambda</span> m: <span class="kw">lambda</span> n: <span class="kw">lambda</span> f: <span class="kw">lambda</span> x: m(f)(n(f)(x))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>mul <span class="op">=</span> <span class="kw">lambda</span> m: <span class="kw">lambda</span> n: <span class="kw">lambda</span> f: m(n(f))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>to_int <span class="op">=</span> <span class="kw">lambda</span> n: n(<span class="kw">lambda</span> k: k <span class="op">+</span> <span class="dv">1</span>)(<span class="dv">0</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>two <span class="op">=</span> succ(succ(zero))<span class="op">;</span> three <span class="op">=</span> succ(two)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> to_int(add(two)(three)) <span class="op">==</span> <span class="dv">5</span> <span class="kw">and</span> to_int(mul(two)(three)) <span class="op">==</span> <span class="dv">6</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Z combinator: recursion from nothing but lambdas (the strict-evaluation variant of Y)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>Z <span class="op">=</span> <span class="kw">lambda</span> f: (<span class="kw">lambda</span> x: f(<span class="kw">lambda</span> v: x(x)(v)))(<span class="kw">lambda</span> x: f(<span class="kw">lambda</span> v: x(x)(v)))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>fact <span class="op">=</span> Z(<span class="kw">lambda</span> rec: <span class="kw">lambda</span> n: <span class="dv">1</span> <span class="cf">if</span> n <span class="op">==</span> <span class="dv">0</span> <span class="cf">else</span> n <span class="op">*</span> rec(n <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> fact(<span class="dv">5</span>) <span class="op">==</span> <span class="dv">120</span></span></code></pre></div>
+<h3 id="folds-recursion-schemes-and-tail-calls">3. Folds, recursion
+schemes, and tail calls</h3>
+<p>Most list processing is one of: <strong>map</strong> (transform each
+element), <strong>filter</strong>, and <strong>fold</strong> (reduce to
+a single value). A fold replaces each constructor of the data type with
+an operation: foldr f z [a, b, c] = f a (f b (f c z)). Anything defined
+by structural recursion on a list is a fold (a <em>catamorphism</em>);
+the dual, <strong>unfold</strong>, builds structures from a seed;
+generalizations are called recursion schemes.</p>
+<ul>
+<li><strong>Left versus right fold</strong>: right folds are
+lazy-friendly (they can short-circuit on infinite input); left folds
+with a strict accumulator run in constant space; a lazy left fold builds
+a chain of thunks.</li>
+<li><strong>Tail calls</strong>: a call in tail position can reuse the
+stack frame. Scheme, OCaml, and Haskell guarantee or optimize this;
+Python and most JVM languages do not, so deep recursion needs loops or
+trampolines; Rust and C compilers may optimize but do not guarantee
+it.</li>
+<li><strong>Fusion</strong>: compilers can merge map/filter/fold chains
+into one loop (Haskell's foldr/build, Rust's iterator adaptors).</li>
+</ul>
+<h3 id="algebraic-data-types">4. Algebraic data types</h3>
+<pre class="text"><code>-- Haskell
+data Shape = Circle Double | Rect Double Double            -- sum of products
+
+area :: Shape -&gt; Double
+area (Circle r) = pi * r * r
+area (Rect w h) = w * h
+
+data Maybe a = Nothing | Just a                            -- absence as a value
+data Either e a = Left e | Right a                         -- failure as a value
+</code></pre>
+<p>Engineering payoffs:</p>
+<ul>
+<li><em>Make illegal states unrepresentable</em>: model a connection as
+<code
+class="verbatim">Disconnected | Connecting of Attempt | Connected of Session</code>
+instead of a record with nullable fields and a status flag that can
+disagree.</li>
+<li>Exhaustive matching turns a new variant into a compile error
+everywhere it matters.</li>
+<li><code class="verbatim">Option</code> / <code
+class="verbatim">Result</code> replace null and exceptions in the type
+signature, so callers cannot forget the failure case.</li>
+<li>Immutable records with updates ("copy with") keep values safe to
+share.</li>
+</ul>
+<h3 id="abstractions-functor-applicative-monad">5. Abstractions:
+functor, applicative, monad</h3>
+<p>These are interfaces (type classes, traits) for "computation in a
+context". They are patterns to learn by example, not mysticism.</p>
+<table>
+<thead>
+<tr>
+<th>Abstraction</th>
+<th>Operation</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Functor</td>
+<td>map: (a -&gt; b) -&gt; F a -&gt; F b</td>
+<td>Transform the contents, keep the shape</td>
+</tr>
+<tr>
+<td>Applicative</td>
+<td>pure, and apply: F (a -&gt; b) -&gt; F a -&gt; F b</td>
+<td>Combine independent computations in a context</td>
+</tr>
+<tr>
+<td>Monad</td>
+<td>return, and bind: F a -&gt; (a -&gt; F b) -&gt; F b</td>
+<td>Sequence computations where later ones depend on earlier
+results</td>
+</tr>
+<tr>
+<td>Monoid</td>
+<td>empty and combine, with associativity</td>
+<td>Aggregate: sums, concatenation, merges (parallel-friendly)</td>
+</tr>
+<tr>
+<td>Foldable / Traversable</td>
+<td>fold, traverse</td>
+<td>Reduce a structure; map with effects and collect the context</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Laws</strong> make the abstractions reliable: functor
+identity and composition; monad left identity (return a &gt;&gt;= f is f
+a), right identity (m &gt;&gt;= return is m), and associativity. Code
+written against the interface works for every instance (Maybe, lists,
+Either, parsers, state, I/O, asynchronous tasks, probability
+distributions).</p>
+<p>Familiar instances in mainstream languages: <code
+class="verbatim">Option.map</code> / <code
+class="verbatim">flatMap</code>; <code
+class="verbatim">Promise.then</code> (a monad-like bind); iterator
+chains; <code class="verbatim">Result</code> with <code
+class="verbatim">?</code> (Rust) as monadic sequencing for errors; LINQ;
+async/await as syntax for monadic sequencing.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Option as a monad: None means failure; bind short-circuits.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bind_opt(m, f):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">None</span> <span class="cf">if</span> m <span class="kw">is</span> <span class="va">None</span> <span class="cf">else</span> f(m)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> safe_div(a, b):</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">None</span> <span class="cf">if</span> b <span class="op">==</span> <span class="dv">0</span> <span class="cf">else</span> a <span class="op">/</span> b</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> bind_opt(safe_div(<span class="dv">10</span>, <span class="dv">2</span>), <span class="kw">lambda</span> x: safe_div(x, <span class="dv">5</span>)) <span class="op">==</span> <span class="fl">1.0</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> bind_opt(safe_div(<span class="dv">10</span>, <span class="dv">0</span>), <span class="kw">lambda</span> x: safe_div(x, <span class="dv">5</span>)) <span class="kw">is</span> <span class="va">None</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>unit <span class="op">=</span> <span class="kw">lambda</span> x: x</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> <span class="kw">lambda</span> x: safe_div(x, <span class="dv">4</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> bind_opt(unit(<span class="dv">8</span>), f) <span class="op">==</span> f(<span class="dv">8</span>)                       <span class="co"># left identity</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> bind_opt(safe_div(<span class="dv">8</span>, <span class="dv">2</span>), unit) <span class="op">==</span> safe_div(<span class="dv">8</span>, <span class="dv">2</span>)   <span class="co"># right identity</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># State monad: a computation is a function from a state to (result, new state).</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> unit_s(x): <span class="cf">return</span> <span class="kw">lambda</span> s: (x, s)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bind_s(m, f): <span class="cf">return</span> <span class="kw">lambda</span> s: (<span class="kw">lambda</span> r: f(r[<span class="dv">0</span>])(r[<span class="dv">1</span>]))(m(s))</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>get <span class="op">=</span> <span class="kw">lambda</span> s: (s, s)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>put <span class="op">=</span> <span class="kw">lambda</span> v: <span class="kw">lambda</span> s: (<span class="va">None</span>, v)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> tick():</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> bind_s(get, <span class="kw">lambda</span> n: bind_s(put(n <span class="op">+</span> <span class="dv">1</span>), <span class="kw">lambda</span> _: unit_s(n)))</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>prog <span class="op">=</span> bind_s(tick(), <span class="kw">lambda</span> a: bind_s(tick(), <span class="kw">lambda</span> b: unit_s((a, b))))</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> prog(<span class="dv">10</span>) <span class="op">==</span> ((<span class="dv">10</span>, <span class="dv">11</span>), <span class="dv">12</span>)                         <span class="co"># state threaded without mutation</span></span></code></pre></div>
+<h3 id="purity-effects-and-state">6. Purity, effects, and state</h3>
+<p>Real programs need effects. FP languages manage them explicitly:</p>
+<ul>
+<li><strong>The I/O monad</strong> (Haskell): an action of type <code
+class="verbatim">IO a</code> is a description of an effect; only the
+runtime executes it. Purity is preserved because evaluation never
+performs effects.</li>
+<li><strong>Effect systems and algebraic effects</strong> (Koka, OCaml 5
+effect handlers, Eff, research languages): declare and handle effects
+compositionally, an alternative to monad transformers.</li>
+<li><strong>State without mutation</strong>: thread state through
+functions (State monad), or keep mutation local and encapsulated
+(Haskell's <code class="verbatim">ST</code>, Rust's ownership) so that
+it cannot leak.</li>
+<li><strong>Architectures</strong>: the Elm architecture and Redux (a
+pure <code class="verbatim">update: (state, event) -&gt; state</code>
+plus effect descriptions), event sourcing (state is a fold over an
+append-only log), CQRS, and reactive pipelines are FP ideas applied to
+systems.</li>
+<li><strong>Persistent data structures</strong> (<code
+class="verbatim">05_data-structures.org</code>) make "copy on update"
+affordable through structural sharing.</li>
+</ul>
+<h3 id="laziness">7. Laziness</h3>
+<p>Lazy evaluation (call-by-need) delays computing a value until it is
+demanded, then caches it.</p>
+<ul>
+<li>Benefits: define infinite structures (<code
+class="verbatim">take 5 (iterate (*2) 1)</code>), compose pipelines
+without intermediate lists, avoid unnecessary work, write control-flow
+combinators as ordinary functions (the <code
+class="verbatim">myIf</code> example in the Haskell notes).</li>
+<li>Costs: unpredictable evaluation order complicates reasoning about
+space and time; <em>space leaks</em> (thunk chains from lazy
+accumulators); harder profiling; interaction with side effects (hence
+purity). Strictness annotations and strict data fields repair hot
+spots.</li>
+<li>Strict languages offer opt-in laziness (iterators, generators, <code
+class="verbatim">Lazy&lt;T&gt;</code>, streams).</li>
+</ul>
+<h3 id="equational-reasoning-parametricity-and-testing">8. Equational
+reasoning, parametricity, and testing</h3>
+<ul>
+<li><strong>Equational reasoning</strong>: because of purity you can
+substitute equals for equals to prove properties and to refactor safely
+(map f . map g equals map (f . g)).</li>
+<li><strong>Parametricity</strong> ("theorems for free", Wadler): a
+polymorphic function's type restricts its behavior: any function of type
+<code class="verbatim">[a] -&gt; [a]</code> can only rearrange, drop, or
+duplicate elements, never inspect them.</li>
+<li><strong>Property-based testing</strong> (QuickCheck and descendants:
+Hypothesis, proptest, fast-check): state laws as properties (reverse
+(reverse xs) == xs; sorted output is a permutation of the input) and let
+the framework generate hundreds of cases and shrink counterexamples.
+This is the cheapest formal-ish technique and works in every
+language.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prop_reverse_involution(xs):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(<span class="bu">reversed</span>(<span class="bu">list</span>(<span class="bu">reversed</span>(xs)))) <span class="op">==</span> xs</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prop_sort_ok(xs):</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> <span class="bu">sorted</span>(xs)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">all</span>(a <span class="op">&lt;=</span> b <span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(out, out[<span class="dv">1</span>:])) <span class="kw">and</span> <span class="bu">sorted</span>(out) <span class="op">==</span> out <span class="kw">and</span> <span class="bu">len</span>(out) <span class="op">==</span> <span class="bu">len</span>(xs)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">8</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">500</span>):</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    xs <span class="op">=</span> [random.randint(<span class="op">-</span><span class="dv">50</span>, <span class="dv">50</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(random.randint(<span class="dv">0</span>, <span class="dv">30</span>))]</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> prop_reverse_involution(xs) <span class="kw">and</span> prop_sort_ok(xs)</span></code></pre></div>
+<h3 id="parser-combinators">9. Parser combinators</h3>
+<p>A parser is a function from input to parsed values plus remaining
+input; combinators build bigger parsers from smaller ones (sequence,
+alternative, many). They show monads in action and give readable,
+composable grammars (<code
+class="verbatim">07_theory-of-computation.org</code>).</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sat(pred):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> s: [(s[<span class="dv">0</span>], s[<span class="dv">1</span>:])] <span class="cf">if</span> s <span class="kw">and</span> pred(s[<span class="dv">0</span>]) <span class="cf">else</span> []</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ret(v):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> s: [(v, s)]</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bind(p, f):</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> s: [x <span class="cf">for</span> v, r <span class="kw">in</span> p(s) <span class="cf">for</span> x <span class="kw">in</span> f(v)(r)]</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> alt(p, q):</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> s: p(s) <span class="kw">or</span> q(s)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> many(p):</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> parse(s):</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        out <span class="op">=</span> []</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> (r <span class="op">:=</span> p(s)):</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            v, s <span class="op">=</span> r[<span class="dv">0</span>]</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            out.append(v)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [(out, s)]</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> parse</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>digit <span class="op">=</span> sat(<span class="bu">str</span>.isdigit)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>number <span class="op">=</span> bind(digit, <span class="kw">lambda</span> d: bind(many(digit), <span class="kw">lambda</span> ds: ret(<span class="bu">int</span>(d <span class="op">+</span> <span class="st">&quot;&quot;</span>.join(ds)))))</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>tok <span class="op">=</span> <span class="kw">lambda</span> c: sat(<span class="kw">lambda</span> x: x <span class="op">==</span> c)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> chainl(p, op):                                    <span class="co"># p (op p)*, left associative</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> parse(s):</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        r <span class="op">=</span> p(s)</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> r:</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> []</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        acc, s <span class="op">=</span> r[<span class="dv">0</span>]</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>            o <span class="op">=</span> op(s)</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> o:</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>            f, s2 <span class="op">=</span> o[<span class="dv">0</span>]</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>            r2 <span class="op">=</span> p(s2)</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> r2:</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>            v, s <span class="op">=</span> r2[<span class="dv">0</span>]</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>            acc <span class="op">=</span> f(acc, v)</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [(acc, s)]</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> parse</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> expr(s):</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    plus <span class="op">=</span> bind(tok(<span class="st">&quot;+&quot;</span>), <span class="kw">lambda</span> _: ret(<span class="kw">lambda</span> a, b: a <span class="op">+</span> b))</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    minus <span class="op">=</span> bind(tok(<span class="st">&quot;-&quot;</span>), <span class="kw">lambda</span> _: ret(<span class="kw">lambda</span> a, b: a <span class="op">-</span> b))</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> chainl(term, alt(plus, minus))(s)</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> term(s):</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> chainl(factor, bind(tok(<span class="st">&quot;*&quot;</span>), <span class="kw">lambda</span> _: ret(<span class="kw">lambda</span> a, b: a <span class="op">*</span> b)))(s)</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> factor(s):</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    paren <span class="op">=</span> bind(tok(<span class="st">&quot;(&quot;</span>), <span class="kw">lambda</span> _: bind(expr, <span class="kw">lambda</span> v: bind(tok(<span class="st">&quot;)&quot;</span>), <span class="kw">lambda</span> _: ret(v))))</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> alt(number, paren)(s)</span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> expr(<span class="st">&quot;2+3*4&quot;</span>) <span class="op">==</span> [(<span class="dv">14</span>, <span class="st">&quot;&quot;</span>)] <span class="kw">and</span> expr(<span class="st">&quot;(1+2)*3&quot;</span>) <span class="op">==</span> [(<span class="dv">9</span>, <span class="st">&quot;&quot;</span>)] <span class="kw">and</span> expr(<span class="st">&quot;10-4-3&quot;</span>) <span class="op">==</span> [(<span class="dv">3</span>, <span class="st">&quot;&quot;</span>)]</span></code></pre></div>
+<h3 id="fp-in-mainstream-engineering">10. FP in mainstream
+engineering</h3>
+<ul>
+<li>Every major language now has lambdas, map/filter/reduce, immutable
+collections or conventions, and Option/Result idioms. Rust's iterators,
+enums, and pattern matching, TypeScript's discriminated unions, Kotlin
+and Swift value types, and Java records and sealed interfaces carry FP
+ideas into mainstream code.</li>
+<li><strong>Concurrency</strong>: immutable data can be shared across
+threads without locks; pure functions can run in any order or in
+parallel (map-reduce, rayon-style data parallelism).</li>
+<li><strong>Costs to manage</strong>: allocation rates and GC pauses
+(<code class="verbatim">11_memory-management.org</code>); deep recursion
+without tail-call guarantees; copying large structures instead of using
+persistent ones; abstraction overhead when a hot loop would be clearer;
+unfamiliar idioms in teams without training.</li>
+<li><strong>Pragmatic style</strong>: pure core, effects at the
+boundary; immutability by default with local mutation where measured;
+algebraic types for domain modeling; small composable functions; avoid
+abstraction for its own sake (a monad transformer stack that nobody on
+the team can debug is a liability).</li>
+</ul>
+<h3 id="functional-languages-and-dependently-typed-programming">11.
+Functional languages and dependently typed programming</h3>
+<ul>
+<li><strong>Haskell</strong>: lazy, pure, strong static types with
+inference; type classes. <strong>OCaml / F# / Standard ML</strong>:
+strict, with a strong module system. <strong>Scala</strong>: functional
+and object-oriented on the JVM. <strong>Clojure</strong>: Lisp with
+persistent data structures and a concurrency focus. <strong>Elixir /
+Erlang</strong>: functional core with actors. <strong>Lean 4</strong>: a
+functional language and a proof assistant; see <em>Functional
+Programming in Lean</em>.</li>
+<li><strong>Dependent types</strong> (Lean, Agda, Idris, Rocq) let types
+mention values, so a function can return a vector of exactly length n or
+carry a proof that its output is sorted. Programs and proofs live in the
+same language (<code class="verbatim">10_type-systems.org</code>, <code
+class="verbatim">02_logic-and-proofs.org</code>).</li>
+</ul>
+<h3 id="self-check">12. Self-check</h3>
+<ol>
+<li>Refactor a function that mutates a shared map into a pure fold and
+discuss what you gained and lost.</li>
+<li>Prove, by structural induction, that map f (xs ++ ys) equals map f
+xs ++ map f ys.</li>
+<li>Explain why a lazy left fold over a million integers can run out of
+memory and how to fix it.</li>
+<li>Show that Option's bind satisfies the monad laws.</li>
+<li>What does "functional core, imperative shell" look like for a
+payment-processing service? Which parts are pure?</li>
+<li>Why can any function with the type <code
+class="verbatim">forall a. [a] -&gt; [a]</code> not depend on the values
+in the list?</li>
+</ol>
+<h3 id="exercises">13. Exercises</h3>
+<ul>
+<li>Warm-up: implement map, filter, fold, zip, and flatten yourself,
+first by recursion and then with folds.</li>
+<li>Core: implement an immutable list and an immutable binary tree with
+insert, and prove or test their properties with randomized
+properties.</li>
+<li>Core: build a parser-combinator library and an expression evaluator
+(or extend the one above to support unary minus and
+exponentiation).</li>
+<li>Core: implement a State, a Reader, and a Writer monad in your
+language of choice and use them to thread configuration, logging, and
+counters through a computation.</li>
+<li>Stretch: implement a small lazy list and the sieve of Eratosthenes
+with it; then do it in a strict language with generators.</li>
+<li>Stretch: write an interpreter for the untyped lambda calculus with
+de Bruijn indices and normal-order reduction.</li>
+<li>Stretch: read the first six chapters of <em>Functional Programming
+in Lean</em> and write verified list functions.</li>
+</ul>
+<h3 id="resources">14. Resources</h3>
+<ul>
+<li>Abelson and Sussman, <em>Structure and Interpretation of Computer
+Programs</em> (the classic; the JavaScript edition is available free
+online): <a
+href="https://sicp.sourceacademy.org/sicpjs.pdf">https://sicp.sourceacademy.org/sicpjs.pdf</a></li>
+<li><em>Functional Programming in Lean</em> and <em>Theorem Proving in
+Lean 4</em> (free; functional programming with dependent types): <a
+href="https://lean-lang.org/learn">https://lean-lang.org/learn</a></li>
+<li>Pierce et al., <em>Software Foundations</em>, volume 1 (functional
+programming and proof in Rocq/Coq): <a
+href="https://softwarefoundations.cis.upenn.edu/">https://softwarefoundations.cis.upenn.edu/</a></li>
+<li>Felleisen et al., <em>How to Design Programs</em> (a systematic,
+recursion-first approach); Hutton, <em>Programming in Haskell</em> (and
+the Hutton-Meijer paper on monadic parser combinators); Okasaki,
+<em>Purely Functional Data Structures</em>; Hughes, <em>Why Functional
+Programming Matters</em> (paper); Wadler, <em>Theorems for Free!</em>
+(paper).</li>
+<li>Nystrom, <em>Crafting Interpreters</em> for implementing closures
+and environments: <a
+href="https://craftinginterpreters.com">https://craftinginterpreters.com</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Pure core, effects at the edges; immutability by default; model data
+with sum types.</li>
+<li>Folds subsume loops; the monad laws make sequencing
+predictable.</li>
+<li>Laziness is powerful and risky; know the space-leak failure
+mode.</li>
+<li>Property-based tests are the cheapest high-value formal
+technique.</li>
+<li>Immutability costs allocation; persistent structures and local
+mutation keep it affordable.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

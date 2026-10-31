@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evolutionary Architecture</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/software-architecture/08-evolutionary-architecture.html">
+  <meta property="og:title" content="Evolutionary Architecture">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/software-architecture/08-evolutionary-architecture.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Evolutionary Architecture</h1>
+<h2 id="evolutionary-architecture-1">Evolutionary Architecture</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Every architecture meets requirements, scale, and technology that its
+authors did not foresee. The question is not whether the system will
+change but whether it can change cheaply, safely, and continuously. At
+Staff and Principal scope you are expected to:</p>
+<ul>
+<li>design for changeability: small steps, reversibility, and fast
+feedback, instead of a perfect initial design;</li>
+<li>turn architectural intent into automated, executable checks (fitness
+functions) so that the architecture does not erode;</li>
+<li>plan and lead migrations that take months or years: sequencing, dual
+running, measuring progress, and finishing;</li>
+<li>keep compatibility under control during change, for code,
+interfaces, and data;</li>
+<li>see architecture, delivery, and organization as one system that
+evolves together.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">01_architectural-styles.org</code> (the styles you
+migrate between), <code
+class="verbatim">02_modularity-and-boundaries.org</code> (seams), <code
+class="verbatim">04_abstraction-and-interfaces.org</code>
+(compatibility), <code
+class="verbatim">07_architecture-decision-records.org</code> (recording
+the path), <code class="verbatim">09_technical-debt.org</code>, and
+<code class="verbatim">10_architecture-review.org</code>.</p>
+<h3 id="what-evolutionary-architecture-means">1. What evolutionary
+architecture means</h3>
+<p>Ford, Parsons, and Kua define an <strong>evolutionary
+architecture</strong> as one that supports guided, incremental change
+across multiple dimensions. Key ideas:</p>
+<ul>
+<li><strong>Incremental</strong>: deliver and change in small steps,
+each safe to deploy and reverse.</li>
+<li><strong>Guided</strong>: change is steered by objective measures of
+what must remain true (fitness functions) rather than by central
+approval.</li>
+<li><strong>Multiple dimensions</strong>: not only code structure, but
+data, security, performance, operability, and the delivery pipeline
+evolve.</li>
+<li><strong>Last responsible moment</strong>: defer irreversible
+decisions until you have enough information, and make decisions
+reversible where you can. Delaying has a cost, so it must be
+deliberate.</li>
+<li><strong>Optionality</strong>: choices that preserve future options
+(clean boundaries, small interfaces, portable data) are valuable in
+proportion to the probability and value of the future you are hedging
+against; paying for options you will never exercise is waste.</li>
+<li><strong>The unit of change</strong>: Ford describes the
+<strong>architectural quantum</strong> as an independently deployable
+artifact with high functional cohesion; coupling inside a quantum is
+acceptable, and coupling between quanta is what limits independent
+evolution.</li>
+<li><strong>Evolvability depends on engineering practices</strong>:
+automated tests, continuous integration and delivery, observability, and
+small batches. Architecture without these cannot evolve safely, however
+clean its diagrams.</li>
+</ul>
+<h3 id="fitness-functions">2. Fitness functions</h3>
+<p>A <strong>fitness function</strong> is any mechanism that provides an
+objective assessment of how well the system satisfies an architectural
+characteristic. It makes a quality attribute (see <code
+class="verbatim">06_quality-attributes-and-tradeoffs.org</code>)
+executable, so that an automated process, not memory and goodwill,
+defends it.</p>
+<p><strong>Dimensions of fitness functions</strong>:</p>
+<ul>
+<li><strong>Atomic</strong> (checks one characteristic in isolation,
+such as a dependency rule) versus <strong>holistic</strong> (checks the
+interaction of several, such as a load test with failure injected).</li>
+<li><strong>Triggered</strong> (runs on a commit, a build, or a
+schedule) versus <strong>continual</strong> (runs in production:
+monitoring, SLO alerts, chaos experiments).</li>
+<li><strong>Static</strong> (a fixed threshold) versus
+<strong>dynamic</strong> (depends on context, such as latency relative
+to load).</li>
+<li><strong>Automated</strong> versus <strong>manual</strong> (an
+architecture review is a manual fitness function; automate what you
+can).</li>
+</ul>
+<p><strong>Examples by characteristic</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Characteristic</th>
+<th>Fitness function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modularity</td>
+<td>Dependency rules in CI; no cycles; layering and module-visibility
+checks</td>
+</tr>
+<tr>
+<td>Coupling</td>
+<td>Threshold on instability or fan-out of key modules; co-change
+reports</td>
+</tr>
+<tr>
+<td>Interface compatibility</td>
+<td>Breaking-change detection on API and schema diffs; consumer-driven
+contract tests</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>Load test with latency percentile thresholds in the pipeline;
+production SLO alerts</td>
+</tr>
+<tr>
+<td>Resilience</td>
+<td>Fault-injection tests in staging; scheduled chaos experiments with
+success criteria</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>Dependency vulnerability scanning with a policy; secrets scanning;
+authorization tests</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>Migration tests; rules that forbid cross-module table access; schema
+lint</td>
+</tr>
+<tr>
+<td>Operability</td>
+<td>Every service exposes health checks and key metrics (checked by a
+template test)</td>
+</tr>
+<tr>
+<td>Cost</td>
+<td>Cost per request or per tenant tracked with budgets and alerts</td>
+</tr>
+<tr>
+<td>Delivery</td>
+<td>Build time budget; lead time and deployment frequency trends</td>
+</tr>
+<tr>
+<td>Code health</td>
+<td>Complexity or size trends in hotspots; test flakiness rate</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ArchUnit (Java): the domain must not depend on infrastructure.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">@ArchTest</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">final</span> ArchRule domain_is_independent_of_infrastructure <span class="op">=</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">noClasses</span><span class="op">().</span><span class="fu">that</span><span class="op">().</span><span class="fu">resideInAPackage</span><span class="op">(</span><span class="st">&quot;..domain..&quot;</span><span class="op">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">should</span><span class="op">().</span><span class="fu">dependOnClassesThat</span><span class="op">().</span><span class="fu">resideInAPackage</span><span class="op">(</span><span class="st">&quot;..infrastructure..&quot;</span><span class="op">);</span></span></code></pre></div>
+<pre class="text"><code># import-linter (Python): layered architecture contract (higher layers first)
+[importlinter]
+root_package = shop
+
+[importlinter:contract:layers]
+name = Layered architecture
+type = layers
+layers =
+    shop.web
+    shop.application
+    shop.domain
+</code></pre>
+<p><strong>Designing good fitness functions</strong>:</p>
+<ul>
+<li>Derive them from the quality attribute scenarios that matter; one
+function per important characteristic, not a dashboard of
+everything.</li>
+<li>Make them fast, deterministic, and loud: a failing function blocks
+or alerts, with a clear message explaining the intent.</li>
+<li>Use <strong>ratchets</strong>: if the current state violates the
+rule, record the existing violations as a baseline that may only shrink,
+so the rule can be enforced from today without a big-bang cleanup.</li>
+<li>Give each an owner and a rationale (link the ADR); retire them when
+the intent changes.</li>
+<li>Avoid vanity metrics and targets that people can game; prefer checks
+that detect a real regression of a real property.</li>
+<li>Treat the pipeline as the place where architecture and delivery
+meet.</li>
+</ul>
+<h3 id="incremental-migration-strategies">3. Incremental migration
+strategies</h3>
+<p>Large changes (a new platform, a new style, a new data store, a
+rewrite of a core component) succeed or fail by how they are sliced. The
+toolbox:</p>
+<ul>
+<li><strong>Strangler fig</strong>: put a routing facade in front of the
+legacy system; implement new functionality, or migrate existing
+functionality slice by slice, behind the facade; shift traffic
+gradually; remove the legacy parts when empty. The old and new systems
+coexist, so a transitional architecture must be designed and eventually
+deleted.</li>
+<li><strong>Branch by abstraction</strong>: introduce an abstraction
+over the component to replace; make callers use it; create the new
+implementation behind it; switch implementations (per tenant, per
+percentage, per feature flag); remove the old implementation and, if
+useless, the abstraction. It allows trunk-based development without
+long-lived branches.</li>
+<li><strong>Parallel change (expand, migrate, contract)</strong>: add
+the new form beside the old, migrate the consumers, then remove the old.
+It applies to APIs, schemas, and file formats.</li>
+<li><strong>Parallel run and shadowing</strong>: run the new
+implementation alongside the old on real input, compare results, and
+serve only the old output until the differences are understood. Design
+the comparison (tolerances, ordering, side-effect suppression).</li>
+<li><strong>Dark launch, canary, and progressive rollout</strong>:
+expose the new path to a small percentage with monitoring and automated
+rollback; ramp up by tenant or region.</li>
+<li><strong>Feature flags</strong>: decouple deployment from release;
+manage their lifecycle (owner, expiry, cleanup) to avoid flag debt.</li>
+<li><strong>Anti-corruption layer</strong>: during the migration,
+translate between the legacy model and the new one so that the new code
+does not inherit the old model.</li>
+<li><strong>Seams</strong> (Feathers): places where behavior can be
+changed without editing the code in place (interfaces, configuration,
+dependency injection, routing). Find or create seams first, then change
+behind them.</li>
+<li><strong>Tracer bullet / walking skeleton</strong>: build one thin
+end-to-end slice of the new architecture early, through all layers, in
+production-like conditions, to expose integration risk before bulk
+work.</li>
+<li><strong>Event interception and change data capture</strong> to keep
+new components in sync with legacy data without modifying the legacy
+code.</li>
+<li><strong>Rewrite (big bang)</strong>: replacing a system wholesale
+while it keeps changing is usually the riskiest option (feature-parity
+target keeps moving, value is delayed, knowledge embedded in the old
+system is lost, the "second system" tends to be over-engineered).
+Spolsky's essay argues against it; there are valid exceptions
+(end-of-life platforms, tiny systems, hard constraints), but justify
+them with explicit evidence and incremental delivery inside the
+rewrite.</li>
+</ul>
+<h3 id="migrating-data">4. Migrating data</h3>
+<p>Data is the hardest part of any migration.</p>
+<ol>
+<li><strong>Expand</strong>: add the new schema or store without
+removing the old; deploy code that tolerates both.</li>
+<li><strong>Synchronize</strong>: keep new and old in sync, by dual
+writes (dangerous: no atomicity across stores, so they diverge on
+partial failure), by the transactional outbox, or by change data
+capture, with a reconciliation job that detects divergence.</li>
+<li><strong>Backfill</strong> historical data in idempotent, resumable,
+throttled batches, with checkpoints and verification (counts, checksums,
+sampled comparisons).</li>
+<li><strong>Verify</strong>: shadow reads compare old and new results;
+monitor mismatch rates.</li>
+<li><strong>Switch reads</strong> to the new store (gradually), then
+<strong>switch writes</strong> (the authoritative source changes),
+keeping the ability to roll back until confidence is high.</li>
+<li><strong>Contract</strong>: stop writing to the old store, keep it
+read-only for a retention period, then decommission.</li>
+</ol>
+<p>Cautions: online schema changes need tooling that avoids long locks;
+long-running backfills compete with production load; ordering and
+idempotency bugs hide in the last 1% of data; changes to identifiers,
+time zones, or encodings are migrations too; plan rollback for each
+step, including what happens to writes that arrived on the new side.</p>
+<h3 id="compatibility-during-change">5. Compatibility during change</h3>
+<p>During any rolling change, old and new versions coexist: servers with
+clients, producers with consumers, code with data (see <code
+class="verbatim">04_abstraction-and-interfaces.org</code>).</p>
+<ul>
+<li>Support <strong>N-1</strong> (or a stated window) compatibility
+between adjacent versions; make this a tested property, not a hope.</li>
+<li>Deploy in an order that keeps compatibility: consumers tolerant
+first (accept the new form), then producers emit it; or expand the
+schema before code uses it, and contract after.</li>
+<li><strong>Feature flags and kill switches</strong> make each step
+reversible without redeploying.</li>
+<li><strong>Telemetry on consumers</strong>: know who still uses the old
+interface before removing it.</li>
+<li><strong>Contract tests and compatibility checks in CI</strong>
+prevent accidental breaks.</li>
+<li>Treat mobile and embedded clients, third-party integrations, and
+stored data as having unbounded lifetimes.</li>
+</ul>
+<h3 id="planning-a-long-migration">6. Planning a long migration</h3>
+<ul>
+<li><strong>Define the destination and the reason</strong>: what
+measurable benefit justifies the cost (cost, reliability, speed of
+delivery, risk reduction, a platform end-of-life date)? If you cannot
+say, do not start.</li>
+<li><strong>Define safe stopping points</strong>: after each step the
+system is working, deployable, and better (or at least not worse); you
+can pause or stop without being stuck in a half-migrated state.</li>
+<li><strong>Slice vertically</strong> by capability, tenant, or traffic,
+not by technical layer, so that each slice delivers value and teaches
+something.</li>
+<li><strong>Do a risky slice early</strong> (the hardest data, the
+most-coupled capability) to learn before committing the schedule.</li>
+<li><strong>Sequence by dependency, risk, and value</strong>: remove the
+dependencies that block others first; migrate low-risk, high-learning
+slices before critical ones.</li>
+<li><strong>Measure progress</strong> with leading indicators:
+percentage of traffic, functionality, and data on the new path; number
+of callers of the legacy interface; size and dependency count of the
+legacy component; legacy run cost. Publish them.</li>
+<li><strong>Account for the cost of running two systems</strong>: double
+operational load, split attention, and doubled bugs. Time-box the
+dual-running period.</li>
+<li><strong>Ownership and incentives</strong>: decide who migrates (a
+central team can do the work but lacks domain knowledge; product teams
+own their migration with platform support). Make the new path the
+easiest path, and the old path progressively harder and then
+closed.</li>
+<li><strong>Finish</strong>: the last 10% takes half the effort
+(long-tail consumers, odd data, undocumented behavior). Plan
+decommissioning, a deprecation deadline, enforcement, and the deletion
+of transitional code. A permanent hybrid is the worst outcome.</li>
+<li><strong>Reversibility</strong>: for each step, define how to roll
+back, how long rollback remains possible, and the point of no
+return.</li>
+<li><strong>Communicate</strong> the plan, the status, and the rules;
+record the key decisions as ADRs.</li>
+</ul>
+<h3 id="architecture-and-delivery">7. Architecture and delivery</h3>
+<ul>
+<li>Evolution requires fast, reliable feedback: continuous integration,
+automated tests at the right levels, deployment automation,
+observability, and the ability to roll back quickly.</li>
+<li><strong>Trunk-based development</strong> with short-lived branches,
+feature flags, and small changes reduces merge risk and makes migrations
+incremental.</li>
+<li><strong>The test pyramid</strong> (many fast unit tests, fewer
+integration tests, few end-to-end tests) plus contract tests at
+boundaries; flaky tests destroy the trust the pipeline needs.</li>
+<li><strong>Delivery metrics</strong> (deployment frequency, lead time,
+change failure rate, time to restore) show whether the architecture
+helps or hinders change; architecture that makes deployment slow or
+risky is the first thing to evolve (see the DORA research).</li>
+<li><strong>Environments</strong>: production-like staging, ephemeral
+environments, and testing in production safely (canaries, shadow
+traffic) shorten feedback.</li>
+</ul>
+<h3 id="organizational-evolution">8. Organizational evolution</h3>
+<p>Architecture and organization co-evolve (Conway's law).</p>
+<ul>
+<li><strong>Team Topologies</strong> describes four team types
+(stream-aligned, platform, enabling, complicated-subsystem) and three
+interaction modes (collaboration, X-as-a-service, facilitating). Aim for
+stream-aligned teams that can deliver without handoffs, supported by
+platform teams that provide self-service capabilities.</li>
+<li><strong>Inverse Conway maneuver</strong>: change team boundaries to
+shape the architecture you want, not the other way around; expect
+friction while the two are misaligned.</li>
+<li><strong>Guardrails over gates</strong>: instead of central approval
+for every decision, provide paved roads (templates, libraries, platform
+services), automated checks (fitness functions), and light review for
+high-risk changes. Gates scale linearly with the number of changes;
+guardrails do not.</li>
+<li><strong>Architecture as a distributed practice</strong>: architects
+(Staff and Principal engineers) act as facilitators and multipliers,
+setting direction and constraints, coaching teams, and keeping the
+system-level picture, while teams make most decisions with an advice
+process.</li>
+<li><strong>Standardization versus autonomy</strong>: standardize what
+is expensive to vary (identity, observability, deployment, data
+classification) and let teams choose elsewhere; make the cost of
+divergence visible.</li>
+<li><strong>Knowledge</strong>: rotate people across boundaries,
+document decisions, and avoid indispensable individuals (bus
+factor).</li>
+</ul>
+<h3 id="detecting-drift-and-erosion">9. Detecting drift and erosion</h3>
+<p>Entropy is the default: boundaries blur, shortcuts accumulate, and
+dependencies tangle.</p>
+<ul>
+<li><strong>Conformance checking</strong>: the fitness functions above,
+run continuously.</li>
+<li><strong>Dependency and structure snapshots over time</strong>:
+cycles, fan-in and fan-out, size of the largest connected component;
+trends matter more than values.</li>
+<li><strong>Hotspot analysis</strong>: files with high change frequency
+and high complexity are where design problems and defects concentrate
+(see <code class="verbatim">09_technical-debt.org</code>).</li>
+<li><strong>Change coupling and ownership reports</strong>: unexpected
+co-change across modules, files touched by many teams.</li>
+<li><strong>Periodic architecture health reviews</strong>: lightweight,
+scheduled, driven by data and the revisit triggers in ADRs (see <code
+class="verbatim">10_architecture-review.org</code>).</li>
+<li><strong>Incident analysis</strong>: recurring failure patterns point
+to structural weaknesses.</li>
+<li><strong>Make erosion visible</strong> to the people who can fix it,
+in the tools they already use.</li>
+</ul>
+<h3 id="anti-patterns">10. Anti-patterns</h3>
+<ul>
+<li><strong>Ivory-tower governance</strong>: architects who dictate
+without owning consequences, slowing teams; replaced by guardrails and
+advice.</li>
+<li><strong>Big-bang rewrite</strong> presented as a clean slate, with
+no incremental value and a moving target.</li>
+<li><strong>Endless migration</strong>: two systems forever; no
+decommissioning date; the cost of coexistence grows.</li>
+<li><strong>Dual writes without reconciliation</strong>: silent
+divergence between stores.</li>
+<li><strong>Flag debt</strong>: flags that outlive their purpose and
+multiply states.</li>
+<li><strong>Migration for its own sake</strong>: resume-driven
+technology change without a measurable benefit.</li>
+<li><strong>Premature extraction</strong>: splitting services before
+boundaries are understood, then paying the network tax for wrong
+boundaries.</li>
+<li><strong>Fitness functions as vanity metrics</strong> or as noisy
+checks everyone learns to ignore.</li>
+<li><strong>Architecture frozen by fear</strong>: no change because
+nobody trusts the tests; the remedy is to build the safety net
+first.</li>
+<li><strong>No finish line</strong>: no definition of done for a
+migration, so the transitional architecture becomes permanent.</li>
+</ul>
+<h3 id="self-check">11. Self-check</h3>
+<ol>
+<li>Choose a quality attribute of your system and write a fitness
+function for it. How does it fail loudly, who owns it, and how would it
+be gamed?</li>
+<li>A legacy monolith must be replaced over two years. Describe the
+slicing, the first three steps, the progress measures, and the
+decommissioning plan.</li>
+<li>Why are dual writes dangerous, and what are two safer
+alternatives?</li>
+<li>Describe the sequence of deployments needed to rename a field in a
+message consumed by several services running different versions.</li>
+<li>How do you keep a feature flag from becoming permanent?</li>
+<li>Your organization wants central architecture approval for all
+services. What do you propose instead, and how do you keep risk under
+control?</li>
+</ol>
+<h3 id="exercises">12. Exercises</h3>
+<ul>
+<li>Warm-up: list the architectural rules your team believes in; mark
+which are enforced by automation today and which only by habit.</li>
+<li>Core: add one dependency-rule fitness function to CI with a ratchet
+baseline, and write the rationale and owner in its failure message.</li>
+<li>Core: plan a strangler migration of one capability: facade, routing
+rules, data synchronization, comparison strategy, rollout steps,
+rollback, and decommission criteria.</li>
+<li>Core: implement parallel change for an API field rename, with
+telemetry that shows when the old field is unused.</li>
+<li>Stretch: build a shadow-traffic comparison for a function being
+replaced; report mismatches by category.</li>
+<li>Stretch: run a hotspot analysis (churn by complexity) on a
+repository, and choose one hotspot to evolve with a plan and fitness
+function.</li>
+</ul>
+<h3 id="resources">13. Resources</h3>
+<ul>
+<li>Ford, Parsons, Kua, Sadalage, <em>Building Evolutionary
+Architectures</em> (2nd edition): fitness functions, incremental change,
+architectural quanta.</li>
+<li>Fowler, <em>Strangler Fig Application</em>: <a
+href="https://martinfowler.com/bliki/StranglerFigApplication.html">https://martinfowler.com/bliki/StranglerFigApplication.html</a>
+; Hodgson, <em>Feature Toggles</em> and branch by abstraction articles
+on Fowler's site; Fowler on parallel change (expand and contract).</li>
+<li>Feathers, <em>Working Effectively with Legacy Code</em> (seams,
+characterization tests); Newman, <em>Monolith to Microservices</em>
+(migration patterns); Humble and Farley, <em>Continuous
+Delivery</em>.</li>
+<li>Skelton and Pais, <em>Team Topologies</em>: <a
+href="https://teamtopologies.com">https://teamtopologies.com</a> ;
+Harmel-Law, <em>Facilitating Software Architecture</em> (advice process,
+guardrails).</li>
+<li>Spolsky, <em>Things You Should Never Do, Part I</em> (2000), on
+rewrites; Brooks, <em>The Mythical Man-Month</em> (the second-system
+effect).</li>
+<li>DORA research: <a href="https://dora.dev">https://dora.dev</a> ;
+ArchUnit user guide and import-linter documentation for architecture
+tests.</li>
+<li>Tornhill, <em>Software Design X-Rays</em> (hotspots and change
+coupling).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Evolvability is a designed property: small reversible steps, fast
+feedback, and executable architectural rules.</li>
+<li>Fitness functions turn quality attributes into automated checks; use
+ratchets to adopt them without a cleanup.</li>
+<li>Migrate incrementally with strangler, branch by abstraction,
+parallel change, and parallel run; avoid big-bang rewrites.</li>
+<li>Data migration needs expand, synchronize, backfill, verify, switch,
+contract, with rollback at each step.</li>
+<li>Plan the finish: measure progress, set deadlines, and delete the
+transitional architecture.</li>
+<li>Prefer guardrails and advice to gates; align teams and architecture
+deliberately.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

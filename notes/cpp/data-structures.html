@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C++ Data Structures</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/cpp/data-structures.html">
+  <meta property="og:title" content="C++ Data Structures">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/cpp/data-structures.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C++ Data Structures</h1>
+<h2 id="c-data-structures-1">C++ Data Structures</h2>
+<p>The standard library supplies containers with value semantics:
+copying a container copies its elements, and destroying it destroys
+them.</p>
+<h3 id="arrays">1. Arrays</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;array&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> raw<span class="op">[</span><span class="dv">3</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span>                  <span class="co">// C array: decays to a pointer, no size info</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> a <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span>        <span class="co">// fixed size, knows its size, no decay</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>a<span class="op">.</span>size<span class="op">();</span>                                <span class="co">// 3</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>a<span class="op">.</span>at<span class="op">(</span><span class="dv">5</span><span class="op">);</span>                                 <span class="co">// throws std::out_of_range</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>a<span class="op">[</span><span class="dv">5</span><span class="op">];</span>                                    <span class="co">// undefined behavior (no check)</span></span></code></pre></div>
+<p>Prefer <code class="verbatim">std::array</code> to C arrays when the
+size is fixed at compile time.</p>
+<h3 id="stdvector">2. std::vector</h3>
+<p>The default sequence container: contiguous storage, amortized O(1)
+<code class="verbatim">push_back</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> v <span class="op">=</span> <span class="op">{</span><span class="dv">3</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">};</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>push_back<span class="op">(</span><span class="dv">4</span><span class="op">);</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>emplace_back<span class="op">(</span><span class="dv">5</span><span class="op">);</span>               <span class="co">// constructs in place</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>reserve<span class="op">(</span><span class="dv">100</span><span class="op">);</span>                  <span class="co">// allocate capacity, size unchanged</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>size<span class="op">();</span>  v<span class="op">.</span>capacity<span class="op">();</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">:</span> v<span class="op">)</span> <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">&amp;</span>x <span class="op">:</span> v<span class="op">)</span> <span class="op">{</span> x <span class="op">*=</span> <span class="dv">2</span><span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<p>Growth may reallocate: any pointer, reference, or iterator into the
+vector is invalidated. Inserting or erasing in the middle invalidates
+the ones after that point. <code
+class="verbatim">std::vector&lt;bool&gt;</code> is a bit-packed
+specialization whose <code class="verbatim">operator[]</code> returns a
+proxy, not a <code class="verbatim">bool &amp;</code>.</p>
+<h3 id="strings">3. Strings</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string s <span class="op">=</span> <span class="st">&quot;hello&quot;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>s <span class="op">+=</span> <span class="st">&quot; world&quot;</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>substr<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">5</span><span class="op">);</span>                        <span class="co">// &quot;hello&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>find<span class="op">(</span><span class="st">&quot;lo&quot;</span><span class="op">);</span>                          <span class="co">// index or std::string::npos</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> f<span class="op">(</span><span class="bu">std::</span>string_view sv<span class="op">);</span>           <span class="co">// non-owning, no copy</span></span></code></pre></div>
+<p>A <code class="verbatim">string_view</code> must not outlive the
+characters it refers to, and it is not guaranteed to be null-terminated.
+<code class="verbatim">std::string</code> holds bytes; it knows nothing
+about Unicode.</p>
+<h3 id="ordered-and-hashed-associative-containers">4. Ordered and hashed
+associative containers</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;map&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;set&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unordered_map&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unordered_set&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="dt">int</span><span class="op">&gt;</span> ordered<span class="op">;</span>          <span class="co">// red-black tree, sorted by key, O(log n)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="dt">int</span><span class="op">&gt;</span> hashed<span class="op">;</span> <span class="co">// hash table, average O(1)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>hashed<span class="op">[</span><span class="st">&quot;a&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span>                      <span class="co">// operator[] inserts a default value if missing</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> it <span class="op">=</span> hashed<span class="op">.</span>find<span class="op">(</span><span class="st">&quot;b&quot;</span><span class="op">);</span> it <span class="op">!=</span> hashed<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span> <span class="co">/* found */</span> <span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>hashed<span class="op">.</span>contains<span class="op">(</span><span class="st">&quot;a&quot;</span><span class="op">);</span>                 <span class="co">// C++20</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>hashed<span class="op">.</span>at<span class="op">(</span><span class="st">&quot;zzz&quot;</span><span class="op">);</span>                     <span class="co">// throws std::out_of_range</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="at">const</span> <span class="kw">auto</span> <span class="op">&amp;[</span>key<span class="op">,</span> value<span class="op">]</span> <span class="op">:</span> hashed<span class="op">)</span> <span class="op">{</span> <span class="op">}</span>   <span class="co">// structured bindings</span></span></code></pre></div>
+<ul>
+<li>Use <code class="verbatim">std::map</code> when you need sorted
+iteration or range queries.</li>
+<li>Iteration order of <code class="verbatim">unordered_map</code> is
+unspecified.</li>
+<li>A custom key type needs <code>operator==</code> and a <code
+class="verbatim">std::hash</code> specialization for the unordered
+containers, or <code class="verbatim">operator&lt;</code> (or a
+comparator) for the ordered ones.</li>
+<li><code class="verbatim">std::set</code> and <code
+class="verbatim">std::unordered_set</code> store keys only.</li>
+</ul>
+<h3 id="other-containers">5. Other containers</h3>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">std::deque</code></td>
+<td>Fast insertion at both ends, non-contiguous</td>
+</tr>
+<tr>
+<td><code class="verbatim">std::list</code></td>
+<td>Doubly linked; stable iterators; rarely the right choice</td>
+</tr>
+<tr>
+<td><code class="verbatim">std::forward_list</code></td>
+<td>Singly linked</td>
+</tr>
+<tr>
+<td><code class="verbatim">std::stack</code>, <code
+class="verbatim">std::queue</code></td>
+<td>Adapters over <code class="verbatim">deque</code> (or another
+container)</td>
+</tr>
+<tr>
+<td><code class="verbatim">std::priority_queue</code></td>
+<td>Binary heap; largest element on top by default</td>
+</tr>
+<tr>
+<td><code class="verbatim">std::span&lt;T&gt;</code> (C++20)</td>
+<td>Non-owning view of a contiguous range</td>
+</tr>
+</tbody>
+</table>
+<p>Linked lists have poor cache behavior; benchmark before preferring
+them to <code class="verbatim">vector</code>.</p>
+<h3 id="structs-and-classes">6. Structs and classes</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>Point p<span class="op">{</span><span class="fl">1.0</span><span class="op">,</span> <span class="fl">2.0</span><span class="op">};</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>Point q<span class="op">{.</span>x <span class="op">=</span> <span class="fl">1.0</span><span class="op">,</span> <span class="op">.</span>y <span class="op">=</span> <span class="fl">2.0</span><span class="op">};</span>          <span class="co">// C++20 designated initializers (declaration order)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="op">[</span>x<span class="op">,</span> y<span class="op">]</span> <span class="op">=</span> p<span class="op">;</span>                      <span class="co">// structured binding</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> same <span class="op">=</span> <span class="op">(</span>p<span class="op">.</span>x <span class="op">==</span> q<span class="op">.</span>x<span class="op">);</span></span></code></pre></div>
+<p>A <code class="verbatim">struct</code> with only public members and
+no user-provided constructors is an <em>aggregate</em> and supports
+brace initialization. Equality and ordering are not generated
+automatically; C++20 can generate them:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x<span class="op">,</span> y<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="kw">operator</span><span class="op">&lt;=&gt;(</span><span class="at">const</span> Point <span class="op">&amp;)</span> <span class="at">const</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span>   <span class="co">// also gives ==</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<h3 id="pairs-and-tuples">7. Pairs and tuples</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;tuple&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;utility&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="dt">int</span><span class="op">&gt;</span> p<span class="op">{</span><span class="st">&quot;a&quot;</span><span class="op">,</span> <span class="dv">1</span><span class="op">};</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>p<span class="op">.</span>first<span class="op">;</span>  p<span class="op">.</span>second<span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>tuple<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dt">double</span><span class="op">,</span> <span class="bu">std::</span>string<span class="op">&gt;</span> t<span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="fl">2.0</span><span class="op">,</span> <span class="st">&quot;x&quot;</span><span class="op">};</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>get<span class="op">&lt;</span><span class="dv">0</span><span class="op">&gt;(</span>t<span class="op">);</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="op">[</span>a<span class="op">,</span> b<span class="op">,</span> c<span class="op">]</span> <span class="op">=</span> t<span class="op">;</span></span></code></pre></div>
+<p>Prefer a named <code class="verbatim">struct</code> to a tuple when
+the fields have meaning.</p>
+<h3 id="optional-and-variant">8. optional and variant</h3>
+<p><code class="verbatim">std::optional&lt;T&gt;</code> is "a <code
+class="verbatim">T</code> or nothing". <code
+class="verbatim">std::variant</code> is a type-safe tagged union, the
+closest thing to a sum type.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;optional&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;variant&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> find_id<span class="op">(</span><span class="bu">std::</span>string_view name<span class="op">);</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> id <span class="op">=</span> find_id<span class="op">(</span><span class="st">&quot;ada&quot;</span><span class="op">))</span> <span class="op">{</span> use<span class="op">(*</span>id<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>find_id<span class="op">(</span><span class="st">&quot;x&quot;</span><span class="op">).</span>value_or<span class="op">(-</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Circle <span class="op">{</span> <span class="dt">double</span> r<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Rect   <span class="op">{</span> <span class="dt">double</span> w<span class="op">,</span> h<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Shape <span class="op">=</span> <span class="bu">std::</span>variant<span class="op">&lt;</span>Circle<span class="op">,</span> Rect<span class="op">&gt;;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">class</span><span class="op">...</span> Ts<span class="op">&gt;</span> <span class="kw">struct</span> overloaded <span class="op">:</span> Ts<span class="op">...</span> <span class="op">{</span> <span class="kw">using</span> Ts<span class="op">::</span><span class="kw">operator</span><span class="op">()...;</span> <span class="op">};</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">class</span><span class="op">...</span> Ts<span class="op">&gt;</span> overloaded<span class="op">(</span>Ts<span class="op">...)</span> <span class="op">-&gt;</span> overloaded<span class="op">&lt;</span>Ts<span class="op">...&gt;;</span>   <span class="co">// needed before C++20</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> area<span class="op">(</span><span class="at">const</span> Shape <span class="op">&amp;</span>s<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>visit<span class="op">(</span>overloaded<span class="op">{</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">[](</span><span class="at">const</span> Circle <span class="op">&amp;</span>c<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> <span class="fl">3.14159265358979</span> <span class="op">*</span> c<span class="op">.</span>r <span class="op">*</span> c<span class="op">.</span>r<span class="op">;</span> <span class="op">},</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">[](</span><span class="at">const</span> Rect <span class="op">&amp;</span>r<span class="op">)</span>   <span class="op">{</span> <span class="cf">return</span> r<span class="op">.</span>w <span class="op">*</span> r<span class="op">.</span>h<span class="op">;</span> <span class="op">},</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> s<span class="op">);</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code class="verbatim">std::visit</code> fails to compile if a case
+is missing, so it is checked for exhaustiveness. <code
+class="verbatim">std::get&lt;T&gt;(v)</code> throws <code
+class="verbatim">std::bad_variant_access</code> on the wrong
+alternative; <code class="verbatim">std::get_if&lt;T&gt;(&amp;v)</code>
+returns a pointer or null.</p>
+<h3 id="enums">9. Enums</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> Color <span class="op">{</span> Red<span class="op">,</span> Green<span class="op">,</span> Blue <span class="op">};</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>Color c <span class="op">=</span> Color<span class="op">::</span>Green<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> n <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>c<span class="op">);</span>       <span class="co">// explicit conversion required</span></span></code></pre></div>
+<p>Prefer <code class="verbatim">enum class</code> (scoped, no implicit
+conversion to int) over the C-style <code
+class="verbatim">enum</code>.</p>
+<h3 id="ownership-inside-containers">10. Ownership inside
+containers</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>Shape<span class="op">&gt;&gt;</span> shapes<span class="op">;</span>      <span class="co">// owns polymorphic objects</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>shapes<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>make_unique<span class="op">&lt;</span>Circle<span class="op">&gt;(</span><span class="fl">1.0</span><span class="op">));</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>Widget <span class="op">*&gt;</span> view<span class="op">;</span>                      <span class="co">// non-owning: OK if you know the lifetimes</span></span></code></pre></div>
+<p>Copying a <code
+class="verbatim">vector&lt;unique_ptr&lt;T&gt;&gt;</code> is a compile
+error; move it. Do not store raw pointers in a container if they are
+meant to own.</p>
+<h3 id="choose-the-structure-for-the-job">11. Choose the structure for
+the job</h3>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Common choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Growable sequence (default)</td>
+<td><code class="verbatim">std::vector</code></td>
+</tr>
+<tr>
+<td>Fixed-size sequence</td>
+<td><code class="verbatim">std::array</code></td>
+</tr>
+<tr>
+<td>Key-value lookup</td>
+<td><code class="verbatim">std::unordered_map</code></td>
+</tr>
+<tr>
+<td>Sorted keys, range queries</td>
+<td><code class="verbatim">std::map</code></td>
+</tr>
+<tr>
+<td>Membership test</td>
+<td><code class="verbatim">std::unordered_set</code></td>
+</tr>
+<tr>
+<td>Fixed named fields</td>
+<td><code class="verbatim">struct</code></td>
+</tr>
+<tr>
+<td>One of several types</td>
+<td><code class="verbatim">std::variant</code></td>
+</tr>
+<tr>
+<td>Value that may be absent</td>
+<td><code class="verbatim">std::optional</code></td>
+</tr>
+<tr>
+<td>View over existing data</td>
+<td><code class="verbatim">std::span</code>, <code
+class="verbatim">std::string_view</code></td>
+</tr>
+<tr>
+<td>Polymorphic objects</td>
+<td><code class="verbatim">std::unique_ptr&lt;Base&gt;</code> in a
+container</td>
+</tr>
+</tbody>
+</table>
+<p>Start with <code class="verbatim">vector</code>, <code
+class="verbatim">string</code>, <code
+class="verbatim">unordered_map</code>, and plain structs. Change when
+profiling or the problem says to.</p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

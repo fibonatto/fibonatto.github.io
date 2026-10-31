@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reliability and Monitoring</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/17-reliability-and-monitoring.html">
+  <meta property="og:title" content="Reliability and Monitoring">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/17-reliability-and-monitoring.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Reliability and Monitoring</h1>
+<h2 id="reliability-and-monitoring-1">Reliability and Monitoring</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Web3 systems fail in two layers: the chain-facing infrastructure
+(RPC, indexers, relayers, frontends) fails like any production service,
+and the on-chain logic can be attacked or drained in minutes. Monitoring
+is the only control that works after deployment, and response speed
+decides how much is lost. At Staff and Principal scope you are expected
+to:</p>
+<ul>
+<li>define service level objectives for the whole user journey,
+including chain-dependent steps, and manage them with error
+budgets;</li>
+<li>design monitoring that detects both operational failures and
+security-relevant on-chain behavior;</li>
+<li>build incident response that works under irreversible loss:
+containment first, with pre-authorized actions and practiced
+procedures;</li>
+<li>plan capacity, redundancy, and degradation for traffic spikes
+(mints, airdrops, market crashes) and chain incidents.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">03_smart-contract-security.org</code>, <code
+class="verbatim">12_distributed-systems.org</code>, <code
+class="verbatim">13_indexing-and-data-access.org</code>, <code
+class="verbatim">15_deployment-and-upgrades.org</code>, <code
+class="verbatim">16_security-auditing.org</code>. Software Architecture
+notes: quality attributes (SLOs, error budgets) and architecture review
+(production readiness). Foundations: concurrency (queueing,
+overload).</p>
+<h3 id="service-level-objectives-for-web3-systems">1. Service level
+objectives for Web3 systems</h3>
+<p>Choose indicators that reflect what users and risk owners care about,
+and set objectives with error budgets (see the SRE material in the
+Software Architecture notes).</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Example SLIs</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transaction submission</td>
+<td>Success rate of submissions; time to inclusion (p50, p95, p99); time
+to finality; share of transactions replaced or dropped</td>
+<td>Depends on fee policy and chain conditions</td>
+</tr>
+<tr>
+<td>RPC and node access</td>
+<td>Availability, latency, error rate per provider; head lag in
+blocks</td>
+<td>Measure from your own probes, not only provider status</td>
+</tr>
+<tr>
+<td>Indexer and data freshness</td>
+<td>Blocks behind head; seconds behind; reconciliation drift; reorg
+handling lag</td>
+<td>Define freshness targets per feature</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>Page and wallet-connection success rate; signature-flow completion;
+error rates by wallet and chain</td>
+<td>Include wallet and chain breakdown</td>
+</tr>
+<tr>
+<td>Oracles and price data</td>
+<td>Feed age; deviation between sources; update failures</td>
+<td>Alert before protocol thresholds trigger</td>
+</tr>
+<tr>
+<td>Relayers, keepers, bots</td>
+<td>Queue depth; action success rate; time from trigger to action; gas
+balance</td>
+<td>Keepers protect solvency: treat as critical</td>
+</tr>
+<tr>
+<td>Cross-chain messaging</td>
+<td>Message latency; backlog; failed or stuck messages; invariant checks
+across chains</td>
+<td></td>
+</tr>
+<tr>
+<td>Protocol invariants</td>
+<td>Solvency ratio; supply conservation; collateralization;
+utilization</td>
+<td>Business-critical correctness metrics</td>
+</tr>
+<tr>
+<td>Security posture</td>
+<td>Time to detect and to contain; privileged actions reviewed</td>
+<td>Process SLOs</td>
+</tr>
+</tbody>
+</table>
+<p>Set objectives from the cost of failure and user expectations; fewer,
+well-chosen SLOs are better than hundreds of dashboards.</p>
+<h3 id="what-to-monitor">2. What to monitor</h3>
+<h4 id="on-chain-monitoring-security-relevant">2.1 On-chain monitoring
+(security-relevant)</h4>
+<ul>
+<li><strong>Privileged actions</strong>: ownership and role changes,
+upgrades (implementation slot changes), timelock queues and executions,
+pause and unpause, parameter changes, new oracle feeds, token listing
+changes.</li>
+<li><strong>Value flows</strong>: large deposits, withdrawals, and
+transfers; unusual outflows relative to TVL; transfers to new or flagged
+addresses; treasury movements.</li>
+<li><strong>Invariants</strong>: solvency (assets versus liabilities),
+share price monotonicity, supply conservation, collateralization ratios;
+alert immediately on breach.</li>
+<li><strong>Behavioral anomalies</strong>: flash-loan usage in
+transactions touching your contracts, sudden changes in price impact or
+oracle deviations, spikes in failed transactions or revert reasons,
+repeated calls to sensitive functions, new contracts interacting with
+yours, sandwich and arbitrage patterns around your pools.</li>
+<li><strong>Dependencies</strong>: health of integrated protocols
+(pauses, upgrades, depegs, oracle updates, governance proposals that
+change their behavior).</li>
+<li><strong>Governance</strong>: new proposals and queued actions, votes
+concentrations, delegation changes, suspicious proposal contents
+(simulate them).</li>
+<li><strong>Tools</strong>: custom scripts on an indexer or node,
+managed monitoring and detection platforms (for example Forta, Tenderly
+alerts, Hypernative, and similar services; verify current offerings and
+costs), block explorer alerts, and dashboards built on your own data
+store. Prefer your own invariant checks for protocol-specific
+properties.</li>
+</ul>
+<h4 id="operational-monitoring">2.2 Operational monitoring</h4>
+<ul>
+<li>Standard service telemetry: latency, errors, saturation, and traffic
+(the golden signals), logs, traces, and resource metrics for backends,
+workers, and databases.</li>
+<li>Node and RPC health: peer count, sync status, head lag, disk and
+memory, request latency and error codes, rate limit usage, and provider
+comparisons.</li>
+<li>Transaction pipeline: pending age, nonce gaps, replacement rate,
+failure reasons, fees paid versus budget, wallet balances for gas, and
+signer availability.</li>
+<li>Data pipeline: ingestion cursor, lag, reorg events, handler
+failures, database health.</li>
+<li>Frontend: real-user monitoring for wallet connection and transaction
+flows; error tracking with chain and wallet context; integrity
+monitoring of deployed assets and dependencies.</li>
+<li>Security of infrastructure: access logs, secret usage, unexpected
+changes to DNS, hosting, repositories, build pipelines, and package
+dependencies.</li>
+</ul>
+<h4 id="alert-design">2.3 Alert design</h4>
+<ul>
+<li>Alert on symptoms that need action (user-impacting or
+risk-increasing), with severity levels, owners, and runbook links. Page
+for conditions where minutes matter (invariant breach, large unexpected
+outflow, privileged action from an unknown address, oracle failure,
+stuck keeper); ticket for slower issues.</li>
+<li>Route security-critical alerts to more than one channel and person;
+avoid single points of failure in alert delivery.</li>
+<li>Test alerts (synthetic events on a fork or testnet) and review false
+positives regularly; alert fatigue is a vulnerability.</li>
+<li>Combine automated detection with human review for ambiguous signals;
+include context (transaction links, simulation results, recent
+changes).</li>
+</ul>
+<h3 id="incident-response">3. Incident response</h3>
+<p>Irreversible loss makes the first minutes decisive.</p>
+<ul>
+<li><strong>Preparation</strong>: an incident response plan with roles
+(incident commander, technical lead, communications lead, scribe),
+contact lists, escalation paths, pre-authorized actions, and access to
+keys and tools; emergency contacts with security responder groups and
+exchange security teams; rehearsed procedures; pre-written communication
+templates.</li>
+<li><strong>Detection to containment</strong>:
+<ol>
+<li><strong>Detect and confirm</strong>: validate the alert; check
+transactions and traces; decide severity.</li>
+<li><strong>Contain</strong>: pause the protocol or affected modules
+(pre-authorized guardians), disable deposits or borrowing, lower caps,
+stop keepers and relayers, revoke approvals or roles, block the frontend
+if it is compromised, and pause cross-chain messaging if relevant.
+Containment first, root cause later.</li>
+<li><strong>Preserve evidence</strong>: save transactions, traces, logs,
+and state snapshots.</li>
+<li><strong>Investigate</strong>: reproduce the attack on a fork;
+identify the vulnerability, the scope of affected funds, the attacker
+addresses, and whether the attack is ongoing.</li>
+<li><strong>Remediate</strong>: patch through the upgrade process (with
+an emergency path where governance allows), migrate funds, rotate keys,
+coordinate with integrators and exchanges to flag stolen funds.</li>
+<li><strong>Communicate</strong>: timely, factual updates to users and
+the community (status page, social channels, governance forum); do not
+speculate; disclose impact and remediation; coordinate with legal and
+regulators as required.</li>
+<li><strong>Recover</strong>: restore service with caps and heightened
+monitoring; compensate users where the protocol has a plan.</li>
+<li><strong>Post-mortem</strong>: blameless, public where appropriate,
+with root cause, timeline, impact, what worked, what failed, and action
+items with owners and dates.</li>
+</ol></li>
+<li><strong>Decision rights</strong>: who may pause, who may upgrade in
+an emergency, and under what conditions; the speed of the response is
+limited by the signing process (multisig availability across time
+zones); keep an on-call rotation for signers.</li>
+<li><strong>Compromised keys</strong>: have a rotation plan; assume
+attackers may watch for rotation transactions and race them; use private
+transaction submission and pre-signed emergency transactions where
+appropriate.</li>
+<li><strong>Chain-level incidents</strong> (halts, reorgs, finality
+stalls, client bugs): follow the client teams' and the foundation's
+channels; pause irreversible actions; verify state across several
+providers (see <code
+class="verbatim">12_distributed-systems.org</code>).</li>
+<li><strong>Exercises</strong>: tabletop and live drills (including a
+compromise scenario, a bridge failure, an oracle failure, and a frontend
+compromise) reveal gaps in access, tooling, and communication.</li>
+</ul>
+<h3 id="reliability-engineering-for-chain-facing-infrastructure">4.
+Reliability engineering for chain-facing infrastructure</h3>
+<ul>
+<li><strong>Redundancy</strong>: several RPC providers plus a
+self-hosted node; independent regions; multiple indexer instances;
+redundant relayers and keepers with leader election; no shared single
+credentials.</li>
+<li><strong>Isolation</strong>: separate critical keepers and
+liquidators from batch jobs and public API traffic; dedicated RPC
+endpoints and quotas.</li>
+<li><strong>Backpressure and rate limiting</strong>: protect against
+bursts (mints, airdrops, market crashes) with queues, admission control,
+and caching.</li>
+<li><strong>Graceful degradation</strong>: read-only mode, disabled
+non-essential features, reduced limits; clear user messaging.</li>
+<li><strong>Idempotency and safe retries</strong> in every chain
+interaction (see <code
+class="verbatim">06_transactions-and-gas.org</code>).</li>
+<li><strong>Capacity planning</strong>: estimate request rates, indexing
+load, and gas budgets at spike conditions; load test against local forks
+and staging; pre-fund gas wallets with automated top-up and caps.</li>
+<li><strong>Dependency management</strong>: track provider status, SLAs,
+and incident histories; test failover regularly; have an exit plan for
+each vendor.</li>
+<li><strong>Change management</strong>: deployments of services and
+contracts through reviewed pipelines with canaries, feature flags, and
+rollbacks; avoid risky changes during known high-volatility events.</li>
+<li><strong>Backups and disaster recovery</strong>: backups of databases
+and configuration; ability to rebuild indexers from raw data or chain
+history within a known recovery time; key backup and recovery procedures
+tested.</li>
+<li><strong>Chaos testing</strong>: inject provider outages, slow
+responses, reorgs, fee spikes, and key unavailability in staging.</li>
+</ul>
+<h3 id="monitoring-invariants-and-accounting">5. Monitoring invariants
+and accounting</h3>
+<ul>
+<li>Translate protocol invariants into continuous checks run against
+live state at every block or at fixed intervals: total assets versus
+total liabilities, supply sums across chains, share price bounds, debt
+versus collateral, reserves.</li>
+<li>Reconcile internal ledgers and treasury balances against on-chain
+balances daily; investigate any unexplained difference.</li>
+<li>Track protocol-owned assets and their custody addresses; alert on
+movements outside approved flows.</li>
+<li>Maintain a source of truth for deployed addresses (a registry) so
+monitoring covers every contract and chain, including newly deployed
+ones.</li>
+</ul>
+<h3 id="metrics-reporting-and-learning">6. Metrics, reporting, and
+learning</h3>
+<ul>
+<li>Review SLO attainment and error budgets regularly; use budget burn
+to guide risk (freeze risky changes when exhausted).</li>
+<li>Track incident metrics: time to detect, time to acknowledge, time to
+contain, time to resolve, funds at risk versus lost.</li>
+<li>Run blameless post-incident reviews and share lessons across teams;
+maintain a library of runbooks and update them after each incident and
+drill.</li>
+<li>Publish status and security information for users; transparency
+builds trust.</li>
+</ul>
+<h3 id="self-check">7. Self-check</h3>
+<ol>
+<li>Define five SLOs for a dApp that sends transactions on behalf of
+users, and explain how each is measured.</li>
+<li>List the on-chain events you would alert on for an upgradeable
+lending protocol, and the response for each.</li>
+<li>A keeper that triggers liquidations stops working during a market
+crash. What is the impact, and how do you design for this?</li>
+<li>Walk through the first 15 minutes of a suspected exploit: who does
+what, and which actions are pre-authorized?</li>
+<li>How do you monitor invariants across three chains for a bridged
+token?</li>
+<li>Your multisig signers are in different time zones. How do you ensure
+an emergency pause within minutes?</li>
+</ol>
+<h3 id="exercises">8. Exercises</h3>
+<ul>
+<li>Warm-up: write a script that watches a contract's admin and upgrade
+events and posts alerts with links to the transaction and a decoded
+summary.</li>
+<li>Core: implement an invariant monitor for a vault (assets versus
+liabilities) that runs each block on a local fork and alerts on breach;
+test with a deliberately broken contract.</li>
+<li>Core: define SLOs and dashboards for a transaction-submitting
+service; run a load test and a failure injection test, and review the
+results against the budgets.</li>
+<li>Core: write an incident response plan for a protocol (roles,
+contacts, pre-authorized actions, communication templates) and run a
+tabletop exercise on a simulated exploit.</li>
+<li>Stretch: build a failover test harness that kills the primary RPC
+provider, injects a reorg, and spikes gas, and measure recovery
+time.</li>
+<li>Stretch: write a public post-mortem for a historical incident from
+the facts available, focusing on detection and response gaps.</li>
+</ul>
+<h3 id="resources">9. Resources</h3>
+<ul>
+<li>Beyer et al., <em>Site Reliability Engineering</em> and <em>The Site
+Reliability Workbook</em> (SLOs, alerting, incident response): <a
+href="https://sre.google/books/">https://sre.google/books/</a></li>
+<li>Documentation of monitoring and detection platforms and open-source
+tools; node client documentation for metrics; Grafana and Prometheus
+documentation.</li>
+<li>Public post-mortems of DeFi and bridge incidents; emergency response
+communities for crypto security; audit firms' incident response
+guides.</li>
+<li>Software Architecture notes in this repository: quality attributes
+(availability, SLOs), architecture review (production readiness
+checklist), evolutionary architecture.</li>
+<li>Foundations notes: concurrency and distributed systems (queueing,
+overload, failure models).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Monitor both operations (RPC, indexers, relayers, frontends) and
+on-chain security signals (privileged actions, value flows,
+invariants).</li>
+<li>Containment first: pre-authorized pause and response paths,
+practiced and reachable in minutes.</li>
+<li>Design redundancy, backpressure, and degraded modes for chain and
+provider failures.</li>
+<li>Turn invariants into continuous checks and reconcile accounting with
+on-chain truth.</li>
+<li>Run drills and blameless post-mortems; update runbooks and
+checklists.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

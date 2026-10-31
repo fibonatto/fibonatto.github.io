@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Memory</title>
+  <meta name="description" content="Technical notes on C memory management covering object storage duration, stack and heap allocation, malloc, calloc, realloc, ownership conventions, pointer arithmetic, memory copying, common memory errors, strict aliasing, effective types, alignment, padding, flexible array members, variable-length arrays, arena allocation, and runtime memory diagnostics.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/04-memory.html">
+  <meta property="og:title" content="C Memory">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/04-memory.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C Memory</h1>
+<h2 id="c-memory-1">C Memory</h2>
+<h3 id="where-objects-live">1. Where objects live</h3>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Holds</th>
+<th>Lifetime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stack</td>
+<td>Automatic variables, call frames</td>
+<td>Until the block or function exits</td>
+</tr>
+<tr>
+<td>Static</td>
+<td>Globals and <code class="verbatim">static</code> variables, string
+literals</td>
+<td>Whole program</td>
+</tr>
+<tr>
+<td>Heap</td>
+<td>Memory from <code class="verbatim">malloc</code> and friends</td>
+<td>Until <code class="verbatim">free</code></td>
+</tr>
+</tbody>
+</table>
+<p>The stack is small (commonly 1 to 8 MB per thread) and fast; a large
+local array or deep recursion can overflow it. Heap memory is limited by
+the system but must be managed explicitly.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>make<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> local <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>local<span class="op">;</span>                   <span class="co">/* </span><span class="al">BUG</span><span class="co">: points to dead storage after return */</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="the-malloc-family">2. The malloc family</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>a <span class="op">=</span> malloc<span class="op">(</span>n <span class="op">*</span> <span class="kw">sizeof</span> <span class="op">*</span>a<span class="op">);</span>       <span class="co">/* uninitialized */</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>b <span class="op">=</span> calloc<span class="op">(</span>n<span class="op">,</span> <span class="kw">sizeof</span> <span class="op">*</span>b<span class="op">);</span>        <span class="co">/* zero-filled; checks n * size overflow */</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> realloc<span class="op">(</span>a<span class="op">,</span> new_n <span class="op">*</span> <span class="kw">sizeof</span> <span class="op">*</span>a<span class="op">);</span>    <span class="co">/* resize; may move; see below */</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>free<span class="op">(</span>a<span class="op">);</span>                              <span class="co">/* free(NULL) is a no-op */</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> <span class="op">*</span>p <span class="op">=</span> aligned_alloc<span class="op">(</span><span class="dv">64</span><span class="op">,</span> <span class="dv">4096</span><span class="op">);</span>    <span class="co">/* C11: size must be a multiple of alignment */</span></span></code></pre></div>
+<p>Rules:</p>
+<ul>
+<li>Check for <code class="verbatim">NULL</code>. <code
+class="verbatim">malloc</code> fails when memory is exhausted (on Linux,
+overcommit can delay the failure to first use).</li>
+<li>Write <code class="verbatim">sizeof *p</code> instead of <code
+class="verbatim">sizeof(int)</code>, so the size follows the pointer's
+type.</li>
+<li><code>malloc(n * size)</code> can overflow <code
+class="verbatim">size_t</code>. <code
+class="verbatim">calloc(n, size)</code> checks it; otherwise check
+manually (<code class="verbatim">n &gt; SIZE_MAX / size</code>).</li>
+<li><code class="verbatim">malloc(0)</code> may return <code
+class="verbatim">NULL</code> or a unique pointer; either way, do not
+dereference it.</li>
+<li>A pointer returned by the allocator must be passed to <code
+class="verbatim">free</code> exactly once, unmodified.</li>
+<li>Casting the result of <code class="verbatim">malloc</code> is
+unnecessary in C and can hide a missing <code
+class="verbatim">&lt;stdlib.h&gt;</code>.</li>
+</ul>
+<p>The safe <code class="verbatim">realloc</code> pattern keeps the old
+block valid if resizing fails:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>tmp <span class="op">=</span> realloc<span class="op">(</span>a<span class="op">,</span> new_n <span class="op">*</span> <span class="kw">sizeof</span> <span class="op">*</span>a<span class="op">);</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>tmp <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span> <span class="co">/* a is still valid and still yours */</span> <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> tmp<span class="op">;</span></span></code></pre></div>
+<p>Memory from <code class="verbatim">malloc</code> is not zeroed.
+All-bits-zero is a valid null pointer and 0.0 on mainstream platforms,
+but the standard does not promise it, so for pointers and floats set
+values explicitly when portability matters.</p>
+<h3 id="typical-memory-bugs">3. Typical memory bugs</h3>
+<table>
+<thead>
+<tr>
+<th>Bug</th>
+<th>Example</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Leak</td>
+<td>return without <code class="verbatim">free</code></td>
+<td>memory grows</td>
+</tr>
+<tr>
+<td>Use after free</td>
+<td>read <code class="verbatim">p</code> after <code
+class="verbatim">free(p)</code></td>
+<td>undefined; often exploitable</td>
+</tr>
+<tr>
+<td>Double free</td>
+<td><code class="verbatim">free(p); free(p);</code></td>
+<td>heap corruption</td>
+</tr>
+<tr>
+<td>Buffer overflow</td>
+<td>write <code class="verbatim">a[n]</code> on an <code
+class="verbatim">n</code>-element array</td>
+<td>undefined; corrupts neighbors</td>
+</tr>
+<tr>
+<td>Off-by-one</td>
+<td><code class="verbatim">strcpy</code> into a buffer without room for
+<code class="verbatim">'\0'</code></td>
+<td>overflow</td>
+</tr>
+<tr>
+<td>Uninitialized read</td>
+<td>read <code class="verbatim">malloc</code> memory or an uninitialized
+local</td>
+<td>undefined, nondeterministic</td>
+</tr>
+<tr>
+<td>Invalid free</td>
+<td><code class="verbatim">free</code> of stack memory or an interior
+pointer</td>
+<td>crash or corruption</td>
+</tr>
+<tr>
+<td>Dangling pointer</td>
+<td>pointer to a local that returned, or into a <code
+class="verbatim">realloc</code>'d block</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<p>Habit: set a pointer to <code class="verbatim">NULL</code> after
+<code class="verbatim">free</code> (limits the damage of a second use),
+and design ownership so every allocation has one clear owner.</p>
+<h3 id="ownership-conventions">4. Ownership conventions</h3>
+<p>C does not track who owns memory; you must. Make the rules explicit
+in names and documentation:</p>
+<ul>
+<li>A function named <code class="verbatim">*_new</code> / <code
+class="verbatim">*_create</code> returns an owned object; the caller
+frees it with <code class="verbatim">*_free</code> / <code
+class="verbatim">*_destroy</code>.</li>
+<li>A <code class="verbatim">const T *</code> parameter is borrowed; the
+function does not keep or free it.</li>
+<li>A function that stores a pointer says so (and who frees it).</li>
+<li>Initialize into caller-owned storage when you can:
+<code>int thing_init(Thing *t)</code> avoids an allocation and a
+pointer.</li>
+<li>Release in reverse order of acquisition; use the <code
+class="verbatim">goto cleanup</code> pattern (see <code
+class="verbatim">01_language.org</code>).</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> Buffer Buffer<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>Buffer <span class="op">*</span>buffer_new<span class="op">(</span><span class="dt">size_t</span> cap<span class="op">);</span>          <span class="co">/* caller owns the result */</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span>    buffer_free<span class="op">(</span>Buffer <span class="op">*</span>b<span class="op">);</span>          <span class="co">/* accepts NULL */</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span>     buffer_append<span class="op">(</span>Buffer <span class="op">*</span>b<span class="op">,</span> <span class="dt">const</span> <span class="dt">void</span> <span class="op">*</span>data<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">);</span>   <span class="co">/* borrows data */</span></span></code></pre></div>
+<h3 id="pointers-and-pointer-arithmetic">5. Pointers and pointer
+arithmetic</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a<span class="op">[</span><span class="dv">4</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span><span class="op">,</span> <span class="dv">40</span><span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>p <span class="op">=</span> a<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">*(</span>p <span class="op">+</span> <span class="dv">2</span><span class="op">);</span>                          <span class="co">/* 30: arithmetic scales by sizeof(int) */</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>p<span class="op">[</span><span class="dv">2</span><span class="op">];</span>                              <span class="co">/* same: p[i] is *(p + i) */</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">&amp;</span>a<span class="op">[</span><span class="dv">4</span><span class="op">]</span> <span class="op">-</span> <span class="op">&amp;</span>a<span class="op">[</span><span class="dv">0</span><span class="op">];</span>                     <span class="co">/* 4 (ptrdiff_t): one past the end is allowed */</span></span></code></pre></div>
+<ul>
+<li>Pointer arithmetic is valid only inside an array object (or one past
+its last element). Forming any other pointer, even without dereferencing
+it, is undefined.</li>
+<li>Subtracting or comparing (<code>&lt;</code>) pointers is valid only
+within the same array. Equality comparison is allowed for any two
+pointers.</li>
+<li><code class="verbatim">void *</code> has no size, so arithmetic on
+it is not standard (GCC allows it as an extension). Cast to <code
+class="verbatim">unsigned char *</code> to step by bytes.</li>
+<li>Dereferencing <code class="verbatim">NULL</code> is undefined, not
+necessarily a crash.</li>
+</ul>
+<h3 id="copying-and-filling-memory">6. Copying and filling memory</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string.h&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>memcpy<span class="op">(</span>dst<span class="op">,</span> src<span class="op">,</span> n<span class="op">);</span>               <span class="co">/* regions must NOT overlap */</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>memmove<span class="op">(</span>dst<span class="op">,</span> src<span class="op">,</span> n<span class="op">);</span>              <span class="co">/* overlap allowed */</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>memset<span class="op">(</span>buf<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> n<span class="op">);</span>                 <span class="co">/* set bytes to a value */</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>memcmp<span class="op">(</span>a<span class="op">,</span> b<span class="op">,</span> n<span class="op">);</span>                   <span class="co">/* compare bytes; sign of the result only */</span></span></code></pre></div>
+<ul>
+<li>Overlapping <code class="verbatim">memcpy</code> is undefined; use
+<code class="verbatim">memmove</code>.</li>
+<li>Do not compare structs with <code class="verbatim">memcmp</code>:
+padding bytes are indeterminate.</li>
+<li>The compiler may remove a <code class="verbatim">memset</code> on a
+buffer that is never read again (dead-store elimination), so wiping
+secrets needs <code class="verbatim">memset_explicit</code> (C23), <code
+class="verbatim">explicit_bzero</code> (glibc/BSD), or <code
+class="verbatim">SecureZeroMemory</code> (Windows).</li>
+</ul>
+<h3 id="strict-aliasing-and-effective-type">7. Strict aliasing and
+effective type</h3>
+<p>An object may be accessed only through an lvalue of a compatible
+type, a qualified/signed/unsigned variant of it, an aggregate or union
+containing it, or <code class="verbatim">char</code>-family types.
+Otherwise the behavior is undefined, and the optimizer relies on
+this.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> f <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> u <span class="op">=</span> <span class="op">*(</span><span class="dt">uint32_t</span> <span class="op">*)&amp;</span>f<span class="op">;</span>      <span class="co">/* UB: float object accessed as uint32_t */</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> v<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>memcpy<span class="op">(&amp;</span>v<span class="op">,</span> <span class="op">&amp;</span>f<span class="op">,</span> <span class="kw">sizeof</span> v<span class="op">);</span>          <span class="co">/* correct */</span></span></code></pre></div>
+<p>Memory returned by <code class="verbatim">malloc</code> has no
+declared type; its effective type becomes the type of the last store.
+GCC's <code class="verbatim">-fno-strict-aliasing</code> disables the
+assumption, but fixing the code with <code
+class="verbatim">memcpy</code> is better.</p>
+<h3 id="alignment-and-padding">8. Alignment and padding</h3>
+<p>Return values of <code class="verbatim">malloc</code> are aligned for
+any standard type. For a stricter alignment (cache line, SIMD), use
+<code class="verbatim">aligned_alloc</code> or <code
+class="verbatim">_Alignas</code>. Misaligned access through a typed
+pointer is undefined and can trap on some architectures; read unaligned
+data with <code class="verbatim">memcpy</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> read_u32<span class="op">(</span><span class="dt">const</span> <span class="dt">unsigned</span> <span class="dt">char</span> <span class="op">*</span>p<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> v<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    memcpy<span class="op">(&amp;</span>v<span class="op">,</span> p<span class="op">,</span> <span class="kw">sizeof</span> v<span class="op">);</span>       <span class="co">/* safe for any alignment */</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> v<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="flexible-array-members-and-vlas">9. Flexible array members and
+VLAs</h3>
+<p>A struct may end with an array of unspecified length (C99):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> message <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> len<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span> data<span class="op">[];</span>                   <span class="co">/* flexible array member */</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> message <span class="op">*</span>m <span class="op">=</span> malloc<span class="op">(</span><span class="kw">sizeof</span> <span class="op">*</span>m <span class="op">+</span> n<span class="op">);</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>m<span class="op">-&gt;</span>len <span class="op">=</span> n<span class="op">;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>memcpy<span class="op">(</span>m<span class="op">-&gt;</span>data<span class="op">,</span> src<span class="op">,</span> n<span class="op">);</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>free<span class="op">(</span>m<span class="op">);</span>                           <span class="co">/* one allocation, one free */</span></span></code></pre></div>
+<p>Such a struct cannot be copied by assignment in a meaningful way, nor
+stored in an array.</p>
+<p>Variable-length arrays (<code class="verbatim">int a[n];</code> with
+runtime <code class="verbatim">n</code>) allocate on the stack. They are
+optional since C11, cannot be checked for failure, and a large or
+attacker-controlled <code class="verbatim">n</code> overflows the stack.
+Prefer <code class="verbatim">malloc</code>. <code
+class="verbatim">alloca</code> has the same problem and is
+non-standard.</p>
+<h3 id="an-arena-bump-allocator">10. An arena (bump) allocator</h3>
+<p>Many small objects with the same lifetime can share one block, and be
+released together.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">unsigned</span> <span class="dt">char</span> <span class="op">*</span>base<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> cap<span class="op">,</span> used<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> Arena<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> arena_init<span class="op">(</span>Arena <span class="op">*</span>a<span class="op">,</span> <span class="dt">size_t</span> cap<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    a<span class="op">-&gt;</span>base <span class="op">=</span> malloc<span class="op">(</span>cap<span class="op">);</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    a<span class="op">-&gt;</span>cap <span class="op">=</span> cap<span class="op">;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    a<span class="op">-&gt;</span>used <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">-&gt;</span>base <span class="op">?</span> <span class="dv">0</span> <span class="op">:</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">/* align must be a power of two */</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> <span class="op">*</span>arena_alloc<span class="op">(</span>Arena <span class="op">*</span>a<span class="op">,</span> <span class="dt">size_t</span> size<span class="op">,</span> <span class="dt">size_t</span> align<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uintptr_t</span> cur <span class="op">=</span> <span class="op">(</span><span class="dt">uintptr_t</span><span class="op">)(</span>a<span class="op">-&gt;</span>base <span class="op">+</span> a<span class="op">-&gt;</span>used<span class="op">);</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uintptr_t</span> aligned <span class="op">=</span> <span class="op">(</span>cur <span class="op">+</span> <span class="op">(</span>align <span class="op">-</span> <span class="dv">1</span><span class="op">))</span> <span class="op">&amp;</span> <span class="op">~(</span><span class="dt">uintptr_t</span><span class="op">)(</span>align <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> pad <span class="op">=</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)(</span>aligned <span class="op">-</span> cur<span class="op">);</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>pad <span class="op">&gt;</span> a<span class="op">-&gt;</span>cap <span class="op">-</span> a<span class="op">-&gt;</span>used<span class="op">)</span> <span class="cf">return</span> NULL<span class="op">;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>size <span class="op">&gt;</span> a<span class="op">-&gt;</span>cap <span class="op">-</span> a<span class="op">-&gt;</span>used <span class="op">-</span> pad<span class="op">)</span> <span class="cf">return</span> NULL<span class="op">;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    a<span class="op">-&gt;</span>used <span class="op">+=</span> pad <span class="op">+</span> size<span class="op">;</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">void</span> <span class="op">*)</span>aligned<span class="op">;</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> arena_reset<span class="op">(</span>Arena <span class="op">*</span>a<span class="op">)</span>   <span class="op">{</span> a<span class="op">-&gt;</span>used <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span>          <span class="co">/* free everything at once */</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> arena_destroy<span class="op">(</span>Arena <span class="op">*</span>a<span class="op">)</span> <span class="op">{</span> free<span class="op">(</span>a<span class="op">-&gt;</span>base<span class="op">);</span> a<span class="op">-&gt;</span>base <span class="op">=</span> NULL<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<p>Allocation is a pointer bump, and there is no per-object <code
+class="verbatim">free</code>, which removes whole classes of leak and
+double-free bugs. It does not run destructors, so it suits plain
+data.</p>
+<h3 id="finding-memory-bugs">11. Finding memory bugs</h3>
+<div class="sourceCode" id="cb11" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-g</span> <span class="at">-fsanitize</span><span class="op">=</span>address,undefined <span class="at">-fno-omit-frame-pointer</span> prog.c <span class="at">-o</span> prog</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./prog</span>                                  <span class="co"># reports overflow, use-after-free, leaks, UB with a stack trace</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--leak-check</span><span class="op">=</span>full ./prog       <span class="co"># no recompile needed; slower</span></span></code></pre></div>
+<ul>
+<li>AddressSanitizer: out-of-bounds, use after free/return, double free,
+leaks (on Linux).</li>
+<li>UndefinedBehaviorSanitizer: signed overflow, bad shifts, misaligned
+access, null dereference.</li>
+<li>MemorySanitizer (Clang): uninitialized reads.</li>
+<li>Valgrind: leaks, invalid accesses, uninitialized reads.</li>
+</ul>
+<p>Use them in tests and CI; they find bugs that "it works on my
+machine" hides.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Know where an object lives and when it dies. Never return a pointer
+to a local.</li>
+<li>Check allocation results, size computations, and the <code
+class="verbatim">realloc</code> result.</li>
+<li>Decide ownership for each pointer; pair every allocation with one
+release.</li>
+<li><code class="verbatim">memcpy</code> forbids overlap; <code
+class="verbatim">memmove</code> allows it. Neither compares structs
+reliably.</li>
+<li>Do not access memory through an incompatible type; use <code
+class="verbatim">memcpy</code> to reinterpret.</li>
+<li>Arenas and cleanup labels simplify lifetimes.</li>
+<li>Run sanitizers routinely.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

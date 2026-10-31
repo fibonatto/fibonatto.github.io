@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architectural Styles</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/software-architecture/01-architectural-styles.html">
+  <meta property="og:title" content="Architectural Styles">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/software-architecture/01-architectural-styles.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Architectural Styles</h1>
+<h2 id="architectural-styles-1">Architectural Styles</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Choosing a style is one of the few architectural decisions that is
+both expensive to reverse and widely visible. At Staff and Principal
+scope the job is not to pick the fashionable style but to:</p>
+<ul>
+<li>derive the style from the forces actually present (team structure,
+domain clarity, scaling profile, reliability needs, regulatory limits,
+operational maturity), and say which forces you are ignoring;</li>
+<li>state what each style costs, in operations, cognitive load, and
+delivery speed, not just what it enables;</li>
+<li>design the path <em>between</em> styles, because systems outlive the
+context in which the first style was chosen;</li>
+<li>keep the option to change your mind cheap: prefer decisions that are
+reversible and evidence-driven over ones that are ideological.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">02_modularity-and-boundaries.org</code> (where to draw
+boundaries inside any style), <code
+class="verbatim">06_quality-attributes-and-tradeoffs.org</code> (the
+qualities styles trade), <code
+class="verbatim">08_evolutionary-architecture.org</code> (migrating
+between styles), and the distributed-systems material in the Foundations
+notes (concurrency and consistency).</p>
+<h3 id="what-a-style-is">1. What a style is</h3>
+<p>An architectural <em>style</em> is a named set of constraints on the
+kinds of components, the connectors between them, and the rules for
+combining them. The constraints are the point: they induce properties
+(scalability, simplicity, evolvability, fault isolation) at the price of
+freedom. Fielding's definition of REST as an architectural style, by
+derivation from constraints, is the canonical example of this way of
+thinking.</p>
+<ul>
+<li><strong>Style versus pattern versus tactic</strong>: a style shapes
+the whole system (monolith, microservices); a pattern solves a recurring
+problem inside it (circuit breaker, CQRS; see <code
+class="verbatim">05_architectural-patterns.org</code>); a tactic is a
+small design move to achieve a quality (add a cache, add a retry).</li>
+<li><strong>Architecture is not only the style</strong>: it is the set
+of significant decisions, those that are costly to change, and the style
+is only the most visible one.</li>
+<li><strong>Styles are compositional</strong>: real systems mix styles
+at different boundaries (a modular monolith for the core, event-driven
+integration to the outside, a serverless edge).</li>
+<li><strong>The unit of analysis is the boundary</strong>: for each
+boundary ask what crosses it (calls, events, data), how strongly the two
+sides are coupled, and who owns each side.</li>
+</ul>
+<h3 id="the-monolith">2. The monolith</h3>
+<p>A <strong>monolith</strong> is a system built and deployed as a
+single unit. This says nothing about its internal quality: a monolith
+can be well structured or a tangle. The label for a tangle is the
+<em>big ball of mud</em> (Foote and Yoder): no discernible structure,
+shared mutable state everywhere, change by accretion.</p>
+<p>Genuine strengths:</p>
+<ul>
+<li><strong>Simple operations</strong>: one artifact to build, deploy,
+monitor, and debug; local development is easy.</li>
+<li><strong>In-process calls</strong>: no network, no partial failure
+between modules, no serialization, cheap refactoring across modules,
+compiler help on cross-module changes.</li>
+<li><strong>Strong consistency for free</strong>: one database
+transaction can span the whole domain.</li>
+<li><strong>Low coordination overhead</strong> for small teams, and
+lowest total cost at small scale.</li>
+</ul>
+<p>Real limits, which appear with scale (of code, teams, or load):</p>
+<ul>
+<li>Build and test time grow; a deployment ships everyone's changes
+together (shared release train, shared blast radius).</li>
+<li>Teams contend over one codebase and one release cadence.</li>
+<li>Scaling is coarse: you scale the whole thing even when one part is
+hot.</li>
+<li>The platform and language are one choice for everyone.</li>
+<li>Without enforced boundaries, modules couple by default (see <code
+class="verbatim">03_coupling-and-cohesion.org</code>).</li>
+</ul>
+<p>The failure of monoliths is usually a failure of <em>modularity</em>,
+not of the single-deployment idea.</p>
+<h3 id="the-modular-monolith">3. The modular monolith</h3>
+<p>A <strong>modular monolith</strong> is deployed as one unit but
+organized into modules with explicit, enforced boundaries: each module
+exposes a small public interface and hides everything else, including
+its data. It captures many benefits of microservices (clear ownership,
+independent evolution, comprehensible units) without the cost of a
+distributed system.</p>
+<p>What makes the modularity real rather than nominal:</p>
+<ul>
+<li><strong>Public API per module</strong>, everything else private,
+enforced by the compiler, package visibility, or a build-time check (see
+<code class="verbatim">02_modularity-and-boundaries.org</code> for
+mechanisms).</li>
+<li><strong>Data ownership</strong>: each module owns its tables or
+schema and no other module reads or writes them directly; cross-module
+data access goes through the API or published events. A shared database
+that everyone queries freely makes the "modules" decorative.</li>
+<li><strong>Dependency rules</strong> checked in CI (acyclic, directed),
+so boundaries do not erode.</li>
+<li><strong>Module-level tests</strong> against the public interface,
+and ownership recorded (CODEOWNERS).</li>
+<li><strong>Communication</strong> by direct calls or in-process events;
+both are cheap, and both can later be replaced by network calls if a
+module is extracted.</li>
+</ul>
+<pre class="text"><code>+---------------------------------------------------------+
+|                 one deployable artifact                 |
+|  +-----------+   +-----------+   +-----------+          |
+|  |  Orders   |--&gt;|  Catalog  |   |  Billing  |          |
+|  | (own data)|   | (own data)|&lt;--| (own data)|          |
+|  +-----------+   +-----------+   +-----------+          |
+|   public API only between modules; no shared tables     |
++---------------------------------------------------------+
+</code></pre>
+<p>Pitfalls: modules that share a domain model class; "common" or
+"shared" modules that everything depends on; foreign keys across module
+schemas; an event bus used to hide, not remove, coupling; boundaries
+drawn by technical layer (controllers, services, repositories) instead
+of by business capability. When well done, a modular monolith is the
+best default for most organizations, and also the best preparation for
+extracting services later, because the seams already exist.</p>
+<h3 id="microservices">4. Microservices</h3>
+<p>Lewis and Fowler's widely cited description characterizes
+microservices as a suite of small services, each running in its own
+process, built around business capabilities, independently deployable,
+communicating through lightweight mechanisms, and owning their data. The
+architectural bet is that independent deployability and team autonomy
+are worth the cost of a distributed system.</p>
+<p>What you gain, when the preconditions hold:</p>
+<ul>
+<li><strong>Independent deployment</strong> and release cadence per
+service; smaller blast radius for a bad deploy.</li>
+<li><strong>Independent scaling</strong> of hot components and
+per-service resource profiles.</li>
+<li><strong>Fault isolation</strong> (if designed for it): a failing
+service degrades a feature instead of the whole product.</li>
+<li><strong>Team autonomy</strong> and clear ownership aligned with
+business capabilities.</li>
+<li><strong>Technology fit</strong> per service (use sparingly).</li>
+</ul>
+<p>What you pay (and these costs are structural, not accidental):</p>
+<ul>
+<li><strong>Distributed-systems failure modes</strong>: partial failure,
+timeouts, retries, duplicate and reordered messages, network partitions.
+In-process calls that could not fail now can.</li>
+<li><strong>Latency and availability composition</strong>: a request
+that traverses five services in series, each 99.9% available, is about
+99.5% available (0.999 to the fifth power), before counting the network.
+Call chains multiply risk (see <code
+class="verbatim">06_quality-attributes-and-tradeoffs.org</code>).</li>
+<li><strong>Data consistency</strong>: no cross-service ACID
+transaction; you need sagas, outbox, idempotency, and eventual
+consistency, and every team must understand them.</li>
+<li><strong>Operational overhead</strong>: deployment pipelines, service
+discovery, configuration, secrets, observability (distributed tracing is
+mandatory), versioning, on-call per service.</li>
+<li><strong>Testing difficulty</strong>: integration and contract
+testing across services, environments, and versions.</li>
+<li><strong>Cognitive load</strong> and a platform investment that small
+organizations cannot afford.</li>
+</ul>
+<p><strong>Preconditions</strong> (Fowler's "microservice
+prerequisites"): rapid provisioning, basic monitoring, rapid deployment,
+and a DevOps culture in which teams run what they build. Without them
+microservices increase risk rather than speed.</p>
+<p><strong>Sizing heuristics</strong>: a service should be owned by one
+team, change for one reason, align with a bounded context or business
+capability, and be small enough to rewrite, but large enough that most
+changes do not cross services. "As small as possible" is not a goal; the
+signal that you went too far is that most features require coordinated
+changes in several services.</p>
+<h3 id="event-driven-architecture">5. Event-driven architecture</h3>
+<p>In an <strong>event-driven architecture</strong> (EDA), components
+communicate by publishing and consuming events: records that something
+happened. Producers do not know their consumers. Distinguish:</p>
+<ul>
+<li><strong>Event</strong>: a fact in the past ("OrderPlaced").
+<strong>Command</strong>: a request to do something ("PlaceOrder"),
+addressed to a handler. <strong>Query</strong>: a request for data.
+Mixing them up produces confusing systems.</li>
+<li><strong>Event notification</strong> (a thin event, "something
+changed, ask me"), <strong>event-carried state transfer</strong> (the
+event contains enough data for consumers not to call back), and
+<strong>event sourcing</strong> (events are the system of record; see
+<code class="verbatim">05_architectural-patterns.org</code>).</li>
+<li><strong>Choreography</strong> (each service reacts to events, no
+central coordinator) versus <strong>orchestration</strong> (a
+coordinator tells participants what to do). Choreography decouples but
+hides the overall flow; orchestration makes the flow explicit and
+testable at the price of a central component.</li>
+<li><strong>Brokers</strong>: queue-based (each message consumed by one
+worker, deleted on ack) versus log-based (an ordered, retained,
+replayable log with consumer offsets, as in Kafka-style systems). Logs
+support replay and many independent consumers; queues are simpler for
+work distribution.</li>
+</ul>
+<p>Properties to design for explicitly:</p>
+<ul>
+<li><strong>Delivery semantics</strong>: at-most-once loses messages;
+at-least-once duplicates them; exactly-once is achievable only within a
+bounded system and in practice means at-least-once delivery plus
+idempotent processing (see the concurrency notes in Foundations).</li>
+<li><strong>Ordering</strong>: usually guaranteed only per partition or
+key; global ordering does not scale. Choose the partition key to match
+the entity whose order matters.</li>
+<li><strong>Schema evolution</strong>: events are public contracts that
+live for years in logs; use a schema registry and compatible changes
+only.</li>
+<li><strong>Failure handling</strong>: retries with backoff, dead-letter
+queues, poison messages, replay, and what a consumer does when it cannot
+process an event.</li>
+<li><strong>Consistency</strong>: eventual; design user interfaces and
+APIs for it (read-your-writes strategies, optimistic UI).</li>
+<li><strong>Observability</strong>: correlation ids and tracing across
+asynchronous hops; "where is my order?" must be answerable.</li>
+</ul>
+<p>Strengths: decoupling of producers and consumers in time and
+knowledge, natural fan-out, absorbing load spikes, audit trails, easier
+integration of new consumers. Weaknesses: hidden coupling (the event
+schema and its meaning), "event spaghetti" where flows are impossible to
+follow, temporal coupling disguised as asynchrony, harder debugging, and
+the need for idempotent consumers. Avoid it for interactions that need
+an immediate, consistent answer.</p>
+<h3 id="layered-architecture">6. Layered architecture</h3>
+<p>A <strong>layered architecture</strong> organizes code in horizontal
+layers (typically presentation, application or service, domain, data
+access), with each layer depending only on the one below. It is
+familiar, simple to explain, and often the default.</p>
+<ul>
+<li><strong>Strict layering</strong> allows a layer to use only the
+layer immediately below; <strong>relaxed layering</strong> allows any
+lower layer. Strict layering isolates more but forces pass-through
+code.</li>
+<li><strong>Strengths</strong>: separation of concerns, a shared
+vocabulary, easy onboarding.</li>
+<li><strong>Weaknesses</strong>: it partitions by <em>technical</em>
+role, but changes follow <em>business</em> features, so most changes
+touch every layer ("shotgun" changes and the sinkhole anti-pattern where
+requests pass through layers that add nothing). Domain logic tends to
+leak into services, producing an anemic domain model. Without more
+structure, the data layer becomes the real center of the design.</li>
+<li><strong>Alternatives that fix the dependency direction</strong>:
+ports and adapters, clean, and onion architectures put the domain at the
+center and make infrastructure depend on it (see <code
+class="verbatim">05_architectural-patterns.org</code>).</li>
+<li><strong>Package by feature</strong>: organize modules by business
+capability and apply layering inside each, rather than one set of layers
+across the whole system.</li>
+</ul>
+<h3 id="other-styles-worth-knowing">7. Other styles worth knowing</h3>
+<table>
+<thead>
+<tr>
+<th>Style</th>
+<th>Core idea</th>
+<th>Typical fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service-based architecture</td>
+<td>A handful of coarse-grained services, often sharing a database</td>
+<td>Pragmatic middle ground; distributed benefits at low cost</td>
+</tr>
+<tr>
+<td>Pipes and filters / pipeline</td>
+<td>Data flows through composable stages</td>
+<td>ETL, compilers, stream processing</td>
+</tr>
+<tr>
+<td>Microkernel (plug-in)</td>
+<td>A small core plus plug-ins through a stable extension interface</td>
+<td>IDEs, browsers, product platforms with extensions</td>
+</tr>
+<tr>
+<td>Client-server, n-tier</td>
+<td>Separate clients and servers; tiers by role</td>
+<td>Most web and mobile systems</td>
+</tr>
+<tr>
+<td>Serverless / functions-as-a-service</td>
+<td>Stateless functions triggered by events on managed
+infrastructure</td>
+<td>Spiky, event-driven workloads; glue; low ops teams</td>
+</tr>
+<tr>
+<td>Space-based / data grid</td>
+<td>In-memory replicated data with processing units</td>
+<td>Extreme elasticity with unpredictable load</td>
+</tr>
+<tr>
+<td>Batch and stream processing</td>
+<td>Process data in bulk or continuously with dataflow engines</td>
+<td>Analytics, ETL, real-time aggregation</td>
+</tr>
+<tr>
+<td>Service-oriented (SOA, ESB)</td>
+<td>Reusable enterprise services through a central bus</td>
+<td>Largely superseded; the central bus became a bottleneck and a
+coupling point</td>
+</tr>
+<tr>
+<td>Cell-based architecture</td>
+<td>Independent, identical, isolated copies ("cells") of the stack
+serving subsets of users</td>
+<td>Limiting blast radius at large scale</td>
+</tr>
+<tr>
+<td>Peer-to-peer</td>
+<td>Nodes act as both client and server without a central authority</td>
+<td>Decentralized systems</td>
+</tr>
+<tr>
+<td>Data mesh (organizational)</td>
+<td>Domain-owned data products with federated governance</td>
+<td>Large organizations with many data domains</td>
+</tr>
+</tbody>
+</table>
+<h3 id="comparing-styles">8. Comparing styles</h3>
+<p>Qualitative tendencies, not guarantees. A well-run monolith beats a
+badly run microservice system on every axis; this table assumes
+competent execution at the appropriate scale.</p>
+<table>
+<thead>
+<tr>
+<th>Characteristic</th>
+<th>Monolith</th>
+<th>Modular monolith</th>
+<th>Service-based</th>
+<th>Microservices</th>
+<th>Event-driven (added to others)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simplicity of operation</td>
+<td>High</td>
+<td>High</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low to medium</td>
+</tr>
+<tr>
+<td>Independent deployability</td>
+<td>Low</td>
+<td>Low</td>
+<td>Medium</td>
+<td>High</td>
+<td>High for consumers</td>
+</tr>
+<tr>
+<td>Fault isolation</td>
+<td>Low</td>
+<td>Low</td>
+<td>Medium</td>
+<td>High</td>
+<td>High if decoupled</td>
+</tr>
+<tr>
+<td>Scaling granularity</td>
+<td>Coarse</td>
+<td>Coarse</td>
+<td>Medium</td>
+<td>Fine</td>
+<td>Fine</td>
+</tr>
+<tr>
+<td>Team autonomy</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>High</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Data consistency (simple)</td>
+<td>High</td>
+<td>High</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low (eventual)</td>
+</tr>
+<tr>
+<td>Latency of internal calls</td>
+<td>Lowest</td>
+<td>Lowest</td>
+<td>Medium</td>
+<td>Highest</td>
+<td>Asynchronous</td>
+</tr>
+<tr>
+<td>Cost at small scale</td>
+<td>Lowest</td>
+<td>Low</td>
+<td>Medium</td>
+<td>High</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Ease of future extraction</td>
+<td>Hard</td>
+<td>Easy</td>
+<td>Medium</td>
+<td>Already done</td>
+<td>Helps</td>
+</tr>
+</tbody>
+</table>
+<h3 id="choosing-a-style-a-decision-framework">9. Choosing a style: a
+decision framework</h3>
+<p>Start with the forces; let them select the style.</p>
+<ol>
+<li><strong>Team and organization</strong>: how many teams, how
+autonomous, how strong is platform and operations capability? Conway's
+law says the system will mirror communication structures: choose
+boundaries that match, or deliberately reorganize.</li>
+<li><strong>Domain clarity and volatility</strong>: if boundaries are
+unclear and the domain is changing, keep everything in-process (cheap to
+move boundaries); network boundaries are expensive to move.</li>
+<li><strong>Scaling and load profile</strong>: measured, not imagined.
+Are there components with very different scaling or availability
+needs?</li>
+<li><strong>Reliability and isolation requirements</strong>: regulatory
+or security isolation (payment card data, tenant isolation) is a
+legitimate reason for a hard boundary.</li>
+<li><strong>Release cadence differences</strong>: components that must
+change weekly and others yearly argue for independent deployment.</li>
+<li><strong>Operational maturity and budget</strong>: observability,
+deployment automation, on-call, and platform cost.</li>
+<li><strong>Reversibility</strong>: prefer the option whose mistakes are
+cheapest to undo.</li>
+</ol>
+<p><strong>Default recommendation</strong>: begin as a modular monolith
+with disciplined boundaries; extract a service only with evidence for
+one or more of: a distinct scaling profile, an independent release need,
+a team ownership conflict that boundaries inside one deployment cannot
+resolve, a hard isolation requirement, or a technology requirement.
+Fowler's "monolith first" argument rests on the observation that getting
+service boundaries right requires understanding the domain, which you
+rarely have at the start.</p>
+<p><strong>Extraction triggers</strong> (evidence to collect):
+deployment frequency blocked by other modules; teams waiting on each
+other; one component driving most of the infrastructure cost; incident
+blast radius crossing unrelated features; build times; recurring merge
+conflicts. <strong>Counter-signals</strong>: you would still need
+coordinated releases after extraction; the module shares most of its
+data with others; the team has no on-call capacity.</p>
+<p><strong>Consolidation is legitimate</strong>: several organizations
+have merged microservices back into larger services when the
+distribution cost outweighed the benefit. Treat the style as a
+hypothesis to validate with the cost of ownership, not an identity.</p>
+<h3 id="failure-modes-and-anti-patterns">10. Failure modes and
+anti-patterns</h3>
+<ul>
+<li><strong>Distributed monolith</strong>: services that must be
+deployed together, share a database, or call each other in long
+synchronous chains: all the cost of distribution with none of the
+independence. Test: can you deploy one service without coordinating with
+others?</li>
+<li><strong>Premature distribution</strong>: splitting before the domain
+is understood, so boundaries are wrong and every feature crosses
+services.</li>
+<li><strong>Nano-services</strong>: services so small that the
+integration cost dominates their value.</li>
+<li><strong>Shared database</strong> between services: couples schemas,
+releases, and ownership.</li>
+<li><strong>Resume-driven or fashion-driven design</strong>: styles
+chosen for career or conference reasons.</li>
+<li><strong>Accidental ESB</strong>: a central integration or
+"orchestration" service that holds logic for everyone and becomes the
+bottleneck and single owner.</li>
+<li><strong>Big-bang rewrite</strong> to change style (see <code
+class="verbatim">08_evolutionary-architecture.org</code>).</li>
+<li><strong>Event-driven everything</strong>: using events for
+interactions that need synchronous, consistent answers, or treating the
+broker as a database.</li>
+<li><strong>Uniform style imposed on all parts</strong>: a CRUD admin
+tool does not need the architecture of the payment engine.</li>
+</ul>
+<h3 id="self-check">11. Self-check</h3>
+<ol>
+<li>Describe three ways a monolith can be well structured and three ways
+a microservice system can be a distributed monolith.</li>
+<li>A team of eight engineers proposes 20 microservices for a new
+product. What questions do you ask, and what do you propose
+instead?</li>
+<li>Compute the availability of a request path through four services in
+series with availabilities 99.95%, 99.9%, 99.9%, and 99.99%. What
+changes if one call is made optional with graceful degradation?</li>
+<li>When is choreography preferable to orchestration, and what do you do
+to keep the end-to-end flow understandable?</li>
+<li>List the evidence you would gather to justify extracting billing
+from a modular monolith.</li>
+<li>Why does a shared database break the promises of a service-based
+architecture even when the code is separate?</li>
+</ol>
+<h3 id="exercises">12. Exercises</h3>
+<ul>
+<li>Warm-up: draw the current architecture of a system you know as
+boundaries and flows (not boxes for technologies); mark which boundaries
+are enforced and which are conventions.</li>
+<li>Core: write a one-page "style decision" for a real or hypothetical
+product, listing the forces, the options considered, and the triggers
+that would make you change the decision. Turn it into an ADR (see <code
+class="verbatim">07_architecture-decision-records.org</code>).</li>
+<li>Core: take a module of a monolith and design the public interface
+and data ownership you would need to extract it; list what would break
+if you did it today.</li>
+<li>Stretch: build a small modular monolith with an automated dependency
+rule (CI fails on a cross-module import) and then extract one module
+behind the same interface into a separate process; measure what changed
+(latency, failure handling, deployment).</li>
+<li>Stretch: map one business workflow across an event-driven design:
+events, ordering keys, idempotency, failure handling, and the dashboard
+that shows where an instance of the workflow is stuck.</li>
+</ul>
+<h3 id="resources">13. Resources</h3>
+<ul>
+<li>Lewis and Fowler, <em>Microservices</em> (the characteristics,
+2014): <a
+href="https://martinfowler.com/articles/microservices.html">https://martinfowler.com/articles/microservices.html</a></li>
+<li>Fowler, <em>MonolithFirst</em>: <a
+href="https://martinfowler.com/bliki/MonolithFirst.html">https://martinfowler.com/bliki/MonolithFirst.html</a></li>
+<li>Richards and Ford, <em>Fundamentals of Software Architecture</em>
+(styles with ratings and trade-offs); Newman, <em>Building
+Microservices</em> and <em>Monolith to Microservices</em>; Richardson,
+<em>Microservices Patterns</em>.</li>
+<li>Foote and Yoder, <em>Big Ball of Mud</em> (the classic paper on
+unstructured systems); Fielding, <em>Architectural Styles and the Design
+of Network-based Software Architectures</em> (the REST dissertation, for
+style as constraints).</li>
+<li>Bass, Clements, Kazman, <em>Software Architecture in Practice</em>
+(quality attributes and styles).</li>
+<li>Conway, <em>How Do Committees Invent?</em> (1968), the source of
+Conway's law: <a
+href="http://www.melconway.com/Home/Committees_Paper.html">http://www.melconway.com/Home/Committees_Paper.html</a></li>
+<li>Foundations notes in this repository: the concurrency and
+distributed-systems file (failure models, consistency, queueing) and the
+data-structures file (storage engines).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>A style is a set of constraints chosen for the properties they
+induce; know the price of each.</li>
+<li>Monolith versus microservices is mostly a question of modularity,
+team structure, and operational maturity.</li>
+<li>A modular monolith with enforced boundaries and data ownership is
+the strongest default and the best preparation for extraction.</li>
+<li>Microservices trade simplicity for independent deployment; the costs
+are structural.</li>
+<li>Event-driven systems decouple in time and knowledge but need
+explicit design for ordering, idempotency, schemas, and visibility.</li>
+<li>Choose from forces and evidence, keep decisions reversible, and
+treat the style as a hypothesis.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Representation</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/03-data-representation.html">
+  <meta property="og:title" content="Data Representation">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/03-data-representation.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Data Representation</h1>
+<h2 id="data-representation-1">Data Representation</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Every bug about "the number is wrong", "the name is garbled", "the
+timestamp is off by an hour", or "the old client cannot read the new
+data" is a representation bug. At Staff scope you will:</p>
+<ul>
+<li>decide how data is encoded in memory, on disk, and on the wire, and
+live with the compatibility consequences for years;</li>
+<li>know the failure modes of numbers (overflow, rounding, precision),
+text (encodings, normalization), time (zones, leap seconds, clocks), and
+identifiers;</li>
+<li>design schemas and serialization formats that evolve without
+breaking producers and consumers;</li>
+<li>reason about cost: bytes per record, parsing speed, cache behavior,
+compressibility.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">11_memory-management.org</code>, <code
+class="verbatim">05_data-structures.org</code>, <code
+class="verbatim">10_type-systems.org</code>, and the types file in the C
+notes.</p>
+<h3 id="bits-bytes-and-words">1. Bits, bytes, and words</h3>
+<ul>
+<li>A <em>bit</em> is 0 or 1; a <em>byte</em> is 8 bits (the smallest
+addressable unit on mainstream machines); a <em>word</em> is the
+machine's natural integer size (32 or 64 bits).</li>
+<li><strong>Hexadecimal</strong> groups four bits per digit; use it to
+read bit patterns (<code class="verbatim">0xFF</code> is 11111111).</li>
+<li><strong>Bit operations</strong>: AND masks, OR sets, XOR toggles,
+NOT inverts, shifts move bits. Left shift by k multiplies by
+2<sup>k</sup> (while no overflow); right shift of unsigned values
+divides by 2<sup>k</sup>; right shift of negative signed values is
+arithmetic (sign-preserving) in practice.</li>
+<li><strong>Endianness</strong>: the byte order of multi-byte values.
+Little-endian (x86, most ARM) stores the least significant byte first;
+big-endian (network byte order, many file formats) stores it last. Never
+write raw structs to files or sockets for portable data; encode byte
+order explicitly.</li>
+<li><strong>Alignment and padding</strong>: hardware prefers values at
+addresses divisible by their size; compilers insert padding in structs.
+Layout differs by compiler, flags, and platform unless fixed with
+explicit packing or a serialization format.</li>
+<li><strong>Common tricks</strong>: test power of two (<code
+class="verbatim">x !</code> 0 and (x and (x - 1)) == 0=), clear lowest
+set bit (<code class="verbatim">x and (x - 1)</code>), isolate lowest
+set bit (<code class="verbatim">x and -x</code>), popcount, count
+leading zeros, bitsets and bit-parallel algorithms, Gray codes. Warren's
+<em>Hacker's Delight</em> is the reference.</li>
+</ul>
+<h3 id="integers">2. Integers</h3>
+<ul>
+<li><strong>Unsigned</strong> n-bit integers represent 0 to
+2<sup>n</sup> - 1 and arithmetic wraps modulo 2<sup>n</sup>.</li>
+<li><strong>Two's complement</strong> represents signed integers: the
+top bit has weight -2<sup>(n-1)</sup>. Range is -2<sup>(n-1)</sup> to
+2<sup>(n-1)</sup> - 1 (asymmetric: one more negative value). Negation is
+invert-and-add-one. Addition and subtraction use the same circuit for
+signed and unsigned values.</li>
+<li><strong>Overflow</strong>: unsigned wraps; signed overflow is
+undefined in C and C++, wraps in Java and Go, and panics in debug builds
+of Rust. Detect with checked arithmetic or wider types.</li>
+<li><strong>Sign extension</strong> copies the sign bit when widening;
+zero extension pads with zeros. Mixing signed and unsigned in
+comparisons and conversions causes classic bugs (see the C notes).</li>
+<li><strong>Variable-length integers</strong> (varints, LEB128) store
+small numbers in few bytes; <strong>zigzag encoding</strong> maps signed
+integers to unsigned ones so small negatives stay small.</li>
+<li><strong>Arbitrary precision</strong> integers (Python <code
+class="verbatim">int</code>, Java <code
+class="verbatim">BigInteger</code>, GMP) trade speed for correctness;
+use them for cryptography and exact counting.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> to_signed(x, bits):</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">&amp;=</span> (<span class="dv">1</span> <span class="op">&lt;&lt;</span> bits) <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">-</span> (<span class="dv">1</span> <span class="op">&lt;&lt;</span> bits) <span class="cf">if</span> x <span class="op">&gt;&gt;</span> (bits <span class="op">-</span> <span class="dv">1</span>) <span class="cf">else</span> x</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> to_signed(<span class="bn">0xFF</span>, <span class="dv">8</span>) <span class="op">==</span> <span class="op">-</span><span class="dv">1</span> <span class="kw">and</span> to_signed(<span class="bn">0x80</span>, <span class="dv">8</span>) <span class="op">==</span> <span class="op">-</span><span class="dv">128</span> <span class="kw">and</span> to_signed(<span class="bn">0x7F</span>, <span class="dv">8</span>) <span class="op">==</span> <span class="dv">127</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> to_signed(<span class="dv">127</span> <span class="op">+</span> <span class="dv">1</span>, <span class="dv">8</span>) <span class="op">==</span> <span class="op">-</span><span class="dv">128</span>                  <span class="co"># signed overflow wraps (in two&#39;s complement hardware)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="op">~</span><span class="dv">5</span> <span class="op">+</span> <span class="dv">1</span> <span class="op">==</span> <span class="op">-</span><span class="dv">5</span>                                   <span class="co"># negation is invert and add one</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> to_signed(<span class="op">-</span><span class="dv">1</span>, <span class="dv">32</span>) <span class="op">==</span> <span class="op">-</span><span class="dv">1</span> <span class="kw">and</span> (<span class="op">-</span><span class="dv">1</span> <span class="op">&amp;</span> <span class="bn">0xFFFFFFFF</span>) <span class="op">==</span> <span class="dv">4294967295</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> <span class="bn">0b101100</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> x <span class="op">&amp;</span> <span class="op">-</span>x <span class="op">==</span> <span class="bn">0b100</span> <span class="kw">and</span> x <span class="op">&amp;</span> (x <span class="op">-</span> <span class="dv">1</span>) <span class="op">==</span> <span class="bn">0b101000</span>   <span class="co"># lowest set bit; clear lowest set bit</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">bin</span>(<span class="bn">0xBEEF</span>).count(<span class="st">&quot;1&quot;</span>) <span class="op">==</span> <span class="dv">13</span>                   <span class="co"># popcount</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> varint_encode(n):</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> <span class="bu">bytearray</span>()</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        b, n <span class="op">=</span> n <span class="op">&amp;</span> <span class="bn">0x7F</span>, n <span class="op">&gt;&gt;</span> <span class="dv">7</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> n:</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            out.append(b <span class="op">|</span> <span class="bn">0x80</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>            out.append(b)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bytes</span>(out)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> varint_decode(data):</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> shift <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, b <span class="kw">in</span> <span class="bu">enumerate</span>(data):</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        n <span class="op">|=</span> (b <span class="op">&amp;</span> <span class="bn">0x7F</span>) <span class="op">&lt;&lt;</span> shift</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> b <span class="op">&amp;</span> <span class="bn">0x80</span>:</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> n, i <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        shift <span class="op">+=</span> <span class="dv">7</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;truncated varint&quot;</span>)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> zigzag(n):   <span class="cf">return</span> (n <span class="op">&lt;&lt;</span> <span class="dv">1</span>) <span class="op">^</span> (n <span class="op">&gt;&gt;</span> <span class="dv">63</span>)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> unzigzag(z): <span class="cf">return</span> (z <span class="op">&gt;&gt;</span> <span class="dv">1</span>) <span class="op">^</span> <span class="op">-</span>(z <span class="op">&amp;</span> <span class="dv">1</span>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> varint_encode(<span class="dv">300</span>) <span class="op">==</span> <span class="st">b&quot;</span><span class="ch">\xac\x02</span><span class="st">&quot;</span> <span class="kw">and</span> varint_decode(<span class="st">b&quot;</span><span class="ch">\xac\x02</span><span class="st">&quot;</span>) <span class="op">==</span> (<span class="dv">300</span>, <span class="dv">2</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> varint_encode(<span class="dv">1</span>) <span class="op">==</span> <span class="st">b&quot;</span><span class="ch">\x01</span><span class="st">&quot;</span> <span class="kw">and</span> <span class="bu">len</span>(varint_encode(<span class="dv">2</span><span class="op">**</span><span class="dv">32</span>)) <span class="op">==</span> <span class="dv">5</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> [zigzag(n) <span class="cf">for</span> n <span class="kw">in</span> (<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">2</span>, <span class="dv">2</span>)] <span class="op">==</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>]</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">all</span>(unzigzag(zigzag(n)) <span class="op">==</span> n <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(<span class="op">-</span><span class="dv">1000</span>, <span class="dv">1000</span>))</span></code></pre></div>
+<h3 id="floating-point">3. Floating point</h3>
+<p>IEEE 754 binary floating point stores a sign, an exponent, and a
+significand (mantissa): value = (-1)^s x 1.m x 2<sup>(e - bias)</sup>
+for normal numbers.</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Bits</th>
+<th>Sign</th>
+<th>Exponent</th>
+<th>Significand</th>
+<th>Decimal digits</th>
+<th>Range (approx.)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>binary16 (half)</td>
+<td>16</td>
+<td>1</td>
+<td>5</td>
+<td>10</td>
+<td>about 3</td>
+<td>up to 6.5 x 10<sup>4</sup></td>
+</tr>
+<tr>
+<td>bfloat16</td>
+<td>16</td>
+<td>1</td>
+<td>8</td>
+<td>7</td>
+<td>about 2</td>
+<td>like binary32</td>
+</tr>
+<tr>
+<td>binary32 (float)</td>
+<td>32</td>
+<td>1</td>
+<td>8</td>
+<td>23</td>
+<td>6 to 7</td>
+<td>up to 3.4 x 10<sup>38</sup></td>
+</tr>
+<tr>
+<td>binary64 (double)</td>
+<td>64</td>
+<td>1</td>
+<td>11</td>
+<td>52</td>
+<td>15 to 17</td>
+<td>up to 1.8 x 10<sup>308</sup></td>
+</tr>
+</tbody>
+</table>
+<p>Essential facts:</p>
+<ul>
+<li><strong>Most decimal fractions are inexact in binary</strong> (0.1
+has an infinite binary expansion). <code
+class="verbatim">0.1 + 0.2 !</code> 0.3=. This is representation, not a
+bug in the hardware.</li>
+<li><strong>Spacing grows with magnitude</strong>: the gap between
+adjacent doubles near x is about x times 2<sup>-52</sup> (the <em>unit
+in the last place</em>, ULP). Above 2<sup>53</sup> a double cannot
+represent every integer; JavaScript's <code
+class="verbatim">Number.MAX_SAFE_INTEGER</code> is 2<sup>53</sup> -
+1.</li>
+<li><strong>Special values</strong>: signed zeros, subnormals (gradual
+underflow), infinities, and NaN ("not a number"; NaN compares unequal to
+everything including itself). Operations round to the nearest
+representable value (ties to even by default).</li>
+<li><strong>Rounding errors accumulate</strong>; floating-point addition
+is <strong>not associative</strong>: (a + b) + c may differ from a + (b
++ c), so parallel reductions change results unless the order is
+fixed.</li>
+<li><strong>Catastrophic cancellation</strong>: subtracting nearly equal
+numbers loses significant digits (the quadratic formula's naive form,
+variance computed as E[x<sup>2</sup>] - E[x]^2). Use stable formulations
+(Welford's algorithm, alternative formulas).</li>
+<li><strong>Summation</strong>: Kahan (compensated) and pairwise
+summation reduce error; <code class="verbatim">math.fsum</code> is
+exact-ish.</li>
+<li><strong>Comparison</strong>: use absolute or relative tolerances
+chosen for the problem; compare ULP distances for tests; never use
+floats as keys or loop counters.</li>
+<li><strong>Money and exact decimals</strong>: use integers (minor
+units: cents) or decimal types (Python <code
+class="verbatim">Decimal</code>, Java <code
+class="verbatim">BigDecimal</code>); never binary floats for
+currency.</li>
+<li><strong>Fused multiply-add</strong> (a x b + c with one rounding)
+and compiler flags such as <code class="verbatim">-ffast-math</code>
+change results; vectorization may reorder operations.</li>
+<li><strong>Machine learning formats</strong> (bfloat16, FP16, FP8)
+trade precision for throughput; accumulate in higher precision.</li>
+</ul>
+<p>Read Goldberg's paper for the full treatment.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> struct, math</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fields(x):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> struct.unpack(<span class="st">&quot;&gt;Q&quot;</span>, struct.pack(<span class="st">&quot;&gt;d&quot;</span>, x))[<span class="dv">0</span>]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> b <span class="op">&gt;&gt;</span> <span class="dv">63</span>, (b <span class="op">&gt;&gt;</span> <span class="dv">52</span>) <span class="op">&amp;</span> <span class="bn">0x7FF</span>, b <span class="op">&amp;</span> ((<span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">52</span>) <span class="op">-</span> <span class="dv">1</span>)       <span class="co"># sign, biased exponent, significand</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> fields(<span class="fl">1.0</span>) <span class="op">==</span> (<span class="dv">0</span>, <span class="dv">1023</span>, <span class="dv">0</span>) <span class="kw">and</span> fields(<span class="op">-</span><span class="fl">2.0</span>) <span class="op">==</span> (<span class="dv">1</span>, <span class="dv">1024</span>, <span class="dv">0</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>s, e, m <span class="op">=</span> fields(<span class="fl">0.1</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> (s, e, m) <span class="op">==</span> (<span class="dv">0</span>, <span class="dv">1019</span>, <span class="bn">0x999999999999A</span>)                   <span class="co"># 0.1 is rounded: ...9999A, not ...99999</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="fl">0.1</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">!=</span> <span class="fl">0.3</span> <span class="kw">and</span> <span class="bu">abs</span>((<span class="fl">0.1</span> <span class="op">+</span> <span class="fl">0.2</span>) <span class="op">-</span> <span class="fl">0.3</span>) <span class="op">&lt;</span> <span class="fl">1e-15</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> math.ulp(<span class="fl">1.0</span>) <span class="op">==</span> <span class="fl">2.0</span> <span class="op">**</span> <span class="op">-</span><span class="dv">52</span> <span class="kw">and</span> math.ulp(<span class="fl">2.0</span> <span class="op">**</span> <span class="dv">53</span>) <span class="op">==</span> <span class="fl">2.0</span>   <span class="co"># gaps grow with magnitude</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">float</span>(<span class="dv">2</span> <span class="op">**</span> <span class="dv">53</span> <span class="op">+</span> <span class="dv">1</span>) <span class="op">==</span> <span class="bu">float</span>(<span class="dv">2</span> <span class="op">**</span> <span class="dv">53</span>)                      <span class="co"># integers above 2^53 collide</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>nan <span class="op">=</span> <span class="bu">float</span>(<span class="st">&quot;nan&quot;</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> nan <span class="op">!=</span> nan <span class="kw">and</span> math.isnan(nan)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> (<span class="fl">1e16</span> <span class="op">+</span> <span class="fl">1.0</span>) <span class="op">-</span> <span class="fl">1e16</span> <span class="op">==</span> <span class="fl">0.0</span> <span class="kw">and</span> (<span class="fl">1e16</span> <span class="op">-</span> <span class="fl">1e16</span>) <span class="op">+</span> <span class="fl">1.0</span> <span class="op">==</span> <span class="fl">1.0</span>  <span class="co"># addition is not associative</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kahan(xs):</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> c <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> x <span class="kw">in</span> xs:</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> x <span class="op">-</span> c</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        t <span class="op">=</span> s <span class="op">+</span> y</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        c <span class="op">=</span> (t <span class="op">-</span> s) <span class="op">-</span> y</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> t</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> s</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>xs <span class="op">=</span> [<span class="fl">0.1</span>] <span class="op">*</span> <span class="dv">200_000</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>exact <span class="op">=</span> math.fsum(xs)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>naive <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> xs:                                                     <span class="co"># explicit loop: Python 3.12+ sum() is itself compensated</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    naive <span class="op">+=</span> x</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>(kahan(xs) <span class="op">-</span> exact) <span class="op">&lt;</span> <span class="bu">abs</span>(naive <span class="op">-</span> exact)               <span class="co"># compensated sum is closer</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> decimal <span class="im">import</span> Decimal</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> Decimal(<span class="st">&quot;0.1&quot;</span>) <span class="op">+</span> Decimal(<span class="st">&quot;0.2&quot;</span>) <span class="op">==</span> Decimal(<span class="st">&quot;0.3&quot;</span>)         <span class="co"># decimal arithmetic is exact here</span></span></code></pre></div>
+<h3 id="text">4. Text</h3>
+<ul>
+<li><strong>Character sets and encodings</strong>: a <em>code point</em>
+is a number assigned to a character (Unicode has code points from U+0000
+to U+10FFFF); an <em>encoding</em> maps code points to bytes. ASCII is 7
+bits; Latin-1 and Windows-1252 are single-byte; <strong>UTF-8</strong>,
+<strong>UTF-16</strong>, and <strong>UTF-32</strong> encode all of
+Unicode.</li>
+<li><strong>UTF-8</strong> (RFC 3629): variable length, 1 to 4 bytes per
+code point; ASCII-compatible; self-synchronizing (continuation bytes
+start with <code class="verbatim">10</code>); no byte-order issues; the
+dominant encoding for files and the web. Bit patterns: <code
+class="verbatim">0xxxxxxx</code> (1 byte), <code
+class="verbatim">110xxxxx 10xxxxxx</code> (2), <code
+class="verbatim">1110xxxx 10xxxxxx 10xxxxxx</code> (3), <code
+class="verbatim">11110xxx</code> and three continuation bytes (4).
+Surrogate code points (U+D800 to U+DFFF) and values above U+10FFFF are
+invalid, and <em>overlong</em> encodings (a short code point written in
+more bytes) must be rejected, since accepting them has caused security
+bugs.</li>
+<li><strong>UTF-16</strong> uses 2 bytes for the basic plane and
+surrogate pairs (4 bytes) above it; it is the native string form of
+Java, JavaScript, C#, and Windows APIs, which is why <code
+class="verbatim">length</code> may count 16-bit units rather than
+characters. Byte order and a BOM matter here.</li>
+<li><strong>Three lengths</strong>: bytes, code points, and <em>grapheme
+clusters</em> (what a user perceives as one character). The flag emoji
+for Brazil is two code points; "e" followed by a combining accent is two
+code points but one grapheme. Slicing text by bytes or code units can
+cut a character in half.</li>
+<li><strong>Normalization</strong>: the same visible text can have
+different code point sequences ("e with acute" precomposed, NFC, or "e"
+plus combining accent, NFD). Normalize (usually NFC) before comparing,
+hashing, or storing identifiers; use case folding for caseless matching
+and locale-aware collation for sorting. Case conversion is
+locale-dependent (Turkish dotless i) and not always
+length-preserving.</li>
+<li><strong>Security</strong>: homoglyph attacks, invisible and
+bidirectional control characters, overlong encodings, and mixed-script
+identifiers; validate and normalize untrusted text at the boundary.
+Always treat byte strings from the outside as untrusted until decoded
+and validated.</li>
+<li><strong>Practice</strong>: use UTF-8 everywhere; decode at the edges
+and work with proper text types inside; never guess encodings (declare
+them); store as bytes only what is bytes.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> unicodedata</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> utf8_encode(cp):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bn">0xD800</span> <span class="op">&lt;=</span> cp <span class="op">&lt;=</span> <span class="bn">0xDFFF</span> <span class="kw">or</span> cp <span class="op">&gt;</span> <span class="bn">0x10FFFF</span>:</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;not a Unicode scalar value&quot;</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cp <span class="op">&lt;</span> <span class="bn">0x80</span>:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">bytes</span>([cp])</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cp <span class="op">&lt;</span> <span class="bn">0x800</span>:</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">bytes</span>([<span class="bn">0xC0</span> <span class="op">|</span> cp <span class="op">&gt;&gt;</span> <span class="dv">6</span>, <span class="bn">0x80</span> <span class="op">|</span> cp <span class="op">&amp;</span> <span class="bn">0x3F</span>])</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cp <span class="op">&lt;</span> <span class="bn">0x10000</span>:</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">bytes</span>([<span class="bn">0xE0</span> <span class="op">|</span> cp <span class="op">&gt;&gt;</span> <span class="dv">12</span>, <span class="bn">0x80</span> <span class="op">|</span> (cp <span class="op">&gt;&gt;</span> <span class="dv">6</span>) <span class="op">&amp;</span> <span class="bn">0x3F</span>, <span class="bn">0x80</span> <span class="op">|</span> cp <span class="op">&amp;</span> <span class="bn">0x3F</span>])</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">bytes</span>([<span class="bn">0xF0</span> <span class="op">|</span> cp <span class="op">&gt;&gt;</span> <span class="dv">18</span>, <span class="bn">0x80</span> <span class="op">|</span> (cp <span class="op">&gt;&gt;</span> <span class="dv">12</span>) <span class="op">&amp;</span> <span class="bn">0x3F</span>, <span class="bn">0x80</span> <span class="op">|</span> (cp <span class="op">&gt;&gt;</span> <span class="dv">6</span>) <span class="op">&amp;</span> <span class="bn">0x3F</span>, <span class="bn">0x80</span> <span class="op">|</span> cp <span class="op">&amp;</span> <span class="bn">0x3F</span>])</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ch <span class="kw">in</span> <span class="st">&quot;aé€😀&quot;</span>:</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> utf8_encode(<span class="bu">ord</span>(ch)) <span class="op">==</span> ch.encode(<span class="st">&quot;utf-8&quot;</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> [<span class="bu">len</span>(ch.encode()) <span class="cf">for</span> ch <span class="kw">in</span> <span class="st">&quot;aé€😀&quot;</span>] <span class="op">==</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>]</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> <span class="st">&quot;😀&quot;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(s) <span class="op">==</span> <span class="dv">1</span> <span class="kw">and</span> <span class="bu">len</span>(s.encode(<span class="st">&quot;utf-8&quot;</span>)) <span class="op">==</span> <span class="dv">4</span> <span class="kw">and</span> <span class="bu">len</span>(s.encode(<span class="st">&quot;utf-16-le&quot;</span>)) <span class="op">//</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">2</span>   <span class="co"># code points / bytes / UTF-16 units</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(<span class="st">&quot;</span><span class="ch">\U0001F1E7\U0001F1F7</span><span class="st">&quot;</span>) <span class="op">==</span> <span class="dv">2</span>                                  <span class="co"># flag of Brazil: two code points, one grapheme</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">&quot;é&quot;</span> <span class="op">!=</span> <span class="st">&quot;e</span><span class="ch">\u0301</span><span class="st">&quot;</span> <span class="kw">and</span> unicodedata.normalize(<span class="st">&quot;NFC&quot;</span>, <span class="st">&quot;e</span><span class="ch">\u0301</span><span class="st">&quot;</span>) <span class="op">==</span> <span class="st">&quot;é&quot;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">b&quot;</span><span class="ch">\xc0\xaf</span><span class="st">&quot;</span>.decode(<span class="st">&quot;utf-8&quot;</span>)                                          <span class="co"># overlong encoding of &quot;/&quot; must be rejected</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">AssertionError</span>(<span class="st">&quot;overlong encoding accepted&quot;</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">UnicodeDecodeError</span>:</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
+<h3 id="time-and-dates">5. Time and dates</h3>
+<ul>
+<li><strong>Clocks</strong>: a <em>wall clock</em> (calendar time) can
+jump (NTP corrections, daylight saving, administrators); a <em>monotonic
+clock</em> only moves forward and is for measuring durations. Never
+compute elapsed time from wall-clock differences.</li>
+<li><strong>Unix time</strong> counts seconds since 1970-01-01 00:00:00
+UTC and ignores leap seconds (a leap second repeats or smears). A signed
+32-bit count overflows on 2038-01-19 03:14:07 UTC; use 64-bit.</li>
+<li><strong>Time zones</strong> are political: offsets and
+daylight-saving rules change by law; store the instant in UTC and the
+zone identifier (an IANA name such as <code
+class="verbatim">America/Sao_Paulo</code>) when local-time semantics
+matter (recurring meetings, billing days). A fixed offset is not a
+zone.</li>
+<li><strong>Formats</strong>: ISO 8601 and the RFC 3339 profile (<code
+class="verbatim">2026-10-10T14:30:00Z</code>) are unambiguous, sortable
+as strings, and widely supported.</li>
+<li><strong>Pitfalls</strong>: assuming days have 24 hours, months have
+30 days, years have 365 days; local times that do not exist or occur
+twice at DST changes; <code class="verbatim">date-only</code> values
+interpreted as midnight in a zone; floating-point timestamps losing
+sub-millisecond precision; parsing locale-formatted dates; comparing
+naive and aware times.</li>
+<li><strong>Distributed systems</strong>: wall clocks on different
+machines disagree; use logical clocks or consensus for ordering (<code
+class="verbatim">12_concurrency.org</code>).</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> dt.datetime.fromtimestamp(<span class="dv">2</span><span class="op">**</span><span class="dv">31</span> <span class="op">-</span> <span class="dv">1</span>, dt.timezone.utc).isoformat() <span class="op">==</span> <span class="st">&quot;2038-01-19T03:14:07+00:00&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> dt.datetime(<span class="dv">2026</span>, <span class="dv">3</span>, <span class="dv">8</span>, <span class="dv">12</span>, tzinfo<span class="op">=</span>dt.timezone.utc)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> (a <span class="op">+</span> dt.timedelta(days<span class="op">=</span><span class="dv">1</span>)).isoformat() <span class="op">==</span> <span class="st">&quot;2026-03-09T12:00:00+00:00&quot;</span>   <span class="co"># UTC days are always 24 h</span></span></code></pre></div>
+<h3 id="identifiers">6. Identifiers</h3>
+<ul>
+<li><strong>Auto-increment integers</strong>: compact, ordered,
+guessable; need a coordinator in distributed systems.</li>
+<li><strong>Random UUIDs</strong> (v4, 122 random bits): collision-free
+in practice (birthday bound, see <code
+class="verbatim">01_discrete-mathematics.org</code>), but random inserts
+scatter across B-tree pages and hurt locality.</li>
+<li><strong>Time-ordered identifiers</strong> (UUIDv7 as defined in RFC
+9562, ULID, Snowflake-style ids): a timestamp prefix keeps inserts
+roughly sequential and allows sorting by creation time, at the cost of
+leaking creation time and needing care when clocks go backward.</li>
+<li><strong>Content-addressed ids</strong> (hash of the content: Git
+objects, container layers, IPFS) give deduplication and integrity
+checking; changing content changes the id.</li>
+<li>Never use sequential ids as the only authorization check; never
+expose internal ids if enumeration is a risk. Represent 64-bit ids as
+strings in JSON consumed by JavaScript, since doubles lose integer
+precision above 2<sup>53</sup>.</li>
+</ul>
+<h3 id="serialization-and-schema-evolution">7. Serialization and schema
+evolution</h3>
+<p>Data crosses boundaries (processes, machines, versions of code), so
+its representation is an API.</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Style</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JSON (RFC 8259)</td>
+<td>Text, self-describing</td>
+<td>Ubiquitous and readable; numbers have no defined precision (doubles
+in JavaScript); no binary type; duplicate keys undefined; large integers
+and dates need conventions</td>
+</tr>
+<tr>
+<td>XML, YAML, TOML</td>
+<td>Text</td>
+<td>XML heavy; YAML has surprising implicit typing and many parsers;
+TOML for configuration</td>
+</tr>
+<tr>
+<td>CBOR, MessagePack</td>
+<td>Binary, schemaless</td>
+<td>Compact JSON-like data model with binary strings</td>
+</tr>
+<tr>
+<td>Protocol Buffers</td>
+<td>Binary, schema</td>
+<td>Field numbers and varints; compatible evolution rules; code
+generation</td>
+</tr>
+<tr>
+<td>Avro</td>
+<td>Binary, schema carried or registered</td>
+<td>Reader and writer schemas resolved at read time; common in data
+pipelines</td>
+</tr>
+<tr>
+<td>FlatBuffers, Cap'n Proto</td>
+<td>Binary, zero-copy</td>
+<td>Read in place without parsing; layout constraints</td>
+</tr>
+<tr>
+<td>Apache Arrow, Parquet</td>
+<td>Columnar</td>
+<td>Analytics: compression, vectorized scans</td>
+</tr>
+<tr>
+<td>ASN.1 (DER), X.509</td>
+<td>Binary</td>
+<td>Used in certificates; strict encodings for signing</td>
+</tr>
+</tbody>
+</table>
+<p>Principles:</p>
+<ul>
+<li><strong>Schema evolution</strong>: design for old readers with new
+data and new readers with old data. Safe changes: add optional fields
+with defaults, never reuse a field number or name for a different
+meaning, avoid changing types, deprecate before removing. Know your
+format's rules (Protocol Buffers: do not renumber fields; treat enum
+unknowns safely).</li>
+<li><strong>Self-describing versus schema-based</strong>:
+self-describing is easy to debug and bulky; schema-based is compact and
+fast, requires schema distribution and versioning discipline.</li>
+<li><strong>Canonical encoding</strong>: signing and hashing require a
+unique byte representation for a value (sorted keys, normalized numbers
+and strings); JSON and many formats are not canonical by default (use a
+defined canonicalization or a format designed for it).</li>
+<li><strong>Byte order and widths</strong>: specify them in the format
+(network byte order, fixed-width or varint integers); never rely on
+in-memory layout.</li>
+<li><strong>Validation and limits</strong>: bound sizes, nesting depth,
+and counts before parsing untrusted input; reject unknown critical
+fields; beware parser differentials (two parsers reading the same bytes
+differently) in security-sensitive code.</li>
+<li><strong>Text versus binary</strong>: text costs bytes and parse time
+and wins on debuggability and interoperability; binary wins on size and
+speed. Measure before switching, and compress at the transport level
+where appropriate.</li>
+</ul>
+<h3 id="information-compression-and-error-detection">8. Information,
+compression, and error detection</h3>
+<ul>
+<li><strong>Entropy</strong> H = -sum p(x) log2 p(x) is the average
+information per symbol: a lower bound (in bits) on lossless coding for a
+source. Data with patterns has low entropy and compresses; random or
+encrypted data does not (and <em>must</em> compress before encrypting,
+not after).</li>
+<li><strong>Huffman coding</strong> assigns shorter codes to frequent
+symbols: optimal among prefix codes with an integer number of bits per
+symbol; average length is within one bit of entropy. <strong>Arithmetic
+coding and ANS</strong> approach entropy more closely. <strong>LZ77/LZ78
+families</strong> (DEFLATE in gzip and zlib, LZ4, Zstandard) replace
+repeated substrings with references; modern codecs combine them with
+entropy coding. Trade-offs: ratio versus speed versus memory.
+<strong>Columnar layout</strong> and <strong>dictionary/delta/run-length
+encoding</strong> make analytic data compress well.</li>
+<li><strong>Checksums, CRCs, and hashes</strong>: a CRC detects
+accidental errors (burst errors in storage and networks) with a cheap
+computation; non-cryptographic hashes (xxHash, MurmurHash) are for hash
+tables and fingerprints; cryptographic hashes (SHA-2, SHA-3, BLAKE3)
+resist adversaries. Do not use a CRC for security or a cryptographic
+hash where a CRC suffices.</li>
+<li><strong>Error-correcting codes</strong>: parity bits detect
+single-bit errors; Hamming codes correct them; Reed-Solomon and LDPC
+codes correct bursts (storage, QR codes, networking, ECC memory).
+Erasure coding stores data with less overhead than replication.</li>
+<li><strong>Base encodings</strong>: hexadecimal doubles size; Base64
+expands by 4/3 (3 bytes become 4 characters); use the URL-safe alphabet
+in URLs; encoding is not encryption.</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math, heapq, collections, zlib, base64</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> entropy(s):</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(s)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span><span class="bu">sum</span>(c <span class="op">/</span> n <span class="op">*</span> math.log2(c <span class="op">/</span> n) <span class="cf">for</span> c <span class="kw">in</span> collections.Counter(s).values())</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> huffman_lengths(s):</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    heap <span class="op">=</span> [(w, i, {ch: <span class="dv">0</span>}) <span class="cf">for</span> i, (ch, w) <span class="kw">in</span> <span class="bu">enumerate</span>(collections.Counter(s).items())]</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    heapq.heapify(heap)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    nxt <span class="op">=</span> <span class="bu">len</span>(heap)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="bu">len</span>(heap) <span class="op">&gt;</span> <span class="dv">1</span>:</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        w1, _, a <span class="op">=</span> heapq.heappop(heap)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        w2, _, b <span class="op">=</span> heapq.heappop(heap)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        merged <span class="op">=</span> {k: v <span class="op">+</span> <span class="dv">1</span> <span class="cf">for</span> k, v <span class="kw">in</span> {<span class="op">**</span>a, <span class="op">**</span>b}.items()}</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        heapq.heappush(heap, (w1 <span class="op">+</span> w2, nxt, merged))</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        nxt <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> heap[<span class="dv">0</span>][<span class="dv">2</span>]</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>text <span class="op">=</span> <span class="st">&quot;abracadabra&quot;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>lengths <span class="op">=</span> huffman_lengths(text)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>avg <span class="op">=</span> <span class="bu">sum</span>(lengths[ch] <span class="cf">for</span> ch <span class="kw">in</span> text) <span class="op">/</span> <span class="bu">len</span>(text)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> entropy(text) <span class="op">&lt;=</span> avg <span class="op">&lt;</span> entropy(text) <span class="op">+</span> <span class="dv">1</span>                  <span class="co"># within one bit of entropy</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> zlib.crc32(<span class="st">b&quot;hello&quot;</span>) <span class="op">==</span> <span class="bn">0x3610A686</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(base64.b64encode(<span class="bu">bytes</span>(<span class="dv">30</span>))) <span class="op">==</span> <span class="dv">40</span>                    <span class="co"># 4/3 expansion</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>repetitive <span class="op">=</span> <span class="st">b&quot;ab&quot;</span> <span class="op">*</span> <span class="dv">5000</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(zlib.compress(repetitive)) <span class="op">&lt;</span> <span class="bu">len</span>(repetitive) <span class="op">//</span> <span class="dv">20</span>    <span class="co"># patterns compress</span></span></code></pre></div>
+<h3 id="layout-and-performance">9. Layout and performance</h3>
+<ul>
+<li><strong>Struct layout</strong>: field order changes size through
+padding; hot fields together; consider <code class="verbatim">u32</code>
+indices in place of pointers.</li>
+<li><strong>Row-oriented versus columnar</strong>: row layout suits
+transactional access to whole records; columnar suits scans of a few
+attributes across many rows and compresses better (Parquet, Arrow,
+column stores).</li>
+<li><strong>Array of structs versus struct of arrays</strong> (<code
+class="verbatim">11_memory-management.org</code>): choose by access
+pattern.</li>
+<li><strong>Tagging tricks</strong>: pointer tagging (spare low bits),
+NaN boxing (smuggle values in double NaN payloads), small-string
+optimization, interning, and tagged unions keep dynamic values
+compact.</li>
+<li><strong>Bitmaps and succinct structures</strong>: bitsets, Roaring
+bitmaps, wavelet trees, rank/select structures store large sets in
+little space.</li>
+<li><strong>Memory-mapped and zero-copy formats</strong>: files laid out
+so they can be used in place (FlatBuffers, Arrow, SSTables) skip
+parsing, at the cost of stricter layout and versioning.</li>
+<li><strong>Parsing cost</strong>: JSON parsing is often the bottleneck
+of services; streaming and SIMD parsers help; do not parse what you only
+forward.</li>
+</ul>
+<h3 id="staff-level-pitfalls-in-data-modeling">10. Staff-level pitfalls
+in data modeling</h3>
+<ul>
+<li><strong>Primitive obsession</strong>: raw strings and integers for
+money, units, ids, emails, and timestamps; use dedicated types (<code
+class="verbatim">10_type-systems.org</code>). Mars Climate Orbiter was
+lost partly through a unit mismatch between systems.</li>
+<li><strong>Boundary conversions</strong>: JavaScript numbers (doubles)
+versus 64-bit ids; database decimal versus float; Excel and CSV silently
+reformatting data; locale decimal commas; time zones lost when dates are
+stored as strings.</li>
+<li><strong>Lossy round trips</strong>: serialize, deserialize, and
+compare as a property test for every format you own.</li>
+<li><strong>Nulls and defaults</strong>: distinguish "absent", "null",
+and "default"; schema languages differ.</li>
+<li><strong>Irreversible choices</strong>: identifier schemes, time
+representation, and partition keys are expensive to change; decide with
+the migration cost in mind.</li>
+<li><strong>Migration discipline</strong>: expand then contract (add the
+new field, dual write, backfill, switch readers, remove the old);
+version APIs and data; keep readers tolerant and writers
+conservative.</li>
+</ul>
+<h3 id="self-check">11. Self-check</h3>
+<ol>
+<li>Why does <code class="verbatim">0.1 + 0.2 !</code> 0.3= in binary
+floating point? What is the next double after 1.0, and what is the
+spacing near 10<sup>16</sup>?</li>
+<li>A service stores money as <code class="verbatim">double</code>.
+Describe two failures that will appear and how you would migrate.</li>
+<li>Explain the difference between a byte, a code point, and a grapheme
+cluster, and give a bug caused by confusing each pair.</li>
+<li>Compute the two's complement encoding of -37 in 8 bits and the
+result of 100 + 100 in an 8-bit signed integer.</li>
+<li>You must add a field to a Protocol Buffers message used by many
+services. What rules keep the rollout safe?</li>
+<li>A scheduled job runs daily at 02:30 local time. What goes wrong on
+days when daylight-saving time starts or ends, and how do you design
+around it?</li>
+<li>Why can UUID v4 primary keys slow inserts into a B-tree-indexed
+table, and what are alternatives?</li>
+<li>When does compressing before encrypting leak information? (Search
+for the CRIME and BREACH attacks.)</li>
+</ol>
+<h3 id="exercises">12. Exercises</h3>
+<ul>
+<li>Warm-up: write functions to print the bit fields of float and double
+values and decode them manually; verify against <code
+class="verbatim">struct</code>.</li>
+<li>Core: implement UTF-8 encode and decode with full validation
+(overlong, surrogates, range) and fuzz it against your language's
+decoder.</li>
+<li>Core: implement Base64 and varints; test round trips with random
+data.</li>
+<li>Core: implement Huffman coding with canonical codes and a bit-level
+writer; compare with <code class="verbatim">zlib</code>.</li>
+<li>Core: implement a tiny schema-based binary serializer with field
+tags and compatible evolution; write the compatibility tests (old reader
+with new data and vice versa).</li>
+<li>Stretch: implement Kahan and pairwise summation and measure the
+errors on adversarial inputs; implement exact decimal arithmetic with
+integers.</li>
+<li>Stretch: implement a ring buffer and an on-disk record format with
+checksums and crash-safe appends; test by truncating the file at every
+byte offset.</li>
+<li>Stretch: implement a LEB128-based columnar encoding with delta and
+run-length compression and compare with Parquet on a sample
+dataset.</li>
+</ul>
+<h3 id="resources">13. Resources</h3>
+<ul>
+<li>Goldberg, <em>What Every Computer Scientist Should Know About
+Floating-Point Arithmetic</em> (ACM Computing Surveys, 1991; reproduced
+as an appendix of Sun/Oracle's numerical computation guide): <a
+href="https://docs.oracle.com/cd/E19957-01/816-2464/ncg_goldberg.html">https://docs.oracle.com/cd/E19957-01/816-2464/ncg_goldberg.html</a></li>
+<li>IETF RFC 3629, <em>UTF-8, a transformation format of ISO 10646</em>:
+<a
+href="https://www.rfc-editor.org/rfc/rfc3629">https://www.rfc-editor.org/rfc/rfc3629</a>
+; the Unicode Standard and its technical reports on normalization and
+security.</li>
+<li>Bryant and O'Hallaron, <em>Computer Systems: A Programmer's
+Perspective</em>, chapter 2 (representing and manipulating information);
+Warren, <em>Hacker's Delight</em>; Kleppmann, <em>Designing
+Data-Intensive Applications</em>, chapter 4 (encoding and
+evolution).</li>
+<li>IEEE 754-2019 (floating-point arithmetic standard); RFC 8259 (JSON);
+RFC 3339 (timestamps); RFC 9562 (UUIDs); the Protocol Buffers
+documentation on updating message types.</li>
+<li>Drepper, <em>What Every Programmer Should Know About Memory</em>: <a
+href="http://people.redhat.com/drepper/cpumemory.pdf">http://people.redhat.com/drepper/cpumemory.pdf</a></li>
+<li>MIT <em>Mathematics for Computer Science</em> for the counting
+behind collisions and codes: <a
+href="https://ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-spring-2015/resources/mit6_042js15_textbook_pdf/">https://ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-spring-2015/resources/mit6_042js15_textbook_pdf/</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Two's complement, endianness, and alignment are the vocabulary of
+binary data; encode byte order explicitly.</li>
+<li>Floats are inexact by design: tolerances, stable formulas, and
+decimal or integer types for money.</li>
+<li>Text has three lengths; use UTF-8 and normalize at the
+boundary.</li>
+<li>Store instants in UTC with a zone name when needed; measure
+intervals with a monotonic clock.</li>
+<li>Serialization formats are APIs: design for evolution, canonical
+encoding, and bounded parsing.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

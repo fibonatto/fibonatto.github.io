@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tooling and Development Workflow</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/20-tooling-and-development-workflow.html">
+  <meta property="og:title" content="Tooling and Development Workflow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/20-tooling-and-development-workflow.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Tooling and Development Workflow</h1>
+<h2 id="tooling-and-development-workflow-1">Tooling and Development
+Workflow</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Tooling is leverage: the right defaults catch bugs before review,
+make safe practices cheap, and keep teams fast. In Web3 the toolchain
+also carries security weight (compiler versions, dependencies, signing,
+deployment). At Staff and Principal scope you are expected to:</p>
+<ul>
+<li>choose and standardize a toolchain and workflow for smart contracts,
+infrastructure, and frontends, with reasons and an upgrade policy;</li>
+<li>design CI/CD that enforces quality and security gates without
+slowing the team unnecessarily;</li>
+<li>manage dependencies, secrets, and keys safely throughout development
+and deployment;</li>
+<li>evaluate new tools critically in a fast-changing ecosystem.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">04_smart-contract-testing.org</code>, <code
+class="verbatim">15_deployment-and-upgrades.org</code>, <code
+class="verbatim">13_indexing-and-data-access.org</code>, <code
+class="verbatim">19_technical-leadership.org</code>. Tool versions and
+features change quickly: confirm against current documentation.</p>
+<h3 id="the-smart-contract-toolchain">1. The smart contract
+toolchain</h3>
+<ul>
+<li><strong>Foundry</strong>: forge (build, test, fuzz, invariant
+testing, gas reports, snapshots, coverage, scripting, formatting), cast
+(RPC command-line and ABI tools), anvil (local node with forking and
+impersonation), and chisel (a Solidity REPL). Tests are written in
+Solidity with cheatcodes; fast; the common default for Solidity-native
+workflows.</li>
+<li><strong>Hardhat</strong>: a JavaScript and TypeScript environment;
+Hardhat 3, the current major version at the time of writing, supports
+Solidity tests alongside TypeScript tests (with viem or ethers), a local
+simulated network, deployment tooling (Ignition), and multichain
+workflows; many existing projects still use Hardhat 2 plugins. Teams
+often use Foundry for contract tests and Hardhat for deployment and
+integration; either alone can suffice.</li>
+<li><strong>Remix</strong>: a browser IDE for learning and quick
+experiments; not for production workflows.</li>
+<li><strong>Retired tools</strong>: Truffle and Ganache were sunset;
+migrate old projects.</li>
+<li><strong>Libraries</strong>: OpenZeppelin Contracts (and the
+upgradeable variants) for tokens, access control, proxies, and
+utilities; Solady and Solmate for gas-optimized components (read what
+they omit); protocol-specific libraries (Uniswap, Aave, Chainlink
+interfaces). Pin versions and review what you import.</li>
+<li><strong>Compilers</strong>: solc (pin exact versions), Vyper for
+Vyper-based code; set the EVM version to match the target chains; record
+compiler settings in the repository and in deployment metadata.</li>
+<li><strong>Static analysis and linting</strong>: Slither, Aderyn,
+solhint, and formatters (forge fmt, Prettier with a Solidity plugin);
+treat warnings as errors in CI.</li>
+<li><strong>Fuzzing and formal tools</strong>: Foundry fuzz and
+invariant runners, Echidna, Medusa, Halmos, Certora (see file 04 and
+file 16).</li>
+<li><strong>Debugging and exploration</strong>: Foundry traces (-vvvv),
+the Foundry debugger, transaction simulators and debuggers (such as
+Tenderly), block explorers (Etherscan-style, Blockscout, Sourcify for
+verification), and cast for decoding calldata, selectors, and
+storage.</li>
+<li><strong>Documentation generation</strong>: NatSpec with forge doc or
+similar; keep specifications next to code.</li>
+</ul>
+<h3 id="project-structure-and-dependency-management">2. Project
+structure and dependency management</h3>
+<pre class="text"><code>project/
+  src/            contracts (one concern per file; interfaces in src/interfaces/)
+  test/           unit, fuzz, invariant, fork tests (mirrors src/)
+  script/         deployment and operational scripts (Foundry scripts or Hardhat Ignition modules)
+  lib/            vendored dependencies (submodules) or managed by a package tool
+  docs/           specification, threat model, ADRs, runbooks
+  foundry.toml    toolchain configuration (profiles for default and CI)
+  .github/        CI workflows
+</code></pre>
+<ul>
+<li><strong>Dependency sources</strong>: git submodules (Foundry's
+default), npm packages (Hardhat and shared tooling), and newer package
+managers for Solidity (for example Soldeer). Whatever you choose: pin
+exact versions or commits, record them, review upgrades, and avoid
+fetching unpinned code during builds.</li>
+<li><strong>Remappings</strong> keep imports stable; avoid deep relative
+paths; keep a single source of truth for each dependency version.</li>
+<li><strong>Monorepo versus multi-repo</strong>: contracts and off-chain
+code in one repository simplify ABI and type sharing; separate
+repositories simplify access control and audit scoping; choose
+deliberately.</li>
+<li><strong>Generated artifacts</strong>: ABIs and TypeScript types
+generated in the build (for example with viem-compatible ABI typing or
+TypeChain), not hand-maintained.</li>
+<li><strong>Supply chain hygiene</strong>: lockfiles, dependency review
+in pull requests, automated vulnerability alerts, minimal and audited
+dependencies, restricted CI permissions.</li>
+</ul>
+<h3 id="configuration-examples">3. Configuration examples</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># foundry.toml (sketch)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[profile.default]</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">src</span> <span class="op">=</span> <span class="st">&quot;src&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">test</span> <span class="op">=</span> <span class="st">&quot;test&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">script</span> <span class="op">=</span> <span class="st">&quot;script&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="dt">libs</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;lib&quot;</span><span class="op">]</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dt">solc_version</span> <span class="op">=</span> <span class="st">&quot;0.8.28&quot;</span>      <span class="co"># pin the exact compiler version you audit and deploy</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="dt">optimizer</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="dt">optimizer_runs</span> <span class="op">=</span> <span class="dv">200</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="dt">evm_version</span> <span class="op">=</span> <span class="st">&quot;cancun&quot;</span>       <span class="co"># match the weakest target chain&#39;s supported EVM version</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">[fuzz]</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="dt">runs</span> <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">[invariant]</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="dt">runs</span> <span class="op">=</span> <span class="dv">128</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="dt">depth</span> <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">[profile.ci.fuzz]</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="dt">runs</span> <span class="op">=</span> <span class="dv">5000</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="kw">[profile.ci.invariant]</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="dt">runs</span> <span class="op">=</span> <span class="dv">512</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="dt">depth</span> <span class="op">=</span> <span class="dv">100</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .github/workflows/ci.yml (sketch)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> ci</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">push</span><span class="kw">,</span><span class="at"> pull_request</span><span class="kw">]</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">test</span><span class="kw">:</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">- </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">submodules</span><span class="kw">:</span><span class="at"> recursive</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">- </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> foundry-rs/foundry-toolchain@v1</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">- </span><span class="fu">run</span><span class="kw">:</span><span class="at"> forge fmt --check</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">- </span><span class="fu">run</span><span class="kw">:</span><span class="at"> forge build --sizes</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">- </span><span class="fu">run</span><span class="kw">:</span><span class="at"> forge test -vvv</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">- </span><span class="fu">run</span><span class="kw">:</span><span class="at"> forge snapshot --check          # fail on unexpected gas changes</span></span></code></pre></div>
+<p>(Illustrative; adjust to the current tool versions, add static
+analysis, coverage, storage-layout checks, and a scheduled job running
+the long fuzz and invariant profile.)</p>
+<h3 id="cicd-for-web3">4. CI/CD for Web3</h3>
+<ul>
+<li><strong>Pull request gates</strong>: format and lint; compile with
+warnings as errors; all tests; static analysis (Slither or similar) with
+triaged baselines; gas snapshot diff; contract size check; storage
+layout compatibility for upgradeable contracts; dependency and secret
+scanning; required reviews, with CODEOWNERS for sensitive paths
+(permissions, upgrade code, oracles).</li>
+<li><strong>Scheduled jobs</strong>: long fuzz and invariant runs; fork
+tests against current mainnet state; dependency update checks; mutation
+testing on critical modules; monitoring of the deployed system's
+invariants.</li>
+<li><strong>Release pipeline</strong>: tagged releases; reproducible
+build artifacts; deployment simulation on forks; manual approval gates
+for mainnet; scripts executed by hardware-backed or multisig signers;
+post-deployment verification and smoke tests; automatic publication of
+ABIs, addresses, and verified sources.</li>
+<li><strong>Environments and secrets</strong>: separate credentials per
+environment; no private keys in repositories, CI variables, or logs; use
+keystores, hardware wallets, or KMS-backed signers; short-lived tokens;
+secret scanning; rotate on suspicion.</li>
+<li><strong>Infrastructure as code</strong> for nodes, indexers,
+relayers, and monitoring; review changes like code; keep runbooks next
+to the configuration.</li>
+<li><strong>Observability of the pipeline itself</strong>: build times,
+flaky tests, and failure causes; keep CI fast enough that people do not
+bypass it.</li>
+</ul>
+<h3 id="frontend-and-off-chain-tooling">5. Frontend and off-chain
+tooling</h3>
+<ul>
+<li><strong>Client libraries</strong>: viem and ethers for RPC and
+contract interaction (viem emphasizes type safety and modularity); wagmi
+and similar React hooks for wallet and chain state; wallet connection
+kits and WalletConnect (under the Reown brand); the standard provider
+interfaces (EIP-1193, EIP-6963).</li>
+<li><strong>Type safety</strong>: generate typed ABIs so incorrect calls
+fail at compile time; share ABIs between contracts, backend, and
+frontend through one source.</li>
+<li><strong>Testing frontends</strong>: run against anvil forks with
+mock wallets or test accounts; end-to-end tests for connection, signing,
+transaction, and error flows; simulate chain switches and rejected
+signatures.</li>
+<li><strong>Backends and bots</strong>: use the same libraries with
+explicit retry and nonce management; typed configuration per chain;
+structured logging with transaction hashes and chain ids (see <code
+class="verbatim">06_transactions-and-gas.org</code>).</li>
+<li><strong>Indexing and data tooling</strong>: indexer frameworks,
+ORMs, and migration tools; local development databases; reproducible
+backfills (see <code
+class="verbatim">13_indexing-and-data-access.org</code>).</li>
+<li><strong>Infrastructure</strong>: node providers and self-hosted
+nodes; secrets management; metrics and alerting stacks (see <code
+class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+<li><strong>Content and storage</strong>: IPFS pinning services,
+gateways, and content tooling with integrity checks; ENS tooling.</li>
+<li><strong>Frontend integrity</strong>: pinned dependencies,
+subresource integrity, reproducible builds, controlled deployment
+access, and monitoring for unexpected changes.</li>
+</ul>
+<h3 id="a-recommended-workflow-for-a-contract-change">6. A recommended
+workflow for a contract change</h3>
+<ol>
+<li><strong>Specify</strong>: update the specification and invariants;
+discuss the design (design document or ADR for significant
+changes).</li>
+<li><strong>Write tests first or alongside</strong>: unit tests for
+behaviors and reverts, fuzz tests for properties, invariants for
+state-wide properties; add a failing test for any bug.</li>
+<li><strong>Implement</strong> with pinned tools and standard libraries;
+keep changes small.</li>
+<li><strong>Run local checks</strong>: format, build, tests, static
+analysis, gas and size reports.</li>
+<li><strong>Open a pull request</strong> with the specification link,
+risk notes, and test evidence; get reviews by people who understand the
+domain; for sensitive paths require additional reviewers.</li>
+<li><strong>CI gates</strong> pass; long-running fuzzing runs on
+schedule or on demand for high-risk changes.</li>
+<li><strong>Audit or internal security review</strong> for changes
+touching value flows, permissions, math, or upgradeability; fix and
+re-review.</li>
+<li><strong>Deploy to a testnet or fork rehearsal</strong> with the real
+scripts; run post-deploy checks.</li>
+<li><strong>Mainnet release</strong> through the gated pipeline, with
+monitoring and caps; announce and document.</li>
+<li><strong>Observe and learn</strong>: monitor, review, and update
+tests and checklists after any incident or finding.</li>
+</ol>
+<h3 id="choosing-and-evaluating-tools">7. Choosing and evaluating
+tools</h3>
+<ul>
+<li><strong>Criteria</strong>: correctness and maturity, security
+posture of the tool itself, community and maintenance, performance,
+integration with your stack, debuggability, lock-in and portability,
+licensing, and cost.</li>
+<li><strong>Pilot first</strong>: run a new tool on a non-critical
+module with measurable goals; compare against the incumbent; keep an
+exit.</li>
+<li><strong>Standardize</strong>: a small set of approved tools and
+versions reduces cognitive load and supply-chain risk; allow exceptions
+with justification.</li>
+<li><strong>Upgrade policy</strong>: schedule regular dependency and
+toolchain updates; test them in CI; read release notes (especially
+compiler and EVM version changes); avoid upgrading the compiler between
+audit and deployment without re-validation.</li>
+<li><strong>Build internal tooling</strong> only where it pays:
+deployment manifests, address registries, simulation harnesses,
+monitoring scripts, and test utilities are common high-value
+targets.</li>
+<li><strong>Documentation</strong>: a developer handbook (setup,
+commands, conventions, release process, runbooks) that new engineers can
+follow on day one.</li>
+</ul>
+<h3 id="self-check">8. Self-check</h3>
+<ol>
+<li>Which gates would you put in CI for a repository containing
+upgradeable contracts, and which run only on a schedule?</li>
+<li>How do you manage deployment keys across environments without
+storing private keys in CI?</li>
+<li>A teammate upgrades the compiler between the audit and the release.
+What risks does that create and what process prevents it?</li>
+<li>Compare Foundry and Hardhat for a team with both contract and
+frontend engineers; when would you use both?</li>
+<li>What would you include in a developer handbook for new smart
+contract engineers?</li>
+<li>How do you evaluate a new static analysis or fuzzing tool before
+adopting it?</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: set up a Foundry project with the sketch configuration; add
+the vault and its tests; run format, build, tests, and a gas
+snapshot.</li>
+<li>Core: write the CI workflow including static analysis, a
+storage-layout check for an upgradeable contract, and a scheduled
+long-fuzz job; make a deliberately failing change and confirm each gate
+catches the right problem.</li>
+<li>Core: set up deployment with a hardware wallet or keystore signer
+(no plaintext keys), simulate on a fork, and produce a deployment
+manifest and verification.</li>
+<li>Core: generate typed ABIs and use them in a small frontend and a
+backend script; show a compile-time error for a wrong call.</li>
+<li>Stretch: write an internal "address registry" tool that records
+deployments across chains and verifies on-chain code hashes in CI.</li>
+<li>Stretch: evaluate two fuzzing or static analysis tools on the same
+codebase and write a short comparison with a recommendation.</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>Foundry Book: <a
+href="https://book.getfoundry.sh">https://book.getfoundry.sh</a> ;
+Hardhat documentation (Hardhat 3, Solidity tests, Ignition, plugins): <a
+href="https://hardhat.org">https://hardhat.org</a></li>
+<li>Solidity documentation and release notes: <a
+href="https://docs.soliditylang.org">https://docs.soliditylang.org</a>
+and <a
+href="https://soliditylang.org/blog/category/releases/">https://soliditylang.org/blog/category/releases/</a></li>
+<li>OpenZeppelin documentation (Contracts, Upgrades, Wizard): <a
+href="https://docs.openzeppelin.com/">https://docs.openzeppelin.com/</a></li>
+<li>viem, wagmi, and ethers documentation; Sourcify and block explorer
+verification documentation.</li>
+<li>Trail of Bits, <em>Building Secure Contracts</em> (tooling and
+process guidance); Slither, Echidna, and Medusa documentation.</li>
+<li>Software Architecture notes (evolutionary architecture, fitness
+functions) for turning rules into automated checks.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Pin and record the toolchain; the compiler, settings, and
+dependencies are part of the audited artifact.</li>
+<li>Encode quality and security rules as CI gates; keep fast checks per
+commit and deep checks on a schedule.</li>
+<li>Keep keys out of repositories and CI; deploy through reviewed,
+simulated, gated pipelines.</li>
+<li>Share typed ABIs across contracts, backend, and frontend.</li>
+<li>Evaluate tools with pilots and an exit; update on a schedule and
+with care.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

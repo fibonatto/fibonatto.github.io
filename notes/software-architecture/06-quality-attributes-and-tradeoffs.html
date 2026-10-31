@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quality Attributes and Trade-offs</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/software-architecture/06-quality-attributes-and-tradeoffs.html">
+  <meta property="og:title" content="Quality Attributes and Trade-offs">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/software-architecture/06-quality-attributes-and-tradeoffs.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Quality Attributes and Trade-offs</h1>
+<h2 id="quality-attributes-and-trade-offs-1">Quality Attributes and
+Trade-offs</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Architecture is the set of decisions that determine which quality
+attributes a system achieves and which it gives up. Functional
+requirements tell you what the system does; quality attributes determine
+how well and at what cost. At Staff and Principal scope you are expected
+to:</p>
+<ul>
+<li>turn vague wishes ("fast", "reliable", "secure") into measurable
+scenarios with numbers and conditions;</li>
+<li>know which attributes are architecturally significant for this
+system, and which are not worth paying for;</li>
+<li>make trade-offs explicit, quantified where possible, and owned by
+named decision makers;</li>
+<li>translate between business language (revenue, risk, cost, time to
+market) and engineering language (latency, availability, coupling);</li>
+<li>say "no" to gold plating with evidence, and "yes, at this price" to
+what the business actually needs.</li>
+</ul>
+<p>A recurring maxim in the architecture literature (for example in
+Richards and Ford) is that everything in architecture is a trade-off; if
+you think you found a design with no downside, you have not found the
+downside yet. Companion files: <code
+class="verbatim">01_architectural-styles.org</code>, <code
+class="verbatim">05_architectural-patterns.org</code>, <code
+class="verbatim">07_architecture-decision-records.org</code>, <code
+class="verbatim">10_architecture-review.org</code>, and the
+distributed-systems and memory notes in Foundations.</p>
+<h3 id="quality-attributes-and-how-to-specify-them">1. Quality
+attributes and how to specify them</h3>
+<p><strong>Models</strong>: the ISO/IEC 25010 product-quality model
+lists characteristics such as functional suitability, performance
+efficiency, compatibility, usability, reliability, security,
+maintainability, and portability (a later revision renames some, adds
+safety, and refines others). Treat any list as a checklist for
+conversation, not a complete theory. <strong>Architecturally significant
+requirements (ASRs)</strong> are the few requirements, usually quality
+attributes, that most strongly shape the design: strict latency, extreme
+availability, large data volumes, multi-tenancy isolation, regulatory
+constraints, extensibility by third parties, offline operation. Find
+them early; they decide the style.</p>
+<p><strong>Quality attribute scenarios</strong> (Bass, Clements, Kazman)
+make requirements testable. A scenario has six parts:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Question</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source of stimulus</td>
+<td>Who or what triggers it?</td>
+<td>A customer on a mobile client</td>
+</tr>
+<tr>
+<td>Stimulus</td>
+<td>What happens?</td>
+<td>Submits an order</td>
+</tr>
+<tr>
+<td>Artifact</td>
+<td>What part of the system is affected?</td>
+<td>The checkout service</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Under what conditions?</td>
+<td>Normal load; or peak load; or one availability zone down</td>
+</tr>
+<tr>
+<td>Response</td>
+<td>What should the system do?</td>
+<td>Confirm the order and persist it</td>
+</tr>
+<tr>
+<td>Response measure</td>
+<td>How do we know it was good enough?</td>
+<td>p99 latency under 400 ms; no order lost; 99.95% monthly success</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Utility tree</strong>: a hierarchy from a quality attribute
+to refined concerns to concrete scenarios, ranked by business importance
+and difficulty. It is the working document for prioritizing and for
+later reviews (it is also the first step of ATAM, the architecture
+trade-off analysis method). <strong>Service level indicators and
+objectives</strong> turn scenarios into operational targets: an SLI
+measures (the fraction of requests under 400 ms), an SLO sets the target
+(99% of requests, over 30 days), and the error budget is the allowed
+failure. They are the contract between engineering and the business
+about reliability (see the Google SRE book).</p>
+<h3 id="performance-and-latency">2. Performance and latency</h3>
+<ul>
+<li><strong>Vocabulary</strong>: latency (time for one operation),
+throughput (operations per time), utilization, saturation, and
+concurrency. Percentiles matter more than averages: p50 is the typical
+experience, p99 and p999 are what fan-out, retries, and unhappy users
+see.</li>
+<li><strong>Where latency comes from</strong>: network round trips (the
+dominant cost in distributed systems), queueing (grows sharply near
+saturation), serialization, locks and contention, garbage collection
+pauses, disk and database access, cold starts, and cross-region
+distances.</li>
+<li><strong>Latency budgets</strong>: decompose an end-to-end target
+across the hops of a request. If the user-visible target is 400 ms at
+p99 and the path has six hops, each hop's budget (and the retry policy)
+must fit.</li>
+<li><strong>Little's law and queueing</strong> (see the Foundations
+concurrency file): L = lambda W; near saturation, small increases in
+load produce large increases in latency. Keep headroom.</li>
+<li><strong>Fan-out amplifies tails</strong>: a request that calls 100
+services with 1% slow calls is slow 63% of the time.</li>
+<li><strong>Caching</strong>: expected latency with hit ratio h is h x
+t<sub>hit</sub> + (1 - h) x t<sub>miss</sub>. With h = 0.95,
+t<sub>hit</sub> = 1 ms, and t<sub>miss</sub> = 20 ms, the expected
+latency is 0.95 + 1.0 = 1.95 ms; the tail still pays 20 ms, and
+invalidation is the price.</li>
+<li><strong>Tactics</strong>: caching, indexing, batching, asynchronous
+work and queues for non-critical paths, data locality (compute near
+data), connection reuse, pagination and projection, precomputation
+(materialized views), reducing hops, parallelizing independent calls,
+backpressure, and lighter serialization formats.</li>
+<li><strong>Trade-offs</strong>: performance versus consistency
+(replicas and caches), versus simplicity (optimizations add code paths),
+versus cost (more capacity), versus security (encryption and checks add
+latency), versus maintainability (hand-tuned code).</li>
+<li><strong>Method</strong>: measure first; profile under realistic
+load; optimize the bottleneck; re-measure. Define SLOs before
+optimizing.</li>
+</ul>
+<h3 id="availability-and-reliability">3. Availability and
+reliability</h3>
+<ul>
+<li><strong>Definitions</strong>: availability is the fraction of time
+the system serves requests correctly; it can be estimated as MTBF /
+(MTBF + MTTR), so reducing repair time is often cheaper than preventing
+failure. Reliability is the probability of correct operation over a
+period; resilience is the ability to withstand and recover from
+faults.</li>
+<li><strong>What availability targets mean</strong> (30-day month):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Availability</th>
+<th>Allowed downtime per 30 days</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>99%</td>
+<td>about 7.2 hours</td>
+</tr>
+<tr>
+<td>99.9%</td>
+<td>about 43 minutes</td>
+</tr>
+<tr>
+<td>99.95%</td>
+<td>about 22 minutes</td>
+</tr>
+<tr>
+<td>99.99%</td>
+<td>about 4.3 minutes</td>
+</tr>
+<tr>
+<td>99.999%</td>
+<td>about 26 seconds</td>
+</tr>
+</tbody>
+</table>
+<p>Each additional nine costs disproportionately more (redundancy,
+automation, testing, on-call) and demands a matching organizational
+capability; a target should come from the business cost of downtime, not
+from aspiration.</p>
+<ul>
+<li><strong>Composition</strong>: components in series multiply: three
+dependencies at 99.9% give about 99.7% (0.999 cubed). Redundant replicas
+in parallel combine as 1 - (1 - a)^n if failures are independent: two
+replicas at 99.9% give 99.9999%, but correlated failures (shared
+deploys, shared dependencies, shared region, the same bug) make the real
+number much lower. <strong>A dependency's SLO caps yours</strong> unless
+you degrade gracefully when it fails.</li>
+<li><strong>Failure domains</strong>: process, host, rack, availability
+zone, region, provider, and the human and process layer (bad deploys,
+bad config, expired certificates cause a large share of incidents).
+Design so that a failure stays inside one domain (cells, bulkheads,
+regional isolation).</li>
+<li><strong>Tactics</strong>: redundancy (active-active,
+active-passive), health checks and automated failover, replication with
+a chosen consistency model, timeouts, retries with backoff, circuit
+breakers, graceful degradation, idempotent operations, queue-based
+decoupling, safe deployment (canaries, progressive rollout, feature
+flags, fast rollback), capacity headroom, backups with tested restores,
+and chaos experiments.</li>
+<li><strong>Recovery objectives</strong>: RTO (how long to restore) and
+RPO (how much data loss is acceptable) per system tier; they drive
+backup frequency, replication mode, and cost.</li>
+<li><strong>Trade-offs</strong>: availability versus consistency under
+partition (CAP, PACELC), versus cost (redundancy), versus complexity
+(failover logic is itself a source of outages), versus speed of change
+(change is the main cause of incidents).</li>
+</ul>
+<h3 id="scalability-and-elasticity">4. Scalability and elasticity</h3>
+<ul>
+<li><strong>Dimensions</strong>: load (requests, users), data volume,
+geographic distribution, number of tenants, feature breadth, and
+organizational scale (teams and contributors). Know which one you are
+scaling.</li>
+<li><strong>Vertical versus horizontal scaling</strong>: bigger machines
+are simple and run into limits and failure concentration; more machines
+need stateless design or partitioning. The <strong>scale cube</strong>:
+clone behind a load balancer (x-axis), decompose by function (y-axis),
+partition by data (z-axis).</li>
+<li><strong>Bottlenecks</strong>: stateful components (databases), hot
+keys and hot partitions, coordination (locks, consensus, global
+counters; see Amdahl's law and the universal scalability law in the
+Foundations notes), fan-out, serialization points, and shared
+resources.</li>
+<li><strong>Tactics</strong>: stateless services; caching and CDN; read
+replicas; partitioning and sharding; asynchronous processing and
+queue-based load leveling; batch and stream processing; autoscaling with
+proper signals; data-tier redesign (CQRS read stores,
+denormalization).</li>
+<li><strong>Elasticity and cost</strong>: scaling down matters as much
+as scaling up; autoscaling reacts slowly to spikes unless you provision
+headroom; cold starts and warm pools; commitments versus on-demand
+pricing.</li>
+<li><strong>Do not pre-scale</strong>: designing for 100x the current
+load multiplies complexity and cost. Design for roughly 10x, know the
+next bottleneck, and instrument so that you see it coming (see <code
+class="verbatim">08_evolutionary-architecture.org</code>).</li>
+<li><strong>Capacity estimation</strong> (back of the envelope): 50
+million requests per day is about 580 requests per second on average
+(50,000,000 / 86,400); with a peak factor of 5, plan for about 2,900 per
+second. At 1 KB per request retained, that is about 50 GB per day, or
+about 18 TB per year, before replication and indexes.</li>
+</ul>
+<h3 id="maintainability-modifiability-and-operability">5.
+Maintainability, modifiability, and operability</h3>
+<ul>
+<li><strong>Modifiability</strong> is the cost of change. It follows
+from modularity, coupling and cohesion, and the ability to defer
+decisions (see files 02 and 03). Tactics: encapsulate, use interfaces,
+reduce dependencies, increase cohesion, defer binding (configuration,
+plugins), keep the dependency graph acyclic.</li>
+<li><strong>Comprehensibility</strong>: consistent structure and naming,
+small modules with clear purpose, documentation of the why (ADRs), and
+diagrams of the system at the right level (see <code
+class="verbatim">07_architecture-decision-records.org</code>).</li>
+<li><strong>Testability</strong>: seams for isolating components,
+deterministic behavior, observable state, fast feedback; ports and
+adapters help.</li>
+<li><strong>Deployability</strong>: small, frequent, reversible
+releases; automation; the four DORA delivery measures (deployment
+frequency, lead time for changes, change failure rate, time to restore
+service) correlate with organizational performance, and architecture
+that blocks them is a business problem.</li>
+<li><strong>Operability and observability</strong>: structured logs,
+metrics (the four golden signals: latency, traffic, errors, saturation),
+distributed traces, correlation ids, dashboards and alerts tied to SLOs,
+runbooks, and safe operational controls (feature flags, kill switches,
+rate limits). If you cannot see it, you cannot run it.</li>
+<li><strong>Developer experience</strong>: build and test speed, local
+environments, clear ownership, and low cognitive load, which directly
+affect throughput and retention.</li>
+</ul>
+<h3 id="security">6. Security</h3>
+<ul>
+<li><strong>Core properties</strong>: confidentiality, integrity,
+availability; add authenticity, non-repudiation, and privacy.</li>
+<li><strong>Architectural decisions</strong>: trust boundaries (what is
+trusted, where authentication and authorization happen), least
+privilege, defense in depth, secure defaults, minimizing the attack
+surface, secrets management, encryption in transit and at rest, key
+management, audit logging, tenant isolation, and secure update and
+supply-chain practices.</li>
+<li><strong>Threat modeling</strong>: identify assets, entry points,
+trust boundaries, and threats (STRIDE is a common checklist: spoofing,
+tampering, repudiation, information disclosure, denial of service,
+elevation of privilege), then choose mitigations proportionate to risk.
+Do it on the design, before the code.</li>
+<li><strong>Authentication and authorization architecture</strong>:
+centralize identity, decentralize or standardize policy enforcement,
+propagate identity across services (tokens with limited scope and
+lifetime), and avoid ad hoc checks scattered through code.</li>
+<li><strong>Multi-tenancy models</strong>: silo (separate stack per
+tenant: strongest isolation, highest cost), pool (shared stack with
+logical isolation: cheapest, riskiest), and bridge variants. The choice
+follows regulation, customer expectations, and cost.</li>
+<li><strong>Memory-safe languages and sandboxing</strong> reduce whole
+classes of vulnerabilities (see the memory-management notes in
+Foundations).</li>
+<li><strong>Trade-offs</strong>: security versus usability (friction),
+performance (encryption, checks), operability (key rotation, access
+reviews), and delivery speed; the cost of a control must be weighed
+against the loss it prevents, and some risks are consciously accepted by
+named owners.</li>
+<li><strong>Compliance and data residency</strong> constrain
+architecture directly (where data may live, who may access it, retention
+and deletion): treat them as ASRs.</li>
+</ul>
+<h3 id="other-attributes-that-shape-architecture">7. Other attributes
+that shape architecture</h3>
+<ul>
+<li><strong>Cost</strong> (FinOps): unit economics (cost per request,
+per tenant), the cost of redundancy and of data transfer, and the
+build-versus-buy trade. Cost is an attribute to design for, with budgets
+and dashboards.</li>
+<li><strong>Interoperability and portability</strong>: standards and
+open protocols versus vendor features; the cost and probability of
+switching (lock-in is a price paid for speed or capability, and
+sometimes a good bargain).</li>
+<li><strong>Privacy</strong>: data minimization, purpose limitation,
+retention and deletion, and consent shape data stores and events.</li>
+<li><strong>Resilience and safety</strong>: for systems that can hurt
+people or property, failure modes and hazard analysis come first.</li>
+<li><strong>Accessibility and internationalization</strong>: structural
+when added late.</li>
+<li><strong>Sustainability</strong>: energy and resource efficiency as a
+design consideration.</li>
+<li><strong>Auditability</strong>, <strong>testability</strong>,
+<strong>configurability</strong>, and <strong>extensibility</strong>
+each matter for particular systems.</li>
+</ul>
+<h3 id="trade-offs">8. Trade-offs</h3>
+<p>Attributes pull against each other. Frequent tensions:</p>
+<table>
+<thead>
+<tr>
+<th>Tension</th>
+<th>Typical mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Availability versus consistency</td>
+<td>Replication and partitions: strong consistency may reject
+requests</td>
+</tr>
+<tr>
+<td>Latency versus consistency</td>
+<td>Synchronous replication and coordination add round trips</td>
+</tr>
+<tr>
+<td>Performance versus security</td>
+<td>Encryption, validation, and isolation add overhead</td>
+</tr>
+<tr>
+<td>Scalability versus simplicity</td>
+<td>Partitioning, caches, and queues add moving parts</td>
+</tr>
+<tr>
+<td>Flexibility versus performance</td>
+<td>Indirection and generality cost cycles and memory</td>
+</tr>
+<tr>
+<td>Reliability versus cost</td>
+<td>Redundancy multiplies infrastructure</td>
+</tr>
+<tr>
+<td>Time to market versus maintainability</td>
+<td>Shortcuts accrue interest (see <code
+class="verbatim">09_technical-debt.org</code>)</td>
+</tr>
+<tr>
+<td>Autonomy versus consistency across teams</td>
+<td>Independent choices diverge; standardization slows teams</td>
+</tr>
+<tr>
+<td>Security versus usability</td>
+<td>Controls add friction</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Techniques for deciding</strong>:</p>
+<ol>
+<li><strong>Rank the attributes</strong> for this system (the top three
+to five drivers), and state what you are explicitly not optimizing.</li>
+<li><strong>Write scenarios with response measures</strong> for the
+drivers; use them to evaluate candidates.</li>
+<li><strong>Identify sensitivity points</strong> (a decision that
+strongly affects one attribute) and <strong>trade-off points</strong> (a
+decision that affects several in opposite directions); ATAM uses these
+terms. Review them with stakeholders.</li>
+<li><strong>Weighted decision matrices</strong> can structure a
+comparison, but weights hide disagreement and invite false precision;
+use them to expose assumptions, run a sensitivity analysis on the
+weights, and never let the score replace judgment.</li>
+<li><strong>Prototype or run a spike</strong> for the uncertain part,
+with realistic data; replace opinions with measurements.</li>
+<li><strong>Cost the options</strong>, including operations, migration,
+and exit.</li>
+<li><strong>Prefer reversible options</strong> when evidence is thin;
+spend effort proportional to the cost of being wrong.</li>
+<li><strong>Record the decision</strong> with alternatives and
+consequences (see <code
+class="verbatim">07_architecture-decision-records.org</code>), and the
+signals that would reopen it.</li>
+<li><strong>Turn important attributes into fitness functions</strong> so
+that the trade-off remains true as the system changes (see <code
+class="verbatim">08_evolutionary-architecture.org</code>).</li>
+</ol>
+<h3 id="quantifying-worked-examples">9. Quantifying: worked
+examples</h3>
+<ul>
+<li><strong>Series availability</strong>: a checkout path calls identity
+(99.95%), catalog (99.9%), pricing (99.9%), and payments (99.99%)
+synchronously. The path's best-case availability is the product, about
+99.74% (roughly 1.9 hours of downtime in 30 days if failures were
+independent and every call were required). Making catalog optional
+(cached, degraded) removes it from the product and raises the path to
+about 99.84%.</li>
+<li><strong>Error budget</strong>: a 99.9% monthly SLO allows about 43
+minutes of failure. If one incident used 30 minutes, 13 minutes remain;
+the budget policy might freeze risky releases until the window
+recovers.</li>
+<li><strong>Latency with fan-out</strong>: a page needs data from 10
+independent services; each has p99 = 200 ms and p50 = 20 ms. The chance
+that at least one call exceeds its p99 is 1 - 0.99<sup>10</sup>, about
+9.6%, so roughly one page in ten sees a 200 ms or slower dependency.
+Hedging, caching, or reducing fan-out changes the tail.</li>
+<li><strong>Queue headroom</strong>: a single server with a 50 ms mean
+service time can process at most 20 requests per second. Under random
+arrivals, at 10 requests per second (50% utilization) the mean time in
+the system is about 100 ms; at 18 requests per second (90%) it is about
+500 ms. Provision for the tail, not the average.</li>
+</ul>
+<p>These numbers are models; their value is in making assumptions
+(independence, uniform load, no retries) visible and in finding which
+input dominates.</p>
+<h3 id="staff-level-practice">10. Staff-level practice</h3>
+<ul>
+<li><strong>Start from business outcomes</strong>: what does a minute of
+downtime, a second of latency, or a day of delay cost? Use that to set
+targets, not folklore.</li>
+<li><strong>Negotiate attributes, not features</strong>: ask "what
+happens if this is five times slower, or down for an hour?" until the
+real requirement appears.</li>
+<li><strong>Write the scenarios down</strong> and keep them next to the
+architecture; review them when the business changes.</li>
+<li><strong>Avoid gold plating</strong>: every unneeded nine, every
+speculative extension point, is cost and complexity paid today for a
+benefit that may never arrive.</li>
+<li><strong>Make the trade-off visible to the owner</strong>: the person
+who accepts the risk should be named and informed.</li>
+<li><strong>Revisit</strong>: the right balance moves as traffic, team,
+and market change; schedule the review (see <code
+class="verbatim">10_architecture-review.org</code>).</li>
+</ul>
+<h3 id="self-check">11. Self-check</h3>
+<ol>
+<li>Rewrite "the system must be fast and highly available" as three
+quality attribute scenarios with measures.</li>
+<li>Compute the availability of a synchronous path through five services
+at 99.9% each, and propose two changes that raise it without making any
+service more reliable.</li>
+<li>A product owner asks for "five nines". How do you respond, and what
+do you ask first?</li>
+<li>Your p50 is 30 ms and your p99 is 1.2 s. What are three possible
+causes and how do you tell them apart?</li>
+<li>Name three trade-offs involved in adding a cache, and what you would
+monitor to know if it is working.</li>
+<li>Identify two sensitivity points and one trade-off point in a system
+you know.</li>
+</ol>
+<h3 id="exercises">12. Exercises</h3>
+<ul>
+<li>Warm-up: write a utility tree for a system you own, with at least
+six leaf scenarios and their priorities.</li>
+<li>Core: build a latency budget for one user-facing request and measure
+the actual breakdown with traces; find the largest gap between budget
+and reality.</li>
+<li>Core: define SLIs and SLOs for a service, compute the error budget,
+and write the policy for what happens when it is exhausted.</li>
+<li>Core: do a back-of-the-envelope capacity and cost estimate for a
+system at 1x, 10x, and 100x load; list where the architecture breaks
+first.</li>
+<li>Stretch: run a lightweight ATAM-style session on a design with three
+stakeholders; record sensitivity points, trade-off points, risks, and
+non-risks.</li>
+<li>Stretch: run a game day that kills one dependency and measure
+whether the degradation behavior matches the scenarios.</li>
+</ul>
+<h3 id="resources">13. Resources</h3>
+<ul>
+<li>Bass, Clements, Kazman, <em>Software Architecture in Practice</em>
+(quality attribute scenarios, tactics, ATAM); Richards and Ford,
+<em>Fundamentals of Software Architecture</em> (architecture
+characteristics and trade-offs).</li>
+<li>Beyer, Jones, Petoff, Murphy (eds.), <em>Site Reliability
+Engineering</em> (SLIs, SLOs, error budgets, monitoring, overload); free
+to read: <a
+href="https://sre.google/books/">https://sre.google/books/</a></li>
+<li>Kleppmann, <em>Designing Data-Intensive Applications</em>
+(reliability, scalability, and maintainability as the framing;
+replication, partitioning, transactions).</li>
+<li>Nygard, <em>Release It!</em> (stability patterns, capacity, failure
+in production).</li>
+<li>AWS Well-Architected Framework: <a
+href="https://aws.amazon.com/architecture/well-architected/">https://aws.amazon.com/architecture/well-architected/</a>
+; Azure Architecture Center and Well-Architected Framework: <a
+href="https://learn.microsoft.com/en-us/azure/architecture/">https://learn.microsoft.com/en-us/azure/architecture/</a></li>
+<li>DORA research and delivery metrics: <a
+href="https://dora.dev">https://dora.dev</a> ; Forsgren, Humble, Kim,
+<em>Accelerate</em>.</li>
+<li>ISO/IEC 25010 (product quality model); Shostack, <em>Threat
+Modeling: Designing for Security</em>.</li>
+<li>Foundations notes in this repository: concurrency and distributed
+systems (queueing, consistency, tail latency), complexity (cost models),
+memory management.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Quality attributes, expressed as measurable scenarios, are what
+architecture is for.</li>
+<li>Everything is a trade-off: name what you give up, quantify it, and
+put an owner on it.</li>
+<li>Availability composes multiplicatively across series dependencies;
+correlated failures break independence assumptions.</li>
+<li>Optimize percentiles and tails, not averages; leave headroom.</li>
+<li>Design for about 10x, instrument for the next bottleneck, and do not
+pre-scale for imagined load.</li>
+<li>Turn the important attributes into fitness functions so the
+trade-offs stay true.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

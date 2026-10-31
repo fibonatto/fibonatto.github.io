@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Functions</title>
+  <meta name="description" content="Study notes on C functions covering declarations and definitions, prototypes, pass-by-value semantics, pointers and array parameters, return-value patterns, output parameters, error handling, function pointers, callbacks, context passing, variadic functions, linkage, inline functions, recursion, evaluation order, and the trade-offs between functions and macros.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/03-functions.html">
+  <meta property="og:title" content="C Functions">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/03-functions.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C Functions</h1>
+<h2 id="c-functions-1">C Functions</h2>
+<h3 id="declare-and-define">1. Declare and define</h3>
+<p>A <em>declaration</em> (prototype) states the name and types. A
+<em>definition</em> provides the body. A function must be declared
+before it is called.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">);</span>          <span class="co">/* declaration, usually in a header */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span>         <span class="co">/* definition */</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Use <code class="verbatim">(void)</code> for "no parameters": in C
+before C23, <code class="verbatim">int f()</code> means "unspecified
+parameters", not "none".</p>
+<h3 id="parameters-are-passed-by-value">2. Parameters are passed by
+value</h3>
+<p>The callee receives copies. Changing a parameter does not change the
+caller's variable.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> bump<span class="op">(</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span> x<span class="op">++;</span> <span class="op">}</span>          <span class="co">/* caller&#39;s variable unchanged */</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> bump_ptr<span class="op">(</span><span class="dt">int</span> <span class="op">*</span>x<span class="op">)</span> <span class="op">{</span> <span class="op">(*</span>x<span class="op">)++;</span> <span class="op">}</span>  <span class="co">/* caller&#39;s variable changed */</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> n <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>bump<span class="op">(</span>n<span class="op">);</span>        <span class="co">/* n == 0 */</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>bump_ptr<span class="op">(&amp;</span>n<span class="op">);</span>   <span class="co">/* n == 1 */</span></span></code></pre></div>
+<p>Arrays cannot be passed by value; an array parameter is really a
+pointer, so the length must travel separately:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> mean<span class="op">(</span><span class="dt">const</span> <span class="dt">double</span> <span class="op">*</span>xs<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">);</span>   <span class="co">/* const: the function only reads */</span></span></code></pre></div>
+<p>Passing a struct by value copies the whole struct. For large structs
+pass <code class="verbatim">const struct T *</code>.</p>
+<h3 id="returning-values">3. Returning values</h3>
+<p>A function returns one value. For several results there are three
+common patterns.</p>
+<p><strong>Return a struct:</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> divmod <span class="op">{</span> <span class="dt">int</span> quot<span class="op">;</span> <span class="dt">int</span> rem<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> divmod divide<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="kw">struct</span> divmod<span class="op">){</span> a <span class="op">/</span> b<span class="op">,</span> a <span class="op">%</span> b <span class="op">};</span>   <span class="co">/* compound literal */</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> divmod r <span class="op">=</span> divide<span class="op">(</span><span class="dv">17</span><span class="op">,</span> <span class="dv">5</span><span class="op">);</span>   <span class="co">/* r.quot == 3, r.rem == 2 */</span></span></code></pre></div>
+<p><strong>Out-parameters plus a status code:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;errno.h&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;limits.h&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> parse_int<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>s<span class="op">,</span> <span class="dt">int</span> <span class="op">*</span>out<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span> <span class="op">*</span>end<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    errno <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">long</span> v <span class="op">=</span> strtol<span class="op">(</span>s<span class="op">,</span> <span class="op">&amp;</span>end<span class="op">,</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>end <span class="op">==</span> s <span class="op">||</span> <span class="op">*</span>end <span class="op">!=</span> <span class="ch">&#39;</span><span class="sc">\0</span><span class="ch">&#39;</span> <span class="op">||</span> errno <span class="op">==</span> ERANGE <span class="op">||</span> v <span class="op">&lt;</span> INT_MIN <span class="op">||</span> v <span class="op">&gt;</span> INT_MAX<span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>out <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">)</span>v<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>A sentinel value</strong> (<code
+class="verbatim">NULL</code>, <code class="verbatim">-1</code>) when the
+result space allows it. Never return a pointer to a local variable: it
+dies when the function returns.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>bad<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> x <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>x<span class="op">;</span>      <span class="co">/* undefined behavior if the caller uses it */</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="function-pointers-and-callbacks">4. Function pointers and
+callbacks</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">int</span> <span class="op">(*</span>binop<span class="op">)(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">int</span><span class="op">);</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> apply<span class="op">(</span>binop f<span class="op">,</span> <span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> f<span class="op">(</span>a<span class="op">,</span> b<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>apply<span class="op">(</span>add<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span>   <span class="co">/* 5 */</span></span></code></pre></div>
+<p>C has no closures. The idiom for carrying state is an extra <code
+class="verbatim">void *</code> context argument:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> counter <span class="op">{</span> <span class="dt">int</span> n<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> each<span class="op">(</span><span class="dt">const</span> <span class="dt">int</span> <span class="op">*</span>a<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">,</span> <span class="dt">void</span> <span class="op">(*</span>fn<span class="op">)(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">void</span> <span class="op">*),</span> <span class="dt">void</span> <span class="op">*</span>ctx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> i<span class="op">++)</span> fn<span class="op">(</span>a<span class="op">[</span>i<span class="op">],</span> ctx<span class="op">);</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> count_pos<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">void</span> <span class="op">*</span>ctx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>x <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">((</span><span class="kw">struct</span> counter <span class="op">*)</span>ctx<span class="op">)-&gt;</span>n<span class="op">++;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> counter c <span class="op">=</span> <span class="op">{</span> <span class="dv">0</span> <span class="op">};</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>each<span class="op">(</span>arr<span class="op">,</span> len<span class="op">,</span> count_pos<span class="op">,</span> <span class="op">&amp;</span>c<span class="op">);</span></span></code></pre></div>
+<p>The <code class="verbatim">void *</code> erases the type, so the
+compiler cannot check that <code class="verbatim">ctx</code> is what the
+callback expects.</p>
+<h3 id="variadic-functions">5. Variadic functions</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdarg.h&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> sum<span class="op">(</span><span class="dt">int</span> n<span class="op">,</span> <span class="op">...)</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">va_list</span> ap<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    va_start<span class="op">(</span>ap<span class="op">,</span> n<span class="op">);</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> total <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        total <span class="op">+=</span> va_arg<span class="op">(</span>ap<span class="op">,</span> <span class="dt">int</span><span class="op">);</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    va_end<span class="op">(</span>ap<span class="op">);</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> total<span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>sum<span class="op">(</span><span class="dv">3</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span>   <span class="co">/* 6 */</span></span></code></pre></div>
+<p>The compiler does not check the extra arguments. You must know how
+many there are and what type each has, and reading the wrong type is
+undefined behavior. Small integer types are promoted to <code
+class="verbatim">int</code> and <code class="verbatim">float</code> to
+<code class="verbatim">double</code>, so read <code
+class="verbatim">int</code> and <code class="verbatim">double</code>.
+Functions like <code class="verbatim">printf</code> get their type
+information from the format string; GCC and Clang can check it with
+<code class="verbatim">__attribute__((format(printf, 1, 2)))</code>.</p>
+<h3 id="static-inline-and-linkage">6. static, inline, and linkage</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">int</span> helper<span class="op">(</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span>   <span class="co">/* visible only in this file */</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="kw">inline</span> <span class="dt">int</span> clamp<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> lo<span class="op">,</span> <span class="dt">int</span> hi<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">&lt;</span> lo <span class="op">?</span> lo <span class="op">:</span> x <span class="op">&gt;</span> hi <span class="op">?</span> hi <span class="op">:</span> x<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A non-<code class="verbatim">static</code> function has external
+linkage: its name is visible to the whole program, so name collisions
+are a link error.</li>
+<li><code class="verbatim">inline</code> is a hint plus linkage rules.
+The portable form for small helpers in headers is <code
+class="verbatim">static inline</code>.</li>
+<li>Two definitions of the same external function in different files
+fail at link time.</li>
+</ul>
+<h3 id="recursion-and-iteration">7. Recursion and iteration</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">unsigned</span> <span class="dt">long</span> <span class="dt">long</span> fact<span class="op">(</span><span class="dt">unsigned</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n <span class="op">&lt;=</span> <span class="dv">1</span> <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> n <span class="op">*</span> fact<span class="op">(</span>n <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Each call uses stack space. Deep recursion overflows the stack, and
+the standard does not guarantee tail-call elimination (compilers may do
+it at <code class="verbatim">-O2</code>, but do not depend on it). Write
+loops for linear recursion, and recursion where the structure is
+recursive (trees, divide and conquer).</p>
+<h3 id="evaluation-order">8. Evaluation order</h3>
+<p>The order in which function arguments are evaluated is
+unspecified.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>f<span class="op">(</span>g<span class="op">(),</span> h<span class="op">());</span>      <span class="co">/* g and h both run, in unspecified order */</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>f<span class="op">(</span>i<span class="op">++,</span> i<span class="op">++);</span>      <span class="co">/* undefined behavior: unsequenced modification of i */</span></span></code></pre></div>
+<p>Keep side effects out of argument lists when two arguments touch the
+same object.</p>
+<h3 id="functions-versus-macros">9. Functions versus macros</h3>
+<p>A function evaluates each argument exactly once and has a
+type-checked signature. A function-like macro is textual substitution
+(see <code class="verbatim">08_macros.org</code>). Prefer <code
+class="verbatim">static inline</code> functions; reach for macros only
+for what a function cannot do.</p>
+<h3 id="quick-reference">Quick reference</h3>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">int f(void);</code></td>
+<td>Declare a function with no parameters</td>
+</tr>
+<tr>
+<td><code class="verbatim">T *p</code> parameter</td>
+<td>Mutate the caller's object or pass an array</td>
+</tr>
+<tr>
+<td><code class="verbatim">const T *p</code></td>
+<td>Read-only access through a pointer</td>
+</tr>
+<tr>
+<td><code class="verbatim">T (*fp)(args)</code></td>
+<td>Function pointer</td>
+</tr>
+<tr>
+<td><code class="verbatim">void *ctx</code></td>
+<td>Manual closure state for callbacks</td>
+</tr>
+<tr>
+<td><code class="verbatim">va_list</code>, <code
+class="verbatim">va_arg</code></td>
+<td>Variadic arguments</td>
+</tr>
+<tr>
+<td><code class="verbatim">static</code></td>
+<td>Internal linkage (file-local function)</td>
+</tr>
+<tr>
+<td><code class="verbatim">static inline</code></td>
+<td>Small function defined in a header</td>
+</tr>
+<tr>
+<td><code class="verbatim">struct</code> return</td>
+<td>Return several values together</td>
+</tr>
+</tbody>
+</table>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

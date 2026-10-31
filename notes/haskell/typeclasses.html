@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haskell Type Classes</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/haskell/typeclasses.html">
+  <meta property="og:title" content="Haskell Type Classes">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/haskell/typeclasses.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Haskell Type Classes</h1>
+<h2 id="haskell-type-classes-1">Haskell Type Classes</h2>
+<p>Haskell has no macros in the Lisp, C, or Rust sense. Its main
+mechanism for abstraction over types, and for code that adapts to the
+types it receives, is the <em>type class</em>. This file plays the role
+that <code class="verbatim">macros.org</code> plays elsewhere: it covers
+the language's central abstraction facility. Template Haskell, the
+actual compile-time metaprogramming system, is sketched in section
+11.</p>
+<h3 id="what-a-type-class-does">1. What a type class does</h3>
+<p>A type class declares a set of operations that types may implement. A
+function constrained by a class works for any type that has an
+instance.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Describable</span> a <span class="kw">where</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  describe ::</span> a <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Describable</span> <span class="dt">Bool</span> <span class="kw">where</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  describe <span class="dt">True</span>  <span class="ot">=</span> <span class="st">&quot;yes&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  describe <span class="dt">False</span> <span class="ot">=</span> <span class="st">&quot;no&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Describable</span> <span class="dt">Int</span> <span class="kw">where</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  describe n <span class="ot">=</span> <span class="st">&quot;the number &quot;</span> <span class="op">++</span> <span class="fu">show</span> n</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>describe <span class="dt">True</span>       <span class="co">-- &quot;yes&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>describe (<span class="dv">3</span><span class="ot"> ::</span> <span class="dt">Int</span>) <span class="co">-- &quot;the number 3&quot;</span></span></code></pre></div>
+<p>The compiler picks the instance from the types, at compile time. A
+constraint such as <code
+class="verbatim">Describable a =&gt; a -&gt; String</code> is, in
+effect, an extra hidden argument: a table (<em>dictionary</em>) of the
+class's methods for that type.</p>
+<h3 id="constraints">2. Constraints</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">describeAll ::</span> <span class="dt">Describable</span> a <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> [<span class="dt">String</span>]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>describeAll <span class="ot">=</span> <span class="fu">map</span> describe</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">showTwice ::</span> (<span class="dt">Show</span> a, <span class="dt">Eq</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>showTwice x y <span class="ot">=</span> <span class="kw">if</span> x <span class="op">==</span> y <span class="kw">then</span> <span class="fu">show</span> x <span class="kw">else</span> <span class="fu">show</span> x <span class="op">++</span> <span class="st">&quot; / &quot;</span> <span class="op">++</span> <span class="fu">show</span> y</span></code></pre></div>
+<p>A function can use only the operations its constraints promise.
+Without <code class="verbatim">Eq a</code>, the <code
+class="verbatim">x =</code> y= above would not type-check.</p>
+<h3 id="default-methods-and-minimal-definitions">3. Default methods and
+minimal definitions</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Shape</span> a <span class="kw">where</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  area      ::</span> a <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  perimeter ::</span> a <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  describeShape ::</span> a <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  describeShape x <span class="ot">=</span> <span class="st">&quot;area &quot;</span> <span class="op">++</span> <span class="fu">show</span> (area x) <span class="op">++</span> <span class="st">&quot;, perimeter &quot;</span> <span class="op">++</span> <span class="fu">show</span> (perimeter x)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Circle</span> <span class="ot">=</span> <span class="dt">Circle</span> <span class="dt">Double</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Rect</span>   <span class="ot">=</span> <span class="dt">Rect</span> <span class="dt">Double</span> <span class="dt">Double</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Shape</span> <span class="dt">Circle</span> <span class="kw">where</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  area (<span class="dt">Circle</span> r)      <span class="ot">=</span> <span class="fu">pi</span> <span class="op">*</span> r <span class="op">*</span> r</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  perimeter (<span class="dt">Circle</span> r) <span class="ot">=</span> <span class="dv">2</span> <span class="op">*</span> <span class="fu">pi</span> <span class="op">*</span> r</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Shape</span> <span class="dt">Rect</span> <span class="kw">where</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  area (<span class="dt">Rect</span> w h)      <span class="ot">=</span> w <span class="op">*</span> h</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  perimeter (<span class="dt">Rect</span> w h) <span class="ot">=</span> <span class="dv">2</span> <span class="op">*</span> (w <span class="op">+</span> h)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  describeShape r      <span class="ot">=</span> <span class="st">&quot;a rectangle with &quot;</span> <span class="op">++</span> <span class="fu">show</span> (area r)   <span class="co">-- overrides the default</span></span></code></pre></div>
+<p>A class states which methods an instance must define. For <code
+class="verbatim">Eq</code>, either <code class="verbatim">(=</code>)= or
+<code class="verbatim">(/</code>)= is enough because each has a default
+in terms of the other.</p>
+<h3 id="deriving">4. Deriving</h3>
+<p>For common classes the compiler can write the instance:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Color</span> <span class="ot">=</span> <span class="dt">Red</span> <span class="op">|</span> <span class="dt">Green</span> <span class="op">|</span> <span class="dt">Blue</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>, <span class="dt">Bounded</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">show</span> <span class="dt">Red</span>                 <span class="co">-- &quot;Red&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Red</span> <span class="op">&lt;</span> <span class="dt">Blue</span>               <span class="co">-- True: constructors are ordered by declaration</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">succ</span> <span class="dt">Red</span>                 <span class="co">-- Green</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>[<span class="fu">minBound</span> <span class="op">..</span> <span class="fu">maxBound</span>]<span class="ot"> ::</span> [<span class="dt">Color</span>]</span></code></pre></div>
+<p>Derivable out of the box: <code class="verbatim">Eq</code>, <code
+class="verbatim">Ord</code>, <code class="verbatim">Show</code>, <code
+class="verbatim">Read</code>, <code class="verbatim">Enum</code>, <code
+class="verbatim">Bounded</code>, and (with extensions) <code
+class="verbatim">Functor</code>, <code class="verbatim">Foldable</code>,
+<code class="verbatim">Traversable</code>, <code
+class="verbatim">Generic</code>. For a <code
+class="verbatim">newtype</code>, <code
+class="verbatim">GeneralizedNewtypeDeriving</code> copies the underlying
+type's instance.</p>
+<h3 id="superclasses">5. Superclasses</h3>
+<p>A class can require another:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> <span class="dt">Ord</span> a <span class="kw">where</span>          <span class="co">-- from the standard library (simplified)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  compare ::</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Ordering</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  (<span class="op">&lt;</span>), (<span class="op">&lt;=</span>), (<span class="op">&gt;</span>),<span class="ot"> (&gt;=) ::</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span></span></code></pre></div>
+<p>Every <code class="verbatim">Ord</code> type must also be <code
+class="verbatim">Eq</code>. A function constrained by <code
+class="verbatim">Ord a</code> may therefore use <code
+class="verbatim">(=</code>)= as well.</p>
+<h3 id="dispatch-on-the-return-type">6. Dispatch on the return type</h3>
+<p>A class method can select its instance from the <em>result</em> type,
+which is something object-oriented method dispatch cannot do:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">minBound</span><span class="ot"> ::</span> <span class="dt">Int</span>          <span class="co">-- -9223372036854775808 on a 64-bit system</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">minBound</span><span class="ot"> ::</span> <span class="dt">Bool</span>         <span class="co">-- False</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">read</span> <span class="st">&quot;42&quot;</span><span class="ot">  ::</span> <span class="dt">Int</span>        <span class="co">-- 42</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">read</span> <span class="st">&quot;4.5&quot;</span><span class="ot"> ::</span> <span class="dt">Double</span>     <span class="co">-- 4.5</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mempty</span><span class="ot"> ::</span> <span class="dt">String</span>         <span class="co">-- &quot;&quot;</span></span></code></pre></div>
+<p>When the type cannot be inferred, add an annotation; otherwise the
+compiler reports an ambiguity (or, for numeric classes, silently
+defaults to <code class="verbatim">Integer</code> or <code
+class="verbatim">Double</code>).</p>
+<h3 id="classes-over-type-constructors">7. Classes over type
+constructors</h3>
+<p>Some classes abstract over types that take a parameter, such as <code
+class="verbatim">Maybe</code>, <code class="verbatim">[]</code>, or
+<code class="verbatim">IO</code>. These have kind <code
+class="verbatim">* -&gt; *</code>.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Functor</span> f <span class="kw">where</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  fmap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Maybe</span> <span class="kw">where</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmap</span> _ <span class="dt">Nothing</span>  <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmap</span> g (<span class="dt">Just</span> x) <span class="ot">=</span> <span class="dt">Just</span> (g x)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Tree</span> a <span class="ot">=</span> <span class="dt">Leaf</span> <span class="op">|</span> <span class="dt">Node</span> (<span class="dt">Tree</span> a) a (<span class="dt">Tree</span> a)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Tree</span> <span class="kw">where</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmap</span> _ <span class="dt">Leaf</span>         <span class="ot">=</span> <span class="dt">Leaf</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmap</span> g (<span class="dt">Node</span> l v r) <span class="ot">=</span> <span class="dt">Node</span> (<span class="fu">fmap</span> g l) (g v) (<span class="fu">fmap</span> g r)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">fmap</span> (<span class="op">+</span> <span class="dv">1</span>) (<span class="dt">Just</span> <span class="dv">2</span>)      <span class="co">-- Just 3</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>(<span class="op">+</span> <span class="dv">1</span>) <span class="op">&lt;$&gt;</span> <span class="dt">Node</span> <span class="dt">Leaf</span> <span class="dv">1</span> <span class="dt">Leaf</span>   <span class="co">-- Node Leaf 2 Leaf</span></span></code></pre></div>
+<p><code class="verbatim">Functor</code>, <code
+class="verbatim">Applicative</code>, and <code
+class="verbatim">Monad</code> are such classes, so a single piece of
+code (such as a <code class="verbatim">do</code> block, <code
+class="verbatim">mapM</code>, or <code class="verbatim">traverse</code>)
+works for <code class="verbatim">Maybe</code>, lists, <code
+class="verbatim">Either e</code>, parsers, state, and <code
+class="verbatim">IO</code>.</p>
+<h3 id="semigroup-and-monoid">8. Semigroup and Monoid</h3>
+<p><code class="verbatim">Semigroup</code> has an associative combine
+operation, <code class="verbatim">Monoid</code> adds an identity
+element.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">MaxInt</span> <span class="ot">=</span> <span class="dt">MaxInt</span> <span class="dt">Int</span> <span class="kw">deriving</span> <span class="dt">Show</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Semigroup</span> <span class="dt">MaxInt</span> <span class="kw">where</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">MaxInt</span> a <span class="op">&lt;&gt;</span> <span class="dt">MaxInt</span> b <span class="ot">=</span> <span class="dt">MaxInt</span> (<span class="fu">max</span> a b)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monoid</span> <span class="dt">MaxInt</span> <span class="kw">where</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">MaxInt</span> <span class="fu">minBound</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">mconcat</span> (<span class="fu">map</span> <span class="dt">MaxInt</span> [<span class="dv">3</span>, <span class="dv">9</span>, <span class="dv">2</span>])    <span class="co">-- MaxInt 9</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>, <span class="dv">2</span>] <span class="op">&lt;&gt;</span> [<span class="dv">3</span>]                     <span class="co">-- [1,2,3]</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;ab&quot;</span> <span class="op">&lt;&gt;</span> <span class="st">&quot;cd&quot;</span>                      <span class="co">-- &quot;abcd&quot;</span></span></code></pre></div>
+<p>Instances should satisfy the class's laws (associativity; <code
+class="verbatim">mempty &lt;&gt; x = x</code>). The compiler cannot
+check laws; you must.</p>
+<h3 id="instance-rules">9. Instance rules</h3>
+<ul>
+<li>There is at most one instance of a class for a given type in a
+program (<em>coherence</em>). To give a type a second behavior, wrap it
+in a <code class="verbatim">newtype</code>.</li>
+<li>An instance defined in a module that owns neither the class nor the
+type is an <em>orphan instance</em>; avoid them in libraries.</li>
+<li>Instances for types such as <code class="verbatim">[Char]</code> or
+<code class="verbatim">Maybe Int</code> need extensions (<code
+class="verbatim">FlexibleInstances</code>); instances with extra
+constraints need <code class="verbatim">FlexibleContexts</code>. Both
+are in common use and are on by default in the <code
+class="verbatim">GHC2021</code> language edition.</li>
+<li>Classes with several type parameters (<code
+class="verbatim">MultiParamTypeClasses</code>) and associated types
+(<code class="verbatim">TypeFamilies</code>) extend the model for
+advanced designs.</li>
+</ul>
+<h3 id="when-to-define-a-class">10. When to define a class</h3>
+<p>Prefer an ordinary function or a plain record of functions when you
+do not need the compiler to select behavior by type. Define a class
+when:</p>
+<ul>
+<li>the operation is naturally defined per type and you want call sites
+to stay generic;</li>
+<li>there are laws, as with <code class="verbatim">Monoid</code> or
+<code class="verbatim">Functor</code>;</li>
+<li>you want derived or generic behavior across many types.</li>
+</ul>
+<p>Do not model a closed set of cases with a class when a <code
+class="verbatim">data</code> type with several constructors expresses it
+better. A class is open (anyone can add an instance); a sum type is
+closed and exhaustively checkable.</p>
+<h3 id="template-haskell">11. Template Haskell</h3>
+<p>Template Haskell (the <code class="verbatim">TemplateHaskell</code>
+extension) is Haskell's compile-time code generation. Quotes <code
+class="verbatim">[| ... |]</code> build syntax trees, splices <code
+class="verbatim">$(...)</code> run Haskell code at compile time and
+insert the result:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TemplateHaskell #-}</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">$</span>(<span class="fu">return</span> [])                         <span class="co">-- an empty declaration splice</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ot">five ::</span> <span class="dt">Int</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>five <span class="ot">=</span> <span class="op">$</span>( [<span class="op">|</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">3</span> <span class="op">|</span>] )              <span class="co">-- the splice expands to the expression 2 + 3</span></span></code></pre></div>
+<p>Because of the <em>stage restriction</em>, a splice can only call
+functions imported from another module, not ones defined earlier in the
+same module. Template Haskell is used for boilerplate, for instance
+<code class="verbatim">makeLenses</code> in the <code
+class="verbatim">lens</code> library. It is advanced and largely
+unnecessary for learning; many Haskell programs never use it. The
+related <code class="verbatim">GHC.Generics</code> lets you write
+instances for many types at once without Template Haskell.</p>
+<h3 id="inspecting">12. Inspecting</h3>
+<p>In GHCi:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="op">:</span>info <span class="dt">Show</span>        <span class="co">-- the class, its methods, and its instances</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="op">:</span>info <span class="dt">Maybe</span>       <span class="co">-- the type and the classes it is an instance of</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">:</span><span class="kw">type</span> <span class="fu">fmap</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">:</span>kind <span class="dt">Maybe</span>       <span class="co">-- * -&gt; *</span></span></code></pre></div>
+<p>Error messages such as "No instance for (Show (a -&gt; b))" mean you
+used a type in a context that requires a class it does not
+implement.</p>
+<h3 id="recommended-learning-sequence">13. Recommended learning
+sequence</h3>
+<ol>
+<li>Use <code class="verbatim">Eq</code>, <code
+class="verbatim">Ord</code>, <code class="verbatim">Show</code>, and
+<code class="verbatim">deriving</code> until they feel routine.</li>
+<li>Write a small class (such as <code class="verbatim">Shape</code>)
+with two instances.</li>
+<li>Learn constraints in signatures (<code
+class="verbatim">Ord a =&gt; ...</code>) and read the errors when one is
+missing.</li>
+<li>Learn <code class="verbatim">Functor</code> by writing an instance
+for your own <code class="verbatim">Tree</code>.</li>
+<li>Learn <code class="verbatim">Semigroup</code> and <code
+class="verbatim">Monoid</code>, then <code
+class="verbatim">Applicative</code> and <code
+class="verbatim">Monad</code>.</li>
+<li>Read <code class="verbatim">:info</code> output on standard
+classes.</li>
+<li>Explore extensions, generics, and Template Haskell only when a
+project needs them.</li>
+</ol>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

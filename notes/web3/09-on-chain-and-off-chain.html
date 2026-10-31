@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>On-Chain and Off-Chain</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/09-on-chain-and-off-chain.html">
+  <meta property="og:title" content="On-Chain and Off-Chain">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/09-on-chain-and-off-chain.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>On-Chain and Off-Chain</h1>
+<h2 id="on-chain-and-off-chain-1">On-Chain and Off-Chain</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>The central design question in Web3 is what the chain must do and
+what it can merely check. Everything on-chain is expensive, public,
+slow, and hard to change; everything off-chain needs a trust or
+verification story. At Staff and Principal scope you are expected
+to:</p>
+<ul>
+<li>draw the line deliberately, with an explicit statement of the trust
+assumption behind each off-chain component;</li>
+<li>choose verification patterns (signatures, Merkle proofs, optimistic
+or validity proofs, commit-reveal) that let the chain enforce rules
+without doing all the work;</li>
+<li>keep on-chain and off-chain state consistent through reorgs,
+failures, and upgrades;</li>
+<li>price the design (gas, data availability, infrastructure) and plan
+for what happens when the off-chain part fails or turns hostile.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">05_web3-architecture.org</code>, <code
+class="verbatim">10_oracles-and-mev.org</code>, <code
+class="verbatim">11_layer-2-and-cross-chain.org</code>, <code
+class="verbatim">13_indexing-and-data-access.org</code>. Software
+Architecture notes: boundaries, contracts, and patterns (outbox,
+saga).</p>
+<h3 id="what-belongs-on-chain">1. What belongs on-chain</h3>
+<p>Keep on-chain only what needs the chain's unique properties:</p>
+<ul>
+<li><strong>Ownership and custody of assets</strong> and the rules for
+moving them.</li>
+<li><strong>Settlement and finality</strong>: the irreversible record
+that something happened.</li>
+<li><strong>Rules that must be enforced without trusting an
+operator</strong>: access control, accounting, invariants such as
+solvency.</li>
+<li><strong>Composability points</strong>: interfaces other contracts
+need to call atomically.</li>
+<li><strong>Commitments</strong>: hashes and roots that bind off-chain
+data (Merkle roots, content hashes, state roots).</li>
+<li><strong>Dispute and exit mechanisms</strong>: the ability to
+challenge, force inclusion, or withdraw when off-chain actors fail.</li>
+</ul>
+<p>Everything else (computation, matching, ranking, search, storage of
+large data, notifications, UI, analytics, personal data) should usually
+live off-chain, with the chain verifying or settling the result.</p>
+<h3 id="patterns-for-combining-the-two">2. Patterns for combining the
+two</h3>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>How it works</th>
+<th>Trust assumption / risk</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Signed messages, on-chain settlement</td>
+<td>Users sign orders or permits off-chain (EIP-712); a relayer or
+counterparty submits; the contract verifies and executes</td>
+<td>Relayer liveness and ordering; signature replay and phishing</td>
+<td>Order-book DEXes, permits, gasless meta-transactions</td>
+</tr>
+<tr>
+<td>Merkle commitments</td>
+<td>Post a root on-chain; users prove membership with a Merkle
+proof</td>
+<td>Whoever computes the root; data availability of the tree</td>
+<td>Airdrops, allowlists, snapshots</td>
+</tr>
+<tr>
+<td>Commit-reveal</td>
+<td>Publish a hash commitment, then reveal the value later</td>
+<td>Reveal liveness; commitments leak timing</td>
+<td>Auctions, randomness, games</td>
+</tr>
+<tr>
+<td>Optimistic verification</td>
+<td>Assume results are correct unless challenged within a window; fraud
+proofs resolve disputes</td>
+<td>At least one honest, watching challenger; long exit delays</td>
+<td>Optimistic rollups, optimistic oracles and bridges</td>
+</tr>
+<tr>
+<td>Validity (zero-knowledge) proofs</td>
+<td>Off-chain computation with an on-chain proof verifier</td>
+<td>Soundness of the proof system and circuits; prover liveness</td>
+<td>ZK rollups, private transfers</td>
+</tr>
+<tr>
+<td>State channels</td>
+<td>Parties transact off-chain and settle the final state on-chain</td>
+<td>Liveness for disputes; limited to a fixed set of participants</td>
+<td>Payment channels</td>
+</tr>
+<tr>
+<td>Oracles</td>
+<td>Off-chain data reported on-chain by a network</td>
+<td>Oracle honesty, freshness, manipulation resistance</td>
+<td>Price feeds, randomness, event outcomes</td>
+</tr>
+<tr>
+<td>Keepers and automation</td>
+<td>Off-chain bots call functions when conditions are met</td>
+<td>Liveness and incentives; MEV</td>
+<td>Liquidations, harvests, rebalancing</td>
+</tr>
+<tr>
+<td>Intents and solvers</td>
+<td>Users sign desired outcomes; competing solvers fulfil them; the
+contract checks settlement</td>
+<td>Solver competition; settlement-rule correctness; MEV protection</td>
+<td>Intent-based swaps and bridges</td>
+</tr>
+<tr>
+<td>Escrow and timelocks</td>
+<td>Funds locked under rules that release by proof, timeout, or
+approval</td>
+<td>Rule correctness; dispute process</td>
+<td>Marketplaces, vesting</td>
+</tr>
+<tr>
+<td>Off-chain data with on-chain hash</td>
+<td>Data stored elsewhere; its hash or CID recorded on-chain</td>
+<td>Data availability and permanence; mutability of the source</td>
+<td>NFT metadata, documents</td>
+</tr>
+<tr>
+<td>Off-chain lookups with proofs</td>
+<td>Contract asks the client to fetch data and verifies it (CCIP-Read,
+EIP-3668)</td>
+<td>Gateway availability; verification design</td>
+<td>ENS off-chain resolution</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-availability-and-storage">3. Data availability and
+storage</h3>
+<ul>
+<li><strong>Data availability (DA)</strong>: for a system to be
+verifiable or recoverable, the data needed to reconstruct state must be
+retrievable by anyone. On Ethereum L1, calldata and blobs provide DA;
+since EIP-4844, blobs are the cheap option for rollups (they are
+retained for a limited window, so long-term archival is a separate
+concern). DA layers outside Ethereum (Celestia, EigenDA, Avail and
+others) trade security assumptions for cost.</li>
+<li><strong>Content addressing</strong>: IPFS identifies data by its
+hash (CID); anyone can pin and serve it, but availability requires at
+least one pinner. Arweave aims at permanent storage with an endowment
+model; Filecoin uses storage deals. Choose by durability requirements
+and cost; pin through more than one provider; document the permanence
+promise.</li>
+<li><strong>Mutable versus immutable data</strong>: a token URI pointing
+to a mutable web server can change what the token means; an immutable
+CID cannot. State clearly which parts are mutable and who can change
+them.</li>
+<li><strong>Personal and regulated data stays off-chain</strong>: write
+only commitments or pseudonymous identifiers on-chain; deletion rights
+and retention rules conflict with immutable ledgers.</li>
+<li><strong>Encrypted data on-chain</strong> is public forever:
+encryption that is safe today may not be later; do not put sensitive
+data on-chain even encrypted unless the threat model allows it.</li>
+</ul>
+<h3 id="keeping-both-sides-consistent">4. Keeping both sides
+consistent</h3>
+<ul>
+<li><strong>The chain is the source of truth for on-chain
+state</strong>; off-chain stores are derived views. Derive them from
+events and state with reorg-aware, idempotent processing (see <code
+class="verbatim">13_indexing-and-data-access.org</code> and <code
+class="verbatim">12_distributed-systems.org</code>).</li>
+<li><strong>Write path</strong>: user intents or signed messages go
+off-chain, a service batches and submits them; the service must handle
+failures (a transaction not mined, reverted, or reorged) and make
+retries idempotent.</li>
+<li><strong>Read path</strong>: off-chain reads of chain state have
+latency and may be stale or inconsistent across providers; for critical
+decisions, read at the safe or finalized block, or verify against
+on-chain state before acting.</li>
+<li><strong>Reconciliation</strong>: periodically compare off-chain
+records (balances, positions, orders) with on-chain truth; alert on
+drift; define who is authoritative in each case.</li>
+<li><strong>Ordering and race conditions</strong>: off-chain order books
+and on-chain state can disagree (an order is valid when matched and
+invalid at settlement); settlement logic must re-check conditions
+on-chain.</li>
+<li><strong>Versioning and upgrades</strong>: contract upgrades and
+event schema changes must be coordinated with off-chain consumers
+(indexers, bots, frontends); version events and expose a registry of
+current addresses.</li>
+</ul>
+<h3 id="designing-for-failure-of-the-off-chain-part">5. Designing for
+failure of the off-chain part</h3>
+<ul>
+<li><strong>Liveness</strong>: what happens if the relayer, sequencer,
+keeper, or oracle stops? Provide fallbacks (anyone can submit, forced
+inclusion, user-triggered withdrawals) or at least a bounded loss and a
+clear degraded mode.</li>
+<li><strong>Censorship</strong>: can the off-chain operator refuse
+specific users? Provide an on-chain path that cannot be blocked, even if
+slower or costlier.</li>
+<li><strong>Malice</strong>: can the operator steal or misreport? Bound
+their power with proofs, challenge windows, collateral (bonds) and
+slashing, and independent verification.</li>
+<li><strong>Data loss</strong>: if the data store disappears, can state
+be reconstructed? Keep data availability guarantees and backups
+appropriate to the value.</li>
+<li><strong>Upgrade or migration</strong>: can the off-chain system be
+replaced without breaking users? Avoid hard-coded dependencies on one
+operator's endpoints; publish interfaces and addresses on-chain or in
+registries.</li>
+<li><strong>Exit</strong>: define and test how users leave if the
+operator is gone.</li>
+</ul>
+<h3
+id="worked-example-an-off-chain-order-book-with-on-chain-settlement">6.
+Worked example: an off-chain order book with on-chain settlement</h3>
+<ul>
+<li><strong>Flow</strong>: makers sign orders (EIP-712) with price,
+amount, nonce, and deadline; a matching engine off-chain pairs orders; a
+relayer submits matched pairs to a settlement contract; the contract
+verifies signatures, enforces limits and nonces, and swaps assets
+atomically.</li>
+<li><strong>On-chain</strong>: signature checks, replay protection, fill
+accounting (partial fills), cancellation (a nonce or order-hash
+invalidation by the maker), token transfers via approvals, and
+fees.</li>
+<li><strong>Off-chain</strong>: order storage, matching, price
+discovery, API, and risk checks.</li>
+<li><strong>Trust and risks</strong>: the operator controls matching and
+ordering and can front-run or censor; users keep custody and can cancel
+on-chain; signatures must be scoped and short-lived; approvals to the
+settlement contract are a standing risk (use exact approvals or
+permits); a bug in the settlement contract affects all makers; the
+operator's infrastructure is a liveness dependency.</li>
+<li><strong>Improvements</strong>: batch auctions to remove ordering
+advantages (see <code class="verbatim">10_oracles-and-mev.org</code>),
+multiple independent relayers, on-chain cancellation and expiry, and
+monitoring that compares fills with orders.</li>
+</ul>
+<h3 id="cost-and-capacity-modeling">7. Cost and capacity modeling</h3>
+<ul>
+<li><strong>On-chain cost per action</strong>: gas times gas price (and
+L1 data fees on L2s); multiply by expected volume at median and spike
+prices; include approvals, failures, and retries.</li>
+<li><strong>Off-chain cost</strong>: infrastructure, RPC and indexing,
+storage, monitoring, and engineering time; weigh against on-chain
+savings.</li>
+<li><strong>Amortization</strong>: batching, Merkle roots, and rollups
+reduce per-user cost at the price of complexity and assumptions.</li>
+<li><strong>Scale limits</strong>: the chain's throughput caps on-chain
+operations; design so that per-user work scales off-chain and only
+constant or logarithmic work lands on-chain.</li>
+</ul>
+<h3 id="self-check">8. Self-check</h3>
+<ol>
+<li>For a protocol you know, list every off-chain component and write
+one sentence on what it can do wrong and what protects users.</li>
+<li>Why must a settlement contract re-check order validity on-chain even
+if an off-chain engine already checked it?</li>
+<li>Compare optimistic and validity-proof verification in trust
+assumptions, latency, and cost.</li>
+<li>How would you design an airdrop for one million recipients, and what
+are the failure modes of the Merkle approach?</li>
+<li>Your NFT metadata sits at a URL owned by the team. What are the
+issues and the options?</li>
+<li>What is the minimum an operator-dependent system must provide to
+pass a "walkaway test"?</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: implement a Merkle airdrop contract and a script that
+builds the tree and proofs; test invalid proofs and double claims.</li>
+<li>Core: implement signed-order settlement with EIP-712, nonces,
+expiry, partial fills, and cancellation; fuzz the accounting.</li>
+<li>Core: build a reconciliation job that compares an indexer's balances
+with on-chain <code>balanceOf</code> at a fixed block and reports
+drift.</li>
+<li>Core: design and test an escape hatch (forced exit) for an
+operator-dependent system, including the case where the operator is
+offline.</li>
+<li>Stretch: implement a commit-reveal auction with deposits and
+penalties for non-reveal; analyze griefing.</li>
+<li>Stretch: write the cost model (spreadsheet or script) for a feature
+at three gas prices and two chains; choose the design that meets the
+budget.</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>ethereum.org documentation on scaling, data availability, storage,
+and oracles: <a
+href="https://ethereum.org/en/developers/docs/">https://ethereum.org/en/developers/docs/</a></li>
+<li>EIP-3668 (CCIP-Read), EIP-712, EIP-4844: <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a> ;
+Protocol Update posts on blob scaling: <a
+href="https://blog.ethereum.org/2025/08/22/protocol-update-002">https://blog.ethereum.org/2025/08/22/protocol-update-002</a></li>
+<li>IPFS, Arweave, and Filecoin documentation; the documentation of your
+chosen DA layer.</li>
+<li>Rollup and bridge risk analyses at <a
+href="https://l2beat.com">https://l2beat.com</a> ; Buterin's essays on
+rollups and data availability.</li>
+<li>Software Architecture notes in this repository: boundaries, patterns
+(outbox, saga), and architecture review.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Put on-chain what needs trustless enforcement and composability;
+verify, do not recompute.</li>
+<li>Every off-chain component carries a trust assumption; document it
+and bound it with proofs, bonds, or exits.</li>
+<li>Derived off-chain state must be reorg-aware, idempotent, and
+reconcilable.</li>
+<li>Design the failure of the off-chain part first: liveness,
+censorship, malice, data loss, exit.</li>
+<li>Model costs on-chain and off-chain at spike conditions.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

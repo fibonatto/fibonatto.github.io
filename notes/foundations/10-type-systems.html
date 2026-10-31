@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Type Systems</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/10-type-systems.html">
+  <meta property="og:title" content="Type Systems">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/10-type-systems.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Type Systems</h1>
+<h2 id="type-systems-1">Type Systems</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>A type system is a lightweight, automatic proof system built into the
+compiler. At Staff scope you will:</p>
+<ul>
+<li>choose languages and type-system features for a codebase and know
+what they do and do not guarantee;</li>
+<li>design APIs so that misuse does not type-check ("parse, don't
+validate");</li>
+<li>explain compiler errors and variance rules to others, and judge when
+a fancier type is worth its complexity;</li>
+<li>decide how much static checking to add to a dynamic codebase
+(gradual adoption), and what soundness holes remain.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">02_logic-and-proofs.org</code> (propositions as types),
+<code class="verbatim">09_functional-programming.org</code>, <code
+class="verbatim">08_paradigms.org</code>, <code
+class="verbatim">07_theory-of-computation.org</code> (decidability
+limits), <code class="verbatim">11_memory-management.org</code>
+(ownership types).</p>
+<h3 id="what-types-are-for">1. What types are for</h3>
+<ul>
+<li><strong>Prevent errors</strong>: a type error is a program that
+applies an operation to values it does not support. Checking happens at
+compile time (static), at run time (dynamic), or in both (gradual).</li>
+<li><strong>Document and structure</strong>: signatures are checked
+documentation; types guide design (modules, interfaces).</li>
+<li><strong>Enable tooling and optimization</strong>: autocomplete,
+refactoring, and compilers that use type information (unboxed
+representations, devirtualization).</li>
+<li><strong>Carry proofs</strong>: richer type systems encode invariants
+(non-null, units, resource ownership, lengths, protocol states).</li>
+</ul>
+<p>Terminology that is often used loosely:</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Careful meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Static / dynamic</td>
+<td>When checking occurs (before running or while running)</td>
+</tr>
+<tr>
+<td>Strong / weak</td>
+<td>Informal: how much implicit conversion and unchecked
+reinterpretation is allowed. Prefer saying which conversions or unsafe
+operations exist</td>
+</tr>
+<tr>
+<td>Sound</td>
+<td>A well-typed program cannot reach a "stuck" state (no type errors at
+run time)</td>
+</tr>
+<tr>
+<td>Nominal / structural</td>
+<td>Types equal by declared name (Java, Rust structs) or by shape
+(TypeScript, Go interfaces)</td>
+</tr>
+<tr>
+<td>Inference</td>
+<td>The compiler deduces types the programmer did not write</td>
+</tr>
+</tbody>
+</table>
+<h3 id="type-safety-progress-and-preservation">2. Type safety: progress
+and preservation</h3>
+<p>For a formal language with a typing relation and an evaluation
+relation, <strong>type safety</strong> is usually proved as two lemmas
+(Wright and Felleisen):</p>
+<ul>
+<li><strong>Progress</strong>: a well-typed term is either a value or
+can take a step.</li>
+<li><strong>Preservation</strong> (subject reduction): if a well-typed
+term takes a step, the result has the same type.</li>
+</ul>
+<p>Together: well-typed programs do not get stuck. Each language feature
+(references, exceptions, subtyping, generics) adds cases to the proof;
+unsound features (such as covariant mutable arrays) break it. Safety
+does not mean correctness: it rules out a class of failures, nothing
+more. It also depends on the absence of escape hatches (casts, <code
+class="verbatim">unsafe</code>, <code class="verbatim">any</code>,
+FFI).</p>
+<h3 id="the-simply-typed-lambda-calculus">3. The simply typed lambda
+calculus</h3>
+<p>Types: base types and function types T1 -&gt; T2. Terms: variables,
+abstractions with annotated parameters, applications, constants. Typing
+rules (Gamma is the typing environment):</p>
+<pre class="text"><code>x : T in Gamma                 Gamma, x : T1 |- e : T2
+---------------- (Var)         --------------------------- (Abs)
+Gamma |- x : T                 Gamma |- (lambda x:T1. e) : T1 -&gt; T2
+
+Gamma |- f : T1 -&gt; T2     Gamma |- a : T1
+------------------------------------------ (App)
+Gamma |- f a : T2
+</code></pre>
+<p>The type of an expression is computed from the types of its parts
+(<em>syntax-directed</em>), so checking is a simple recursive function.
+Properties: type safety, <strong>strong normalization</strong> (every
+well-typed term terminates, so the calculus is not Turing-complete), and
+decidable type checking. Recursion, polymorphism, and effects are added
+by extending it.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A type checker for the simply typed lambda calculus.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Types: (&quot;int&quot;,), (&quot;bool&quot;,), (&quot;fun&quot;, T1, T2).  Terms: tagged tuples.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> typeof(term, env<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> env <span class="kw">or</span> {}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    tag <span class="op">=</span> term[<span class="dv">0</span>]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;int&quot;</span>:</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (<span class="st">&quot;int&quot;</span>,)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;bool&quot;</span>:</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (<span class="st">&quot;bool&quot;</span>,)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;var&quot;</span>:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> term[<span class="dv">1</span>] <span class="kw">not</span> <span class="kw">in</span> env:</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">TypeError</span>(<span class="ss">f&quot;unbound variable </span><span class="sc">{</span>term[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env[term[<span class="dv">1</span>]]</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;lam&quot;</span>:                              <span class="co"># (&quot;lam&quot;, x, T, body)</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        _, x, ty, body <span class="op">=</span> term</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (<span class="st">&quot;fun&quot;</span>, ty, typeof(body, {<span class="op">**</span>env, x: ty}))</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;app&quot;</span>:                              <span class="co"># (&quot;app&quot;, f, a)</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        tf, ta <span class="op">=</span> typeof(term[<span class="dv">1</span>], env), typeof(term[<span class="dv">2</span>], env)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tf[<span class="dv">0</span>] <span class="op">!=</span> <span class="st">&quot;fun&quot;</span> <span class="kw">or</span> tf[<span class="dv">1</span>] <span class="op">!=</span> ta:</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">TypeError</span>(<span class="ss">f&quot;cannot apply </span><span class="sc">{</span>tf<span class="sc">}</span><span class="ss"> to </span><span class="sc">{</span>ta<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf[<span class="dv">2</span>]</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;if&quot;</span>:                               <span class="co"># (&quot;if&quot;, c, t, e)</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> typeof(term[<span class="dv">1</span>], env) <span class="op">!=</span> (<span class="st">&quot;bool&quot;</span>,):</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">TypeError</span>(<span class="st">&quot;condition must be bool&quot;</span>)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        t1, t2 <span class="op">=</span> typeof(term[<span class="dv">2</span>], env), typeof(term[<span class="dv">3</span>], env)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> t1 <span class="op">!=</span> t2:</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">TypeError</span>(<span class="st">&quot;branches differ&quot;</span>)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> t1</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;add&quot;</span>:                              <span class="co"># (&quot;add&quot;, a, b)</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> typeof(term[<span class="dv">1</span>], env) <span class="op">!=</span> (<span class="st">&quot;int&quot;</span>,) <span class="kw">or</span> typeof(term[<span class="dv">2</span>], env) <span class="op">!=</span> (<span class="st">&quot;int&quot;</span>,):</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">TypeError</span>(<span class="st">&quot;add needs ints&quot;</span>)</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (<span class="st">&quot;int&quot;</span>,)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(tag)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>INT <span class="op">=</span> (<span class="st">&quot;int&quot;</span>,)</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>ident <span class="op">=</span> (<span class="st">&quot;lam&quot;</span>, <span class="st">&quot;x&quot;</span>, INT, (<span class="st">&quot;var&quot;</span>, <span class="st">&quot;x&quot;</span>))</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> typeof(ident) <span class="op">==</span> (<span class="st">&quot;fun&quot;</span>, INT, INT)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> typeof((<span class="st">&quot;app&quot;</span>, ident, (<span class="st">&quot;int&quot;</span>, <span class="dv">3</span>))) <span class="op">==</span> INT</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> bad <span class="kw">in</span> [(<span class="st">&quot;app&quot;</span>, (<span class="st">&quot;int&quot;</span>, <span class="dv">3</span>), (<span class="st">&quot;int&quot;</span>, <span class="dv">4</span>)),                       <span class="co"># applying a non-function</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>            (<span class="st">&quot;if&quot;</span>, (<span class="st">&quot;int&quot;</span>, <span class="dv">1</span>), (<span class="st">&quot;int&quot;</span>, <span class="dv">2</span>), (<span class="st">&quot;int&quot;</span>, <span class="dv">3</span>)),            <span class="co"># non-bool condition</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>            (<span class="st">&quot;if&quot;</span>, (<span class="st">&quot;bool&quot;</span>, <span class="va">True</span>), (<span class="st">&quot;int&quot;</span>, <span class="dv">2</span>), (<span class="st">&quot;bool&quot;</span>, <span class="va">False</span>))]:  <span class="co"># branch mismatch</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>        typeof(bad)</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">AssertionError</span>(<span class="st">&quot;should not type-check&quot;</span>)</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">TypeError</span>:</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">pass</span></span></code></pre></div>
+<h3 id="polymorphism">4. Polymorphism</h3>
+<p>Polymorphism lets one piece of code work at many types. Three
+kinds:</p>
+<ul>
+<li><strong>Parametric</strong>: the same code for all types (generics:
+<code class="verbatim">fn id&lt;T&gt;(x: T) -&gt; T</code>). System F
+formalizes it. Parametricity makes types informative: a function of type
+<code class="verbatim">forall a. a -&gt; a</code> can only be the
+identity.</li>
+<li><strong>Ad hoc</strong> (overloading, type classes, traits):
+different code per type, chosen by the type. Type classes (Haskell) and
+traits (Rust) implement it by passing a dictionary of methods;
+resolution happens at compile time, so there is no run-time type
+test.</li>
+<li><strong>Subtype</strong> (inclusion): a value of a subtype can be
+used where a supertype is expected (object-oriented languages).</li>
+<li><strong>Row polymorphism</strong> and <strong>structural
+typing</strong> (OCaml objects, PureScript records, TypeScript) abstract
+over the remaining fields of a record.</li>
+</ul>
+<p><strong>Bounded</strong> polymorphism combines them: <code
+class="verbatim">forall T: Ord. [T] -&gt; [T]</code>.</p>
+<h3 id="type-inference-and-unification">5. Type inference and
+unification</h3>
+<p><strong>Hindley-Milner</strong> (HM) inference, in ML, OCaml, Haskell
+(as a core), and Rust's local inference, finds the most general
+(<em>principal</em>) type of a program with no annotations.
+Ingredients:</p>
+<ol>
+<li>Assign each unknown a fresh <em>type variable</em>.</li>
+<li>Walk the program generating equations between types (a function
+applied to an argument forces the function's parameter type to equal the
+argument's type).</li>
+<li>Solve the equations by <strong>unification</strong>: find a
+substitution making two types identical, failing on a mismatch (int
+versus bool) or an infinite type (the <strong>occurs check</strong>,
+which rejects self-application <code class="verbatim">x x</code>).</li>
+<li><strong>Let-polymorphism</strong>: generalize the type of a <code
+class="verbatim">let</code>-bound name over variables that do not occur
+in the environment, so one definition can be used at many types.</li>
+</ol>
+<p>Practical features need more: type classes (constraints solved after
+unification), higher-rank types (annotations required), GADTs, and local
+type inference with bidirectional checking in Rust, Scala, TypeScript,
+Kotlin, and Swift. Inference for full System F is undecidable (Wells),
+which is why such features demand annotations.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> itertools</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Types: (&quot;var&quot;, name) or (&quot;con&quot;, name, [args]).  Function type: (&quot;con&quot;, &quot;-&gt;&quot;, [a, b]).</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> walk(t, s):</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> t[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&quot;var&quot;</span> <span class="kw">and</span> t[<span class="dv">1</span>] <span class="kw">in</span> s:</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        t <span class="op">=</span> s[t[<span class="dv">1</span>]]</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> t</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> occurs(v, t, s):</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> walk(t, s)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> t[<span class="dv">1</span>] <span class="op">==</span> v <span class="cf">if</span> t[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&quot;var&quot;</span> <span class="cf">else</span> <span class="bu">any</span>(occurs(v, a, s) <span class="cf">for</span> a <span class="kw">in</span> t[<span class="dv">2</span>])</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> unify(a, b, s):</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    a, b <span class="op">=</span> walk(a, s), walk(b, s)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a <span class="op">==</span> b:</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> s</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&quot;var&quot;</span>:</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> occurs(a[<span class="dv">1</span>], b, s):</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">TypeError</span>(<span class="st">&quot;occurs check: infinite type&quot;</span>)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {<span class="op">**</span>s, a[<span class="dv">1</span>]: b}</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> b[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&quot;var&quot;</span>:</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> unify(b, a, s)</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a[<span class="dv">1</span>] <span class="op">!=</span> b[<span class="dv">1</span>] <span class="kw">or</span> <span class="bu">len</span>(a[<span class="dv">2</span>]) <span class="op">!=</span> <span class="bu">len</span>(b[<span class="dv">2</span>]):</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">TypeError</span>(<span class="ss">f&quot;cannot unify </span><span class="sc">{</span>a[<span class="dv">1</span>]<span class="sc">}</span><span class="ss"> with </span><span class="sc">{</span>b[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> x, y <span class="kw">in</span> <span class="bu">zip</span>(a[<span class="dv">2</span>], b[<span class="dv">2</span>]):</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> unify(x, y, s)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> s</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>_counter <span class="op">=</span> itertools.count()</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fresh():</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (<span class="st">&quot;var&quot;</span>, <span class="ss">f&quot;t</span><span class="sc">{</span><span class="bu">next</span>(_counter)<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> arrow(a, b):</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (<span class="st">&quot;con&quot;</span>, <span class="st">&quot;-&gt;&quot;</span>, [a, b])</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>INT <span class="op">=</span> (<span class="st">&quot;con&quot;</span>, <span class="st">&quot;int&quot;</span>, [])</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> infer(term, env, s):</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    tag <span class="op">=</span> term[<span class="dv">0</span>]</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;int&quot;</span>:</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> INT, s</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;var&quot;</span>:</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env[term[<span class="dv">1</span>]], s</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;lam&quot;</span>:                                   <span class="co"># (&quot;lam&quot;, x, body): no annotation needed</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        a <span class="op">=</span> fresh()</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        t, s <span class="op">=</span> infer(term[<span class="dv">2</span>], {<span class="op">**</span>env, term[<span class="dv">1</span>]: a}, s)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> arrow(a, t), s</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&quot;app&quot;</span>:</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        tf, s <span class="op">=</span> infer(term[<span class="dv">1</span>], env, s)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        ta, s <span class="op">=</span> infer(term[<span class="dv">2</span>], env, s)</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>        r <span class="op">=</span> fresh()</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> r, unify(tf, arrow(ta, r), s)</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(tag)</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> resolve(t, s):</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> walk(t, s)</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> t <span class="cf">if</span> t[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&quot;var&quot;</span> <span class="cf">else</span> (<span class="st">&quot;con&quot;</span>, t[<span class="dv">1</span>], [resolve(x, s) <span class="cf">for</span> x <span class="kw">in</span> t[<span class="dv">2</span>]])</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>t, s <span class="op">=</span> infer((<span class="st">&quot;lam&quot;</span>, <span class="st">&quot;x&quot;</span>, (<span class="st">&quot;var&quot;</span>, <span class="st">&quot;x&quot;</span>)), {}, {})        <span class="co"># \x. x   :  a -&gt; a</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> resolve(t, s)</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> t[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&quot;-&gt;&quot;</span> <span class="kw">and</span> t[<span class="dv">2</span>][<span class="dv">0</span>] <span class="op">==</span> t[<span class="dv">2</span>][<span class="dv">1</span>]</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>t, s <span class="op">=</span> infer((<span class="st">&quot;lam&quot;</span>, <span class="st">&quot;f&quot;</span>, (<span class="st">&quot;lam&quot;</span>, <span class="st">&quot;x&quot;</span>, (<span class="st">&quot;app&quot;</span>, (<span class="st">&quot;var&quot;</span>, <span class="st">&quot;f&quot;</span>), (<span class="st">&quot;var&quot;</span>, <span class="st">&quot;x&quot;</span>)))), {}, {})</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> resolve(t, s)                                       <span class="co"># \f.\x. f x  :  (a -&gt; b) -&gt; a -&gt; b</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>f, rest <span class="op">=</span> t[<span class="dv">2</span>]</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> f[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&quot;-&gt;&quot;</span> <span class="kw">and</span> rest[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&quot;-&gt;&quot;</span> <span class="kw">and</span> f[<span class="dv">2</span>][<span class="dv">0</span>] <span class="op">==</span> rest[<span class="dv">2</span>][<span class="dv">0</span>] <span class="kw">and</span> f[<span class="dv">2</span>][<span class="dv">1</span>] <span class="op">==</span> rest[<span class="dv">2</span>][<span class="dv">1</span>]</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>t, s <span class="op">=</span> infer((<span class="st">&quot;app&quot;</span>, (<span class="st">&quot;lam&quot;</span>, <span class="st">&quot;x&quot;</span>, (<span class="st">&quot;var&quot;</span>, <span class="st">&quot;x&quot;</span>)), (<span class="st">&quot;int&quot;</span>, <span class="dv">1</span>)), {}, {})</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> resolve(t, s) <span class="op">==</span> INT</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:                                                    <span class="co"># \x. x x  has no finite type</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    infer((<span class="st">&quot;lam&quot;</span>, <span class="st">&quot;x&quot;</span>, (<span class="st">&quot;app&quot;</span>, (<span class="st">&quot;var&quot;</span>, <span class="st">&quot;x&quot;</span>), (<span class="st">&quot;var&quot;</span>, <span class="st">&quot;x&quot;</span>))), {}, {})</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">AssertionError</span>(<span class="st">&quot;expected an occurs-check failure&quot;</span>)</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">TypeError</span>:</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
+<h3 id="subtyping-and-variance">6. Subtyping and variance</h3>
+<p>If S is a subtype of T, S values can be used where T is expected. For
+type constructors, <strong>variance</strong> says how subtyping of the
+arguments lifts to the constructed types:</p>
+<table>
+<thead>
+<tr>
+<th>Constructor</th>
+<th>Variance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Function result type</td>
+<td>Covariant: if S &lt;: T then (A -&gt; S) &lt;: (A -&gt; T)</td>
+</tr>
+<tr>
+<td>Function parameter type</td>
+<td>Contravariant: if S &lt;: T then (T -&gt; R) &lt;: (S -&gt; R)</td>
+</tr>
+<tr>
+<td>Immutable list / read-only collection</td>
+<td>Covariant</td>
+</tr>
+<tr>
+<td>Mutable array / mutable reference</td>
+<td>Invariant if sound. Java arrays and some other languages are
+covariant, which needs a run-time check (<code
+class="verbatim">ArrayStoreException</code>) to stay safe</td>
+</tr>
+<tr>
+<td>Write-only sink / consumer</td>
+<td>Contravariant</td>
+</tr>
+</tbody>
+</table>
+<p>Practical notes: TypeScript checks method parameters bivariantly for
+convenience (unsound but pragmatic), and function-type parameters
+contravariantly under <code class="verbatim">strictFunctionTypes</code>;
+Rust's lifetimes and references have variance (<code
+class="verbatim">&amp;'a T</code> is covariant in both; <code
+class="verbatim">&amp;mut T</code> is invariant in T), which the
+compiler infers; Java and Kotlin use wildcards or declaration-site
+variance (<code class="verbatim">? extends</code>, <code
+class="verbatim">out</code>, <code class="verbatim">in</code>). A
+subtype must honor behavioral contracts too (Liskov), which types alone
+rarely express.</p>
+<h3 id="algebraic-and-richer-data-types">7. Algebraic and richer data
+types</h3>
+<ul>
+<li><strong>Sum and product types</strong> (<code
+class="verbatim">enum</code> with data, tagged unions): exhaustive
+matching and "illegal states unrepresentable".</li>
+<li><strong>Recursive types</strong>: lists and trees; equi- versus
+iso-recursive.</li>
+<li><strong>Generalized algebraic data types (GADTs)</strong>:
+constructors refine the type index; typed expression evaluators with no
+ill-typed terms.</li>
+<li><strong>Existential types / trait objects</strong>: hide the
+concrete type behind an interface.</li>
+<li><strong>Phantom types and the typestate pattern</strong>: encode a
+state in a type parameter that has no run-time presence (<code
+class="verbatim">File&lt;Open&gt;</code> versus <code
+class="verbatim">File&lt;Closed&gt;</code>; a builder that cannot be
+built before required fields are set). The compiler rejects calls that
+are illegal in the current state.</li>
+<li><strong>Newtypes</strong>: distinct types for ids, units, and
+validated values (<code class="verbatim">Email</code>, <code
+class="verbatim">UserId</code>, <code
+class="verbatim">Meters</code>).</li>
+<li><strong>Type-level computation</strong>: const generics, type
+families, C++ templates (Turing-complete at compile time), TypeScript
+conditional types. Powerful and easy to overuse.</li>
+</ul>
+<h3 id="dependent-and-refinement-types-curry-howard">8. Dependent and
+refinement types; Curry-Howard</h3>
+<p>In <strong>dependent type theory</strong> types may mention values:
+<code class="verbatim">Vec A n</code> is a list of exactly n elements; a
+function can return <code class="verbatim">Sorted xs</code> as evidence.
+Type checking then requires evaluating terms and sometimes proof.
+Languages: Lean, Rocq (Coq), Agda, Idris. <strong>Refinement
+types</strong> attach logical predicates to base types (<code
+class="verbatim">{v: Int | v &gt; 0}</code>) and discharge them with an
+SMT solver (Liquid Haskell, F*, Dafny's contracts); they fit existing
+languages better than full dependent types.</p>
+<p>The <strong>Curry-Howard correspondence</strong> (Wadler's
+<em>Propositions as Types</em>) identifies logic and programming:</p>
+<table>
+<thead>
+<tr>
+<th>Logic</th>
+<th>Type theory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proposition</td>
+<td>Type</td>
+</tr>
+<tr>
+<td>Proof</td>
+<td>Program (term) of that type</td>
+</tr>
+<tr>
+<td>Implication A =&gt; B</td>
+<td>Function type A -&gt; B</td>
+</tr>
+<tr>
+<td>Conjunction A and B</td>
+<td>Product (pair) type</td>
+</tr>
+<tr>
+<td>Disjunction A or B</td>
+<td>Sum (tagged union) type</td>
+</tr>
+<tr>
+<td>Truth / falsity</td>
+<td>Unit type / empty type</td>
+</tr>
+<tr>
+<td>Universal quantifier</td>
+<td>Dependent function type (forall)</td>
+</tr>
+<tr>
+<td>Existential quantifier</td>
+<td>Dependent pair type</td>
+</tr>
+</tbody>
+</table>
+<p>Proof by induction is recursion; a proof assistant is a type checker
+(<code class="verbatim">02_logic-and-proofs.org</code>).</p>
+<h3 id="resource-sensitive-types-linear-affine-ownership-effects">9.
+Resource-sensitive types: linear, affine, ownership, effects</h3>
+<ul>
+<li><strong>Linear types</strong>: a value must be used exactly once.
+<strong>Affine types</strong>: at most once. Rust's ownership is an
+affine discipline plus borrowing: moving consumes a value; references
+with lifetimes (regions) express temporary access. This statically
+prevents use-after-free, double free, and data races (<code
+class="verbatim">11_memory-management.org</code>, the ownership file in
+the Rust notes).</li>
+<li><strong>Capabilities and effect systems</strong>: types record which
+effects a function may perform (I/O, exceptions, allocation) and which
+resources it may touch (Koka, Haskell's <code
+class="verbatim">IO</code>, Java checked exceptions as a clumsy early
+attempt).</li>
+<li><strong>Session types</strong>: types describe communication
+protocols between processes; the type checker verifies both ends follow
+the protocol.</li>
+<li><strong>Information-flow types</strong> track data sensitivity
+(taint) to prevent leaks.</li>
+</ul>
+<h3 id="gradual-typing-and-real-world-type-systems">10. Gradual typing
+and real-world type systems</h3>
+<ul>
+<li><strong>Gradual typing</strong> (Siek and Taha) mixes static and
+dynamic checking via a dynamic type (<code class="verbatim">any</code>,
+<code class="verbatim">Any</code>). Type annotations are added
+incrementally. The dynamic type is a soundness hole: values flowing
+through it are checked at run time (sound gradual typing, with
+performance costs) or not at all (TypeScript, Python's type hints with
+mypy/pyright).</li>
+<li><strong>TypeScript</strong> is structural, unsound by design
+(bivariance, <code class="verbatim">any</code>, unchecked casts, index
+signatures), with sophisticated flow typing (narrowing by control flow),
+unions, intersections, mapped and conditional types. It optimizes for
+productivity on top of JavaScript; types are erased and not checked at
+run time, so boundary data (JSON, network) needs validation (zod,
+io-ts).</li>
+<li><strong>Python</strong>: annotations are optional and checked by
+external tools; <code class="verbatim">Protocol</code> gives structural
+typing.</li>
+<li><strong>Go</strong>: structural interfaces; generics since 1.18;
+deliberately limited.</li>
+<li><strong>Java and C#</strong>: nominal, with generics (erased in
+Java, reified in C#) and nullability annotations.</li>
+<li><strong>Rust</strong>: nominal, traits and generics, ownership, no
+null, exhaustive matching; <code class="verbatim">unsafe</code> as an
+explicit escape.</li>
+<li><strong>Haskell and OCaml</strong>: inference, type classes or
+modules and functors, algebraic types.</li>
+<li><strong>SQL</strong>: static types per column, with implicit
+coercions that cause surprises.</li>
+</ul>
+<h3 id="design-trade-offs-of-type-systems">11. Design trade-offs of type
+systems</h3>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Tension</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Expressiveness vs decidability</td>
+<td>Richer types can make checking undecidable or exponential (C++
+templates, System F inference)</td>
+</tr>
+<tr>
+<td>Soundness vs convenience</td>
+<td>Unsound features (casts, bivariance) ease use and break
+guarantees</td>
+</tr>
+<tr>
+<td>Inference vs annotations</td>
+<td>More inference means principal types are lost for advanced
+features</td>
+</tr>
+<tr>
+<td>Error message quality</td>
+<td>Powerful types give long, cryptic errors</td>
+</tr>
+<tr>
+<td>Compile time</td>
+<td>Type-level computation and large inference problems slow builds</td>
+</tr>
+<tr>
+<td>Learning curve</td>
+<td>Concepts such as lifetimes or higher-kinded types raise the
+barrier</td>
+</tr>
+</tbody>
+</table>
+<p>By Rice's theorem (<code
+class="verbatim">07_theory-of-computation.org</code>) no sound type
+checker accepts all and only the correct programs; every type system
+rejects some good programs and accepts some bad ones. Choose where you
+want the line.</p>
+<h3 id="type-driven-design-in-practice">12. Type-driven design in
+practice</h3>
+<ul>
+<li><strong>Parse, don't validate</strong>: convert raw input into a
+type that makes invalid states unrepresentable (<code
+class="verbatim">NonEmptyString</code>, <code
+class="verbatim">Percentage</code>) at the boundary; the rest of the
+program uses the stronger type and needs no re-checking.</li>
+<li><strong>Make wrong code not compile</strong>: separate types for
+different ids and units; typestate for protocols; non-exhaustive enums
+marked deliberately.</li>
+<li><strong>Totality</strong>: handle every variant; avoid partial
+functions (<code class="verbatim">head</code>, unchecked indexing) in
+core logic.</li>
+<li><strong>Model nullability and errors in types</strong> (Option,
+Result) instead of exceptions that signatures hide.</li>
+<li><strong>Boundaries</strong>: validate untrusted data where it
+enters; types are not run-time guarantees across serialization or
+process boundaries.</li>
+<li><strong>Migration</strong>: introduce types where bugs cost most
+(public APIs, money, auth, serialization), start with strict settings on
+new code, ratchet coverage, and track escape-hatch counts (<code
+class="verbatim">any</code>, <code class="verbatim">unsafe</code>, <code
+class="verbatim">cast</code>).</li>
+<li><strong>Cost</strong>: every type-level trick must pay for its
+complexity in prevented bugs and clearer APIs; unreadable types are a
+maintenance liability.</li>
+</ul>
+<h3 id="self-check">13. Self-check</h3>
+<ol>
+<li>State progress and preservation. Which feature, added to the simply
+typed calculus, can make preservation fail if done carelessly?</li>
+<li>Infer the type of <code
+class="verbatim">fun f g x -&gt; f (g x)</code> by hand with
+unification.</li>
+<li>Why is Java's covariant array subtyping unsound? Show a program that
+type-checks and fails at run time.</li>
+<li>Explain contravariance of function parameters with a concrete
+example (a handler for animals used where a handler for cats is
+expected).</li>
+<li>Design a typestate API for a connection (disconnected,
+authenticated, in transaction) so that calling <code
+class="verbatim">commit</code> outside a transaction fails to
+compile.</li>
+<li>A TypeScript service crashes on a field the type says is always
+present. List the ways types and runtime data can disagree.</li>
+<li>What can the type <code class="verbatim">forall a. a -&gt; a</code>
+tell you, and what can it not?</li>
+</ol>
+<h3 id="exercises">14. Exercises</h3>
+<ul>
+<li>Warm-up: extend the checker above with pairs, sums, and <code
+class="verbatim">let</code>; then add a division-by-zero-free arithmetic
+fragment.</li>
+<li>Core: implement Algorithm W with let-polymorphism (generalization
+and instantiation) for a small ML-like language.</li>
+<li>Core: implement bidirectional type checking for the simply typed
+lambda calculus with annotations only where needed.</li>
+<li>Core: define a typestate API in Rust or TypeScript, and show the
+illegal sequences fail to compile.</li>
+<li>Stretch: implement a type checker with subtyping and records; then
+add parametric polymorphism with bounded quantification.</li>
+<li>Stretch: do the first chapters of Software Foundations volume 2
+(<em>Programming Language Foundations</em>): prove progress and
+preservation for the simply typed lambda calculus.</li>
+<li>Stretch: write a dependent vector type in Lean with <code
+class="verbatim">append</code> whose type guarantees the length of the
+result.</li>
+</ul>
+<h3 id="resources">15. Resources</h3>
+<ul>
+<li>Pierce, <em>Types and Programming Languages</em> (MIT Press, 2002),
+the standard text; companion site: <a
+href="http://www.cis.upenn.edu/~bcpierce/tapl">http://www.cis.upenn.edu/~bcpierce/tapl</a></li>
+<li>Pierce et al., <em>Software Foundations</em>, volume 2
+<em>Programming Language Foundations</em> (machine-checked proofs of
+type safety; free): <a
+href="https://softwarefoundations.cis.upenn.edu/">https://softwarefoundations.cis.upenn.edu/</a></li>
+<li>Harper, <em>Practical Foundations for Programming Languages</em>,
+2nd edition (Cambridge University Press), for a rigorous treatment of
+types, dynamics, and safety.</li>
+<li><em>Theorem Proving in Lean 4</em> (dependent types and propositions
+as types): <a
+href="https://lean-lang.org/theorem_proving_in_lean4/">https://lean-lang.org/theorem_proving_in_lean4/</a></li>
+<li>Wadler, <em>Propositions as Types</em> (Communications of the ACM,
+2015) and <em>Theorems for Free!</em> (1989); Siek and Taha on gradual
+typing; Wright and Felleisen, <em>A Syntactic Approach to Type
+Soundness</em>.</li>
+<li>Nystrom, <em>Crafting Interpreters</em> for the front end that feeds
+a type checker: <a
+href="https://craftinginterpreters.com">https://craftinginterpreters.com</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Type safety means progress plus preservation; it rules out a class
+of failures only.</li>
+<li>HM inference is constraint generation plus unification; the occurs
+check rejects infinite types.</li>
+<li>Variance: results covariant, parameters contravariant, mutable
+containers invariant.</li>
+<li>Types are proofs (Curry-Howard); richer types buy stronger
+guarantees at a complexity price.</li>
+<li>Parse at the boundary into types that cannot represent invalid
+states.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

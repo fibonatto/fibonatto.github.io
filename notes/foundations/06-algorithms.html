@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Algorithms</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/06-algorithms.html">
+  <meta property="og:title" content="Algorithms">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/06-algorithms.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Algorithms</h1>
+<h2 id="algorithms-1">Algorithms</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>You will rarely invent a new algorithm. You will often:</p>
+<ul>
+<li>recognize that a product requirement is a known problem (shortest
+path, matching, scheduling, top-k, deduplication, consensus) and pick
+the right tool;</li>
+<li>choose between an exact algorithm, an approximation, and a heuristic
+given data size, latency, and correctness needs;</li>
+<li>find the algorithmic cause of an incident (a quadratic loop, a
+pathological hash input, a missing index, a retry storm);</li>
+<li>design test strategies for algorithmic code (brute-force oracles,
+property-based tests, adversarial inputs).</li>
+</ul>
+<p>The techniques below are the common vocabulary. Complexity analysis
+is in <code class="verbatim">04_complexity.org</code> and the structures
+algorithms rely on are in <code
+class="verbatim">05_data-structures.org</code>; all code here is Python
+and has been run against brute-force checks.</p>
+<h3 id="a-method-for-attacking-problems">1. A method for attacking
+problems</h3>
+<ol>
+<li>State the problem precisely: inputs, outputs, constraints, size
+limits, what "best" means.</li>
+<li>Look for a reduction to a known problem; identify the structure
+(graph? order? overlapping subproblems? monotone predicate?).</li>
+<li>Write a correct brute-force solution first; it becomes the oracle
+for testing.</li>
+<li>Pick a technique (below), state the invariant that makes it correct,
+and the cost.</li>
+<li>Test against the oracle on small random inputs and on edge cases
+(empty, one element, duplicates, maximum size, adversarial order).</li>
+<li>Measure on realistic data; only then optimize.</li>
+</ol>
+<h3 id="sorting-and-selection">2. Sorting and selection</h3>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Time (worst / typical)</th>
+<th>Space</th>
+<th>Stable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Insertion sort</td>
+<td>n<sup>2</sup> / n<sup>2</sup> (n when sorted)</td>
+<td>O(1)</td>
+<td>yes</td>
+<td>Best for tiny or nearly sorted inputs</td>
+</tr>
+<tr>
+<td>Merge sort</td>
+<td>n log n</td>
+<td>O(n)</td>
+<td>yes</td>
+<td>Predictable; good for linked lists and external sort</td>
+</tr>
+<tr>
+<td>Heap sort</td>
+<td>n log n</td>
+<td>O(1)</td>
+<td>no</td>
+<td>In place with worst-case guarantee; poor locality</td>
+</tr>
+<tr>
+<td>Quicksort</td>
+<td>n<sup>2</sup> / n log n</td>
+<td>O(log n)</td>
+<td>no</td>
+<td>Fast in practice; needs good pivots</td>
+</tr>
+<tr>
+<td>Counting/radix</td>
+<td>O(n + k) / O(d (n + k))</td>
+<td>O(n + k)</td>
+<td>yes</td>
+<td>Beats comparison sorts when keys are small integers</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Libraries use hybrids: introsort (quicksort with a heap-sort
+fallback), pattern-defeating quicksort, and Timsort (runs of sorted data
+merged, stable). Prefer the library sort; implement your own only to
+learn.</li>
+<li><strong>Selection</strong>: the k-th smallest in expected O(n) with
+quickselect, and worst-case O(n) with median of medians.
+<strong>Top-k</strong> of a stream: a heap of size k, O(n log k).</li>
+<li><strong>External sort</strong>: sort runs that fit in memory, then
+k-way merge; the basis of database sorting and MapReduce shuffles.</li>
+<li>Stability matters when sorting by multiple keys.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> quickselect(xs, k):                    <span class="co"># k-th smallest, 0-based, expected O(n)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    xs <span class="op">=</span> <span class="bu">list</span>(xs)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        pivot <span class="op">=</span> random.choice(xs)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        lo <span class="op">=</span> [x <span class="cf">for</span> x <span class="kw">in</span> xs <span class="cf">if</span> x <span class="op">&lt;</span> pivot]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        eq <span class="op">=</span> [x <span class="cf">for</span> x <span class="kw">in</span> xs <span class="cf">if</span> x <span class="op">==</span> pivot]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        hi <span class="op">=</span> [x <span class="cf">for</span> x <span class="kw">in</span> xs <span class="cf">if</span> x <span class="op">&gt;</span> pivot]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> k <span class="op">&lt;</span> <span class="bu">len</span>(lo):</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            xs <span class="op">=</span> lo</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> k <span class="op">&lt;</span> <span class="bu">len</span>(lo) <span class="op">+</span> <span class="bu">len</span>(eq):</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> pivot</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            k <span class="op">-=</span> <span class="bu">len</span>(lo) <span class="op">+</span> <span class="bu">len</span>(eq)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>            xs <span class="op">=</span> hi</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">11</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">200</span>):</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    xs <span class="op">=</span> [random.randint(<span class="dv">0</span>, <span class="dv">20</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(random.randint(<span class="dv">1</span>, <span class="dv">30</span>))]</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    k <span class="op">=</span> random.randrange(<span class="bu">len</span>(xs))</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> quickselect(xs, k) <span class="op">==</span> <span class="bu">sorted</span>(xs)[k]</span></code></pre></div>
+<h3 id="searching-and-binary-search-on-the-answer">3. Searching and
+binary search on the answer</h3>
+<p>Binary search needs a <em>monotone predicate</em>: false for a
+prefix, then true. Write it with an explicit invariant (see <code
+class="verbatim">02_logic-and-proofs.org</code>) and compute the
+midpoint as <code class="verbatim">lo + (hi - lo) / 2</code> to avoid
+overflow in fixed-width integers.</p>
+<p>The same pattern searches over <em>answers</em> instead of array
+indices: "what is the smallest capacity such that the work fits in D
+days?" Test feasibility for a candidate (a greedy check), then binary
+search the candidate.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> min_capacity(weights, days):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> feasible(cap):</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        used, cur <span class="op">=</span> <span class="dv">1</span>, <span class="dv">0</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> w <span class="kw">in</span> weights:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cur <span class="op">+</span> w <span class="op">&gt;</span> cap:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                used <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                cur <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            cur <span class="op">+=</span> w</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> used <span class="op">&lt;=</span> days</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    lo, hi <span class="op">=</span> <span class="bu">max</span>(weights), <span class="bu">sum</span>(weights)    <span class="co"># answer lies in [lo, hi]</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> lo <span class="op">&lt;</span> hi:</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        mid <span class="op">=</span> lo <span class="op">+</span> (hi <span class="op">-</span> lo) <span class="op">//</span> <span class="dv">2</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> feasible(mid):</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            hi <span class="op">=</span> mid</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            lo <span class="op">=</span> mid <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> lo</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> min_capacity([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">7</span>, <span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">10</span>], <span class="dv">5</span>) <span class="op">==</span> <span class="dv">15</span></span></code></pre></div>
+<h3 id="divide-and-conquer">4. Divide and conquer</h3>
+<p>Split into independent subproblems, solve recursively, combine.
+Examples: merge sort, quicksort, binary search, fast exponentiation,
+Karatsuba and Strassen multiplication, closest pair of points, the FFT
+(polynomial multiplication in O(n log n)), and parallel reductions. The
+analysis is the master theorem (<code
+class="verbatim">04_complexity.org</code>). Independent subproblems also
+parallelize naturally (fork-join), but watch the sequential combine step
+(Amdahl).</p>
+<h3 id="greedy-algorithms">5. Greedy algorithms</h3>
+<p>A greedy algorithm makes the locally best choice and never
+reconsiders. It is correct only when a proof (usually an <em>exchange
+argument</em> or a <em>matroid</em> structure) shows an optimal solution
+contains the greedy choice.</p>
+<ul>
+<li>Interval scheduling (maximize the number of non-overlapping
+intervals): sort by finish time.</li>
+<li>Huffman coding: repeatedly merge the two lowest-weight nodes (see
+<code class="verbatim">03_data-representation.org</code>).</li>
+<li>Minimum spanning tree: Kruskal (sort edges, add if no cycle) and
+Prim (grow from a vertex).</li>
+<li>Dijkstra's shortest paths with non-negative weights.</li>
+<li>Fractional knapsack: take by value/weight ratio. (The 0/1 knapsack
+is <em>not</em> greedy-solvable; it needs dynamic programming.)</li>
+</ul>
+<p>If you cannot prove a greedy choice safe, find a counterexample or
+use DP.</p>
+<h3 id="dynamic-programming">6. Dynamic programming</h3>
+<p>Use DP when the problem has <em>optimal substructure</em> (an optimal
+solution contains optimal solutions to subproblems) and <em>overlapping
+subproblems</em> (the recursion revisits the same subproblem).
+Steps:</p>
+<ol>
+<li>Define the state (what parameters identify a subproblem) and what
+the value means.</li>
+<li>Write the recurrence over smaller states, including base cases.</li>
+<li>Choose an evaluation order: memoized recursion (top-down) or table
+filling (bottom-up).</li>
+<li>Count states times work per state. Reduce space by keeping only the
+rows you need.</li>
+<li>Recover the solution (not just the value) with parent pointers or by
+retracing the table.</li>
+</ol>
+<p>Classics: longest common subsequence, edit distance, 0/1 knapsack
+(pseudo-polynomial O(nW)), longest increasing subsequence (O(n log n)
+with binary search), matrix-chain multiplication, shortest paths on
+DAGs, optimal binary search trees, subset-sum, DP over bitmasks for the
+traveling salesman in O(2<sup>n</sup> n<sup>2</sup>), and DP on trees.
+Viterbi decoding, sequence alignment, and many text-layout and
+scheduling problems are DP.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> bisect, itertools, random</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> edit_distance(a, b):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    prev <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="bu">len</span>(b) <span class="op">+</span> <span class="dv">1</span>))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, ca <span class="kw">in</span> <span class="bu">enumerate</span>(a, <span class="dv">1</span>):</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        cur <span class="op">=</span> [i]</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j, cb <span class="kw">in</span> <span class="bu">enumerate</span>(b, <span class="dv">1</span>):</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            cur.append(<span class="bu">min</span>(prev[j] <span class="op">+</span> <span class="dv">1</span>, cur[j <span class="op">-</span> <span class="dv">1</span>] <span class="op">+</span> <span class="dv">1</span>, prev[j <span class="op">-</span> <span class="dv">1</span>] <span class="op">+</span> (ca <span class="op">!=</span> cb)))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        prev <span class="op">=</span> cur</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lis_length(xs):                        <span class="co"># strictly increasing, O(n log n)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    tails <span class="op">=</span> []</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> x <span class="kw">in</span> xs:</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> bisect.bisect_left(tails, x)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> i <span class="op">==</span> <span class="bu">len</span>(tails):</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            tails.append(x)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            tails[i] <span class="op">=</span> x</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">len</span>(tails)</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> knapsack(weights, values, cap):</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    best <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> (cap <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> w, v <span class="kw">in</span> <span class="bu">zip</span>(weights, values):</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(cap, w <span class="op">-</span> <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>):    <span class="co"># iterate downward: each item used at most once</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>            best[c] <span class="op">=</span> <span class="bu">max</span>(best[c], best[c <span class="op">-</span> w] <span class="op">+</span> v)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> best[cap]</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> edit_distance(<span class="st">&quot;kitten&quot;</span>, <span class="st">&quot;sitting&quot;</span>) <span class="op">==</span> <span class="dv">3</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> lis_length([<span class="dv">10</span>, <span class="dv">9</span>, <span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">3</span>, <span class="dv">7</span>, <span class="dv">101</span>, <span class="dv">18</span>]) <span class="op">==</span> <span class="dv">4</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> knapsack([<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>], [<span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">7</span>], <span class="dv">7</span>) <span class="op">==</span> <span class="dv">9</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">5</span>)                             <span class="co"># check knapsack against brute force</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>):</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> random.randint(<span class="dv">1</span>, <span class="dv">8</span>)</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    ws <span class="op">=</span> [random.randint(<span class="dv">1</span>, <span class="dv">6</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n)]</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    vs <span class="op">=</span> [random.randint(<span class="dv">1</span>, <span class="dv">9</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n)]</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    cap <span class="op">=</span> random.randint(<span class="dv">0</span>, <span class="dv">15</span>)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    brute <span class="op">=</span> <span class="bu">max</span>(<span class="bu">sum</span>(v <span class="cf">for</span> v, take <span class="kw">in</span> <span class="bu">zip</span>(vs, mask) <span class="cf">if</span> take)</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> mask <span class="kw">in</span> itertools.product([<span class="dv">0</span>, <span class="dv">1</span>], repeat<span class="op">=</span>n)</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="bu">sum</span>(w <span class="cf">for</span> w, take <span class="kw">in</span> <span class="bu">zip</span>(ws, mask) <span class="cf">if</span> take) <span class="op">&lt;=</span> cap)</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> knapsack(ws, vs, cap) <span class="op">==</span> brute</span></code></pre></div>
+<h3 id="graph-algorithms">7. Graph algorithms</h3>
+<p>Representation choice drives performance (<code
+class="verbatim">05_data-structures.org</code>). Core toolkit:</p>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Algorithm</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reachability, unweighted shortest path</td>
+<td>BFS</td>
+<td>O(V + E)</td>
+</tr>
+<tr>
+<td>Connectivity, cycle detection, ordering</td>
+<td>DFS</td>
+<td>O(V + E)</td>
+</tr>
+<tr>
+<td>Topological order of a DAG</td>
+<td>Kahn's algorithm or DFS finish order</td>
+<td>O(V + E)</td>
+</tr>
+<tr>
+<td>Strongly connected components</td>
+<td>Tarjan or Kosaraju</td>
+<td>O(V + E)</td>
+</tr>
+<tr>
+<td>Single-source shortest paths, non-negative weights</td>
+<td>Dijkstra with a heap</td>
+<td>O((V + E) log V)</td>
+</tr>
+<tr>
+<td>Shortest paths with negative edges</td>
+<td>Bellman-Ford (detects negative cycles)</td>
+<td>O(V E)</td>
+</tr>
+<tr>
+<td>All-pairs shortest paths</td>
+<td>Floyd-Warshall / Johnson</td>
+<td>O(V<sup>3</sup>) / O(V E + V<sup>2</sup> log V)</td>
+</tr>
+<tr>
+<td>Minimum spanning tree</td>
+<td>Kruskal (union-find) / Prim</td>
+<td>O(E log V)</td>
+</tr>
+<tr>
+<td>Maximum flow / minimum cut</td>
+<td>Edmonds-Karp, Dinic</td>
+<td>O(V E<sup>2</sup>) / O(V<sup>2</sup> E)</td>
+</tr>
+<tr>
+<td>Bipartite matching</td>
+<td>Hopcroft-Karp, or flow</td>
+<td>O(E sqrt V)</td>
+</tr>
+</tbody>
+</table>
+<p>Max-flow min-cut generalizes many problems: assignment, project
+selection, image segmentation, and network capacity. Many "hard-looking"
+allocation problems reduce to flow.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> heapq</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> deque</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dijkstra(adj, s):</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    dist <span class="op">=</span> {s: <span class="dv">0</span>}</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    pq <span class="op">=</span> [(<span class="dv">0</span>, s)]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> pq:</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        d, u <span class="op">=</span> heapq.heappop(pq)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> d <span class="op">&gt;</span> dist.get(u, <span class="bu">float</span>(<span class="st">&quot;inf&quot;</span>)):</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span>                        <span class="co"># stale queue entry</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v, w <span class="kw">in</span> adj.get(u, []):</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            nd <span class="op">=</span> d <span class="op">+</span> w</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> nd <span class="op">&lt;</span> dist.get(v, <span class="bu">float</span>(<span class="st">&quot;inf&quot;</span>)):</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                dist[v] <span class="op">=</span> nd</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                heapq.heappush(pq, (nd, v))</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dist</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>adj <span class="op">=</span> {<span class="st">&quot;a&quot;</span>: [(<span class="st">&quot;b&quot;</span>, <span class="dv">7</span>), (<span class="st">&quot;c&quot;</span>, <span class="dv">9</span>), (<span class="st">&quot;f&quot;</span>, <span class="dv">14</span>)], <span class="st">&quot;b&quot;</span>: [(<span class="st">&quot;a&quot;</span>, <span class="dv">7</span>), (<span class="st">&quot;c&quot;</span>, <span class="dv">10</span>), (<span class="st">&quot;d&quot;</span>, <span class="dv">15</span>)],</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;c&quot;</span>: [(<span class="st">&quot;a&quot;</span>, <span class="dv">9</span>), (<span class="st">&quot;b&quot;</span>, <span class="dv">10</span>), (<span class="st">&quot;d&quot;</span>, <span class="dv">11</span>), (<span class="st">&quot;f&quot;</span>, <span class="dv">2</span>)], <span class="st">&quot;d&quot;</span>: [(<span class="st">&quot;b&quot;</span>, <span class="dv">15</span>), (<span class="st">&quot;c&quot;</span>, <span class="dv">11</span>), (<span class="st">&quot;e&quot;</span>, <span class="dv">6</span>)],</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;e&quot;</span>: [(<span class="st">&quot;d&quot;</span>, <span class="dv">6</span>), (<span class="st">&quot;f&quot;</span>, <span class="dv">9</span>)], <span class="st">&quot;f&quot;</span>: [(<span class="st">&quot;a&quot;</span>, <span class="dv">14</span>), (<span class="st">&quot;c&quot;</span>, <span class="dv">2</span>), (<span class="st">&quot;e&quot;</span>, <span class="dv">9</span>)]}</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> dijkstra(adj, <span class="st">&quot;a&quot;</span>) <span class="op">==</span> {<span class="st">&quot;a&quot;</span>: <span class="dv">0</span>, <span class="st">&quot;b&quot;</span>: <span class="dv">7</span>, <span class="st">&quot;c&quot;</span>: <span class="dv">9</span>, <span class="st">&quot;f&quot;</span>: <span class="dv">11</span>, <span class="st">&quot;d&quot;</span>: <span class="dv">20</span>, <span class="st">&quot;e&quot;</span>: <span class="dv">20</span>}</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> topo_order(adj):                        <span class="co"># Kahn; returns None if there is a cycle</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    indeg <span class="op">=</span> {u: <span class="dv">0</span> <span class="cf">for</span> u <span class="kw">in</span> adj}</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> u <span class="kw">in</span> adj:</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v <span class="kw">in</span> adj[u]:</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>            indeg[v] <span class="op">=</span> indeg.get(v, <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> deque(u <span class="cf">for</span> u, d <span class="kw">in</span> indeg.items() <span class="cf">if</span> d <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> []</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> q:</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        u <span class="op">=</span> q.popleft()</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        out.append(u)</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v <span class="kw">in</span> adj.get(u, []):</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>            indeg[v] <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> indeg[v] <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>                q.append(v)</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out <span class="cf">if</span> <span class="bu">len</span>(out) <span class="op">==</span> <span class="bu">len</span>(indeg) <span class="cf">else</span> <span class="va">None</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> topo_order({<span class="st">&quot;a&quot;</span>: [<span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>], <span class="st">&quot;b&quot;</span>: [<span class="st">&quot;d&quot;</span>], <span class="st">&quot;c&quot;</span>: [<span class="st">&quot;d&quot;</span>], <span class="st">&quot;d&quot;</span>: []}) <span class="kw">in</span> ([<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>, <span class="st">&quot;d&quot;</span>], [<span class="st">&quot;a&quot;</span>, <span class="st">&quot;c&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;d&quot;</span>])</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> topo_order({<span class="st">&quot;a&quot;</span>: [<span class="st">&quot;b&quot;</span>], <span class="st">&quot;b&quot;</span>: [<span class="st">&quot;a&quot;</span>]}) <span class="kw">is</span> <span class="va">None</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UnionFind:</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, items):</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.parent <span class="op">=</span> {x: x <span class="cf">for</span> x <span class="kw">in</span> items}</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rank <span class="op">=</span> {x: <span class="dv">0</span> <span class="cf">for</span> x <span class="kw">in</span> items}</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> find(<span class="va">self</span>, x):</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="va">self</span>.parent[x] <span class="op">!=</span> x:</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.parent[x] <span class="op">=</span> <span class="va">self</span>.parent[<span class="va">self</span>.parent[x]]     <span class="co"># path halving</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> <span class="va">self</span>.parent[x]</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> union(<span class="va">self</span>, a, b):</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>        ra, rb <span class="op">=</span> <span class="va">self</span>.find(a), <span class="va">self</span>.find(b)</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ra <span class="op">==</span> rb:</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.rank[ra] <span class="op">&lt;</span> <span class="va">self</span>.rank[rb]:</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>            ra, rb <span class="op">=</span> rb, ra</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.parent[rb] <span class="op">=</span> ra</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.rank[ra] <span class="op">==</span> <span class="va">self</span>.rank[rb]:</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.rank[ra] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kruskal(nodes, edges):                  <span class="co"># edges: (weight, u, v)</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>    uf, total <span class="op">=</span> UnionFind(nodes), <span class="dv">0</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> w, u, v <span class="kw">in</span> <span class="bu">sorted</span>(edges):</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> uf.union(u, v):</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>            total <span class="op">+=</span> w</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> total</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> kruskal(<span class="st">&quot;abcd&quot;</span>, [(<span class="dv">1</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>), (<span class="dv">4</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;c&quot;</span>), (<span class="dv">3</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>), (<span class="dv">2</span>, <span class="st">&quot;c&quot;</span>, <span class="st">&quot;d&quot;</span>), (<span class="dv">5</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;d&quot;</span>)]) <span class="op">==</span> <span class="dv">6</span></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> max_flow(cap, s, t):                    <span class="co"># Edmonds-Karp on a dict-of-dicts of capacities</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    flow <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>    res <span class="op">=</span> {u: <span class="bu">dict</span>(vs) <span class="cf">for</span> u, vs <span class="kw">in</span> cap.items()}</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> u <span class="kw">in</span> <span class="bu">list</span>(res):</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v <span class="kw">in</span> <span class="bu">list</span>(res[u]):</span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>            res.setdefault(v, {}).setdefault(u, <span class="dv">0</span>)</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>        parent, q <span class="op">=</span> {s: <span class="va">None</span>}, deque([s])</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> q <span class="kw">and</span> t <span class="kw">not</span> <span class="kw">in</span> parent:</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>            u <span class="op">=</span> q.popleft()</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> v, c <span class="kw">in</span> res[u].items():</span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> c <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">and</span> v <span class="kw">not</span> <span class="kw">in</span> parent:</span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>                    parent[v] <span class="op">=</span> u</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>                    q.append(v)</span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> t <span class="kw">not</span> <span class="kw">in</span> parent:</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> flow</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>        path, v <span class="op">=</span> [], t</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> parent[v] <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>            path.append((parent[v], v))</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>            v <span class="op">=</span> parent[v]</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>        push <span class="op">=</span> <span class="bu">min</span>(res[u][v] <span class="cf">for</span> u, v <span class="kw">in</span> path)</span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> u, v <span class="kw">in</span> path:</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>            res[u][v] <span class="op">-=</span> push</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>            res[v][u] <span class="op">+=</span> push</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>        flow <span class="op">+=</span> push</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> max_flow({<span class="st">&quot;s&quot;</span>: {<span class="st">&quot;a&quot;</span>: <span class="dv">3</span>, <span class="st">&quot;b&quot;</span>: <span class="dv">2</span>}, <span class="st">&quot;a&quot;</span>: {<span class="st">&quot;t&quot;</span>: <span class="dv">2</span>, <span class="st">&quot;b&quot;</span>: <span class="dv">1</span>}, <span class="st">&quot;b&quot;</span>: {<span class="st">&quot;t&quot;</span>: <span class="dv">3</span>}}, <span class="st">&quot;s&quot;</span>, <span class="st">&quot;t&quot;</span>) <span class="op">==</span> <span class="dv">5</span></span></code></pre></div>
+<h3 id="string-algorithms">8. String algorithms</h3>
+<ul>
+<li><strong>KMP</strong> and the Z-algorithm find a pattern in O(n + m)
+using a failure/prefix function; <strong>Rabin-Karp</strong> uses a
+rolling hash (expected linear, good for multiple patterns);
+<strong>Aho-Corasick</strong> matches many patterns at once (the basis
+of many scanners).</li>
+<li><strong>Tries</strong> and radix trees index prefixes (autocomplete,
+routing tables); <strong>suffix arrays</strong> and <strong>suffix
+automata</strong> answer substring queries in sub-linear time after
+preprocessing.</li>
+<li><strong>Edit distance</strong> and alignment (DP) power diff tools,
+spell-checkers, and bioinformatics.</li>
+<li><strong>Regular expressions</strong> compile to automata.
+Backtracking engines can take exponential time on crafted inputs
+(ReDoS); automata-based engines (RE2-style) guarantee linear time (see
+<code class="verbatim">07_theory-of-computation.org</code>).</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prefix_function(p):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    pi <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> <span class="bu">len</span>(p)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="bu">len</span>(p)):</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> pi[i <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> k <span class="kw">and</span> p[i] <span class="op">!=</span> p[k]:</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>            k <span class="op">=</span> pi[k <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> p[i] <span class="op">==</span> p[k]:</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>            k <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        pi[i] <span class="op">=</span> k</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pi</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kmp_find_all(text, p):</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> p:</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="bu">len</span>(text) <span class="op">+</span> <span class="dv">1</span>))</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    pi, k, out <span class="op">=</span> prefix_function(p), <span class="dv">0</span>, []</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, ch <span class="kw">in</span> <span class="bu">enumerate</span>(text):</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> k <span class="kw">and</span> ch <span class="op">!=</span> p[k]:</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            k <span class="op">=</span> pi[k <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ch <span class="op">==</span> p[k]:</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>            k <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> k <span class="op">==</span> <span class="bu">len</span>(p):</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>            out.append(i <span class="op">-</span> k <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            k <span class="op">=</span> pi[k <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">2</span>)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">300</span>):</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> <span class="st">&quot;&quot;</span>.join(random.choice(<span class="st">&quot;ab&quot;</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(random.randint(<span class="dv">0</span>, <span class="dv">20</span>)))</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> <span class="st">&quot;&quot;</span>.join(random.choice(<span class="st">&quot;ab&quot;</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(random.randint(<span class="dv">1</span>, <span class="dv">4</span>)))</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    brute <span class="op">=</span> [i <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(t) <span class="op">-</span> <span class="bu">len</span>(p) <span class="op">+</span> <span class="dv">1</span>) <span class="cf">if</span> t[i:i <span class="op">+</span> <span class="bu">len</span>(p)] <span class="op">==</span> p]</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> kmp_find_all(t, p) <span class="op">==</span> brute</span></code></pre></div>
+<h3 id="randomized-streaming-and-approximate-algorithms">9. Randomized,
+streaming, and approximate algorithms</h3>
+<p>At scale, exact answers are often unaffordable and unnecessary.</p>
+<ul>
+<li><strong>Sampling</strong>: reservoir sampling keeps a uniform random
+sample of k items from a stream of unknown length in O(k) memory.</li>
+<li><strong>Hashing-based sketches</strong>: Bloom filter (set
+membership, no false negatives), Count-Min sketch (frequency estimates),
+HyperLogLog (distinct counts in kilobytes), MinHash and SimHash
+(similarity). See <code
+class="verbatim">05_data-structures.org</code>.</li>
+<li><strong>Load balancing</strong>: the "power of two choices" (pick
+the less loaded of two random servers) cuts maximum load from about log
+n / log log n to about log log n.</li>
+<li><strong>Consistent hashing</strong> and <strong>rendezvous
+hashing</strong> move few keys when nodes change.</li>
+<li>Randomization defeats adversarial inputs, but only if the adversary
+cannot see your seed or function.</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> reservoir_sample(stream, k, rng):</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> []</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, x <span class="kw">in</span> <span class="bu">enumerate</span>(stream):</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> i <span class="op">&lt;</span> k:</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>            sample.append(x)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            j <span class="op">=</span> rng.randint(<span class="dv">0</span>, i)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> j <span class="op">&lt;</span> k:</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                sample[j] <span class="op">=</span> x</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sample</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> random.Random(<span class="dv">42</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>counts <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> <span class="dv">10</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">20000</span>):</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    counts[reservoir_sample(<span class="bu">range</span>(<span class="dv">10</span>), <span class="dv">1</span>, rng)[<span class="dv">0</span>]] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">all</span>(<span class="dv">1700</span> <span class="op">&lt;</span> c <span class="op">&lt;</span> <span class="dv">2300</span> <span class="cf">for</span> c <span class="kw">in</span> counts)          <span class="co"># each item chosen about 10% of the time</span></span></code></pre></div>
+<h3 id="algorithms-engineering-at-staff-scope">10. Algorithms
+engineering at Staff scope</h3>
+<ul>
+<li><strong>Complexity attacks</strong>: hash flooding (use randomized
+or keyed hashes such as SipHash), regex backtracking (ReDoS),
+decompression bombs, algorithmic blowup in parsers (deeply nested
+input). Treat input size and structure as untrusted.</li>
+<li><strong>Data layout over cleverness</strong>: a linear scan over a
+contiguous array often beats a pointer-based structure until n is
+large.</li>
+<li><strong>Pagination and top-k</strong>: offset pagination degrades
+with deep pages (O(offset)); keyset pagination keeps cost constant.</li>
+<li><strong>Idempotence and determinism</strong> make algorithms
+retryable and testable; floating-point reductions in parallel are not
+bitwise deterministic unless ordered.</li>
+<li><strong>Differential testing</strong>: compare a fast implementation
+to a slow obviously-correct one on random and adversarial inputs.</li>
+<li><strong>Fallbacks</strong>: for heuristics and solvers, keep a time
+limit, a measurable quality metric, and a safe default.</li>
+<li><strong>Explain the trade-off in writing</strong>: "we use a
+sort-merge join because inputs exceed memory; a hash join would be
+faster if the build side fit in memory; we revisit at 10x data."</li>
+</ul>
+<h3 id="self-check">11. Self-check</h3>
+<ol>
+<li>Give a graph formulation for each: build ordering, detecting a
+deadlock in a lock graph, assigning reviewers to pull requests, finding
+the cheapest network to connect data centers, the minimum number of
+replicas to cut.</li>
+<li>Why does Dijkstra fail with negative edges, and what do you use
+instead?</li>
+<li>Write the DP for "can this multiset of integers be split into two
+equal-sum halves?" and state its complexity. Is it polynomial?</li>
+<li>Show that the greedy "pick the largest coin" fails for coins {1, 3,
+4} and target 6.</li>
+<li>How would you compute the 99th percentile of a stream you can only
+scan once, with a few kilobytes of memory?</li>
+<li>An endpoint becomes slow only for certain tenants. List three
+algorithmic causes you would check.</li>
+</ol>
+<h3 id="exercises">12. Exercises</h3>
+<p>Work in order; always write the brute-force oracle first.</p>
+<ul>
+<li>Warm-up: binary search (lower bound, upper bound, on the answer),
+two pointers, sliding window, prefix sums.</li>
+<li>Core, graphs: BFS shortest path on a grid; topological sort with
+cycle report; Dijkstra; Kruskal; strongly connected components;
+bipartite matching via flow.</li>
+<li>Core, DP: LCS with reconstruction; edit distance; coin change (count
+and min coins); LIS; matrix-chain order; knapsack with traceback.</li>
+<li>Core, strings: KMP; trie with autocomplete; Rabin-Karp for multiple
+patterns.</li>
+<li>Stretch: implement a Bloom filter, a Count-Min sketch, and
+HyperLogLog; measure error against exact counts.</li>
+<li>Stretch: implement consistent hashing with virtual nodes; measure
+key movement when adding a node.</li>
+<li>Stretch: solve 30 problems from a graded problem list (for example
+the exercises in Erickson's book, which are proof-oriented) and write
+the correctness argument for each.</li>
+</ul>
+<h3 id="resources">13. Resources</h3>
+<ul>
+<li>MIT 6.006 <em>Introduction to Algorithms</em>, Spring 2020 (lectures
+on hashing, sorting, trees, heaps, BFS/DFS, shortest paths, dynamic
+programming, complexity; with problem sets and solutions): <a
+href="https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/pages/lecture-notes">https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/pages/lecture-notes</a></li>
+<li>Erickson, <em>Algorithms</em> (recursion, backtracking, DP, greedy,
+graphs, DFS, MST, shortest paths, flows, NP-hardness; free; assumes
+basic data structures): <a
+href="https://jeffe.cs.illinois.edu/teaching/algorithms/">https://jeffe.cs.illinois.edu/teaching/algorithms/</a></li>
+<li>Morin, <em>Open Data Structures</em> (free, implementations in
+several languages; analysis of the structures algorithms use): <a
+href="https://opendatastructures.org/ods-cpp.pdf">https://opendatastructures.org/ods-cpp.pdf</a></li>
+<li>Cormen, Leiserson, Rivest, Stein, <em>Introduction to
+Algorithms</em>, 4th edition; Skiena, <em>The Algorithm Design
+Manual</em> (strong on problem recognition and a catalog of problems);
+Kleinberg and Tardos, <em>Algorithm Design</em>.</li>
+<li>ACM/IEEE-CS/AAAI <em>Computer Science Curricula 2023</em> for the
+expected scope of algorithmic foundations: <a
+href="https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf">https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Recognize the problem class first; write a brute-force oracle; then
+optimize.</li>
+<li>Greedy needs a proof; DP needs optimal substructure and a defined
+state; binary search needs a monotone predicate.</li>
+<li>Graph algorithms plus flow cover a surprising share of engineering
+problems.</li>
+<li>At scale prefer sketches, sampling, and approximations, and defend
+against adversarial inputs.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

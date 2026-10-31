@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The C Standard Library</title>
+  <meta name="description" content="A practical reference to the C standard library and its most important headers. Covers string and memory operations, safe copying, numeric parsing and error handling, sorting and searching, random numbers, environment access, character classification, mathematics, time measurement, variadic functions, signals, C23 checked arithmetic, and the distinction between ISO C, POSIX, and platform-specific extensions.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/06-standard-library.html">
+  <meta property="og:title" content="The C Standard Library">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/06-standard-library.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>The C Standard Library</h1>
+<h2 id="the-c-standard-library-1">The C Standard Library</h2>
+<h3 id="headers-at-a-glance">1. Headers at a glance</h3>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Provides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">&lt;stddef.h&gt;</code></td>
+<td><code class="verbatim">size_t</code>, <code
+class="verbatim">ptrdiff_t</code>, <code class="verbatim">NULL</code>,
+<code class="verbatim">offsetof</code>, <code
+class="verbatim">max_align_t</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;stdint.h&gt;</code></td>
+<td>Fixed-width integers, <code class="verbatim">SIZE_MAX</code>, <code
+class="verbatim">INTPTR_MAX</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;inttypes.h&gt;</code></td>
+<td><code class="verbatim">PRId64</code>, <code
+class="verbatim">strtoimax</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;limits.h&gt;</code></td>
+<td><code class="verbatim">INT_MAX</code>, <code
+class="verbatim">CHAR_BIT</code>, …</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;float.h&gt;</code></td>
+<td><code class="verbatim">DBL_EPSILON</code>, <code
+class="verbatim">FLT_MAX</code>, …</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;stdbool.h&gt;</code></td>
+<td><code class="verbatim">bool</code>, <code
+class="verbatim">true</code>, <code class="verbatim">false</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;stdlib.h&gt;</code></td>
+<td>Allocation, conversions, <code class="verbatim">qsort</code>, <code
+class="verbatim">bsearch</code>, <code class="verbatim">exit</code>,
+<code class="verbatim">getenv</code>, <code
+class="verbatim">rand</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;string.h&gt;</code></td>
+<td>Memory and string functions</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;stdio.h&gt;</code></td>
+<td>Streams and formatted I/O (see <code
+class="verbatim">07_io-and-errors.org</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;ctype.h&gt;</code></td>
+<td>Character classification</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;math.h&gt;</code></td>
+<td>Math functions (link with <code class="verbatim">-lm</code> on
+Linux)</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;time.h&gt;</code></td>
+<td>Time and date</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;errno.h&gt;</code></td>
+<td><code class="verbatim">errno</code>, <code
+class="verbatim">EINVAL</code>, …</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;assert.h&gt;</code></td>
+<td><code class="verbatim">assert</code>, <code
+class="verbatim">static_assert</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;stdarg.h&gt;</code></td>
+<td>Variadic argument access</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;setjmp.h&gt;</code></td>
+<td>Non-local jumps</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;signal.h&gt;</code></td>
+<td>Signal handling</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;locale.h&gt;</code></td>
+<td>Locale (affects <code class="verbatim">printf</code>, <code
+class="verbatim">ctype</code>, <code
+class="verbatim">strtod</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;stdatomic.h&gt;</code>, <code
+class="verbatim">&lt;threads.h&gt;</code></td>
+<td>Atomics and threads (see <code
+class="verbatim">11_concurrency.org</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;stdckdint.h&gt;</code></td>
+<td>C23: checked integer arithmetic (<code
+class="verbatim">ckd_add</code> …)</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;wchar.h&gt;</code>, <code
+class="verbatim">&lt;uchar.h&gt;</code>, <code
+class="verbatim">&lt;wctype.h&gt;</code></td>
+<td>Wide and Unicode characters</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;complex.h&gt;</code>, <code
+class="verbatim">&lt;tgmath.h&gt;</code>, <code
+class="verbatim">&lt;fenv.h&gt;</code></td>
+<td>Complex numbers, generic math, floating-point environment</td>
+</tr>
+<tr>
+<td><code class="verbatim">&lt;iso646.h&gt;</code>, <code
+class="verbatim">&lt;stdalign.h&gt;</code>, <code
+class="verbatim">&lt;stdnoreturn.h&gt;</code></td>
+<td>Spelling aliases, alignment, <code
+class="verbatim">noreturn</code></td>
+</tr>
+</tbody>
+</table>
+<p>POSIX adds more (<code class="verbatim">&lt;unistd.h&gt;</code>,
+<code class="verbatim">&lt;fcntl.h&gt;</code>, <code
+class="verbatim">&lt;pthread.h&gt;</code>, <code
+class="verbatim">&lt;sys/stat.h&gt;</code>, <code
+class="verbatim">&lt;dirent.h&gt;</code>, …), which are not part of ISO
+C.</p>
+<h3 id="string.h">2. &lt;string.h&gt;</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>strlen<span class="op">(</span>s<span class="op">);</span>                    <span class="co">/* length without the &#39;\0&#39;; O(n) */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>strcmp<span class="op">(</span>a<span class="op">,</span> b<span class="op">);</span>                 <span class="co">/* &lt;0, 0, &gt;0; equal iff 0 */</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>strncmp<span class="op">(</span>a<span class="op">,</span> b<span class="op">,</span> n<span class="op">);</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>strchr<span class="op">(</span>s<span class="op">,</span> c<span class="op">);</span>  strrchr<span class="op">(</span>s<span class="op">,</span> c<span class="op">);</span> <span class="co">/* first/last occurrence of a char, or NULL */</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>strstr<span class="op">(</span>hay<span class="op">,</span> needle<span class="op">);</span>          <span class="co">/* substring search, or NULL */</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>strspn<span class="op">(</span>s<span class="op">,</span> accept<span class="op">);</span>  strcspn<span class="op">(</span>s<span class="op">,</span> reject<span class="op">);</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>memchr<span class="op">(</span>p<span class="op">,</span> c<span class="op">,</span> n<span class="op">);</span></span></code></pre></div>
+<p>Functions to be careful with:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Problem</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">strcpy</code>, <code
+class="verbatim">strcat</code></td>
+<td>No bounds check: overflows if the destination is too small</td>
+</tr>
+<tr>
+<td><code class="verbatim">strncpy</code></td>
+<td>Does not NUL-terminate if the source is <code
+class="verbatim">n</code> or longer; pads with zeros up to <code
+class="verbatim">n</code> otherwise. It is not a "safe strcpy"</td>
+</tr>
+<tr>
+<td><code class="verbatim">strncat</code></td>
+<td>Appends at most <code class="verbatim">n</code> characters
+<em>plus</em> a NUL; <code class="verbatim">n</code> is not the buffer
+size</td>
+</tr>
+<tr>
+<td><code class="verbatim">strtok</code></td>
+<td>Modifies its input and keeps hidden static state; not reentrant. Use
+<code class="verbatim">strtok_r</code> (POSIX) or <code
+class="verbatim">strsep</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">strdup</code></td>
+<td>POSIX, standard in C23; the result must be =free=d</td>
+</tr>
+</tbody>
+</table>
+<p>A bounded copy that always terminates:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> copy_str<span class="op">(</span><span class="dt">char</span> <span class="op">*</span>dst<span class="op">,</span> <span class="dt">size_t</span> dstsz<span class="op">,</span> <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>src<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> len <span class="op">=</span> strlen<span class="op">(</span>src<span class="op">);</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>dstsz <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> n <span class="op">=</span> len <span class="op">&lt;</span> dstsz <span class="op">-</span> <span class="dv">1</span> <span class="op">?</span> len <span class="op">:</span> dstsz <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        memcpy<span class="op">(</span>dst<span class="op">,</span> src<span class="op">,</span> n<span class="op">);</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        dst<span class="op">[</span>n<span class="op">]</span> <span class="op">=</span> <span class="ch">&#39;</span><span class="sc">\0</span><span class="ch">&#39;</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> len<span class="op">;</span>               <span class="co">/* &gt;= dstsz means truncated */</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code class="verbatim">strlcpy</code> and <code
+class="verbatim">strlcat</code> (BSD, glibc 2.38+) do this, but are not
+in ISO C. Often <code
+class="verbatim">snprintf(dst, size, "%s", src)</code> is the simplest
+correct option.</p>
+<h3 id="stdlib.h">3. &lt;stdlib.h&gt;</h3>
+<h4 id="number-parsing">Number parsing</h4>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>end<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>errno <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> v <span class="op">=</span> strtol<span class="op">(</span>s<span class="op">,</span> <span class="op">&amp;</span>end<span class="op">,</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>end <span class="op">==</span> s<span class="op">)</span>               <span class="op">{</span> <span class="co">/* no digits */</span> <span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span> <span class="cf">if</span> <span class="op">(*</span>end <span class="op">!=</span> <span class="ch">&#39;</span><span class="sc">\0</span><span class="ch">&#39;</span><span class="op">)</span>      <span class="op">{</span> <span class="co">/* trailing garbage */</span> <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>errno <span class="op">==</span> ERANGE<span class="op">)</span>   <span class="op">{</span> <span class="co">/* overflow: v is LONG_MAX or LONG_MIN */</span> <span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> d <span class="op">=</span> strtod<span class="op">(</span>s<span class="op">,</span> <span class="op">&amp;</span>end<span class="op">);</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="dt">unsigned</span> <span class="dt">long</span> <span class="dt">long</span> u <span class="op">=</span> strtoull<span class="op">(</span>s<span class="op">,</span> <span class="op">&amp;</span>end<span class="op">,</span> <span class="dv">16</span><span class="op">);</span></span></code></pre></div>
+<p>Avoid <code class="verbatim">atoi</code> and <code
+class="verbatim">atof</code>: they report no errors, and overflow is
+undefined. <code class="verbatim">strtol</code> takes a base (use <code
+class="verbatim">0</code> to accept <code class="verbatim">0x</code> and
+<code class="verbatim">0</code> prefixes).</p>
+<h4 id="sorting-and-searching">Sorting and searching</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> cmp_int<span class="op">(</span><span class="dt">const</span> <span class="dt">void</span> <span class="op">*</span>a<span class="op">,</span> <span class="dt">const</span> <span class="dt">void</span> <span class="op">*</span>b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> x <span class="op">=</span> <span class="op">*(</span><span class="dt">const</span> <span class="dt">int</span> <span class="op">*)</span>a<span class="op">,</span> y <span class="op">=</span> <span class="op">*(</span><span class="dt">const</span> <span class="dt">int</span> <span class="op">*)</span>b<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span>x <span class="op">&gt;</span> y<span class="op">)</span> <span class="op">-</span> <span class="op">(</span>x <span class="op">&lt;</span> y<span class="op">);</span>             <span class="co">/* never x - y: it can overflow */</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>qsort<span class="op">(</span>arr<span class="op">,</span> n<span class="op">,</span> <span class="kw">sizeof</span> arr<span class="op">[</span><span class="dv">0</span><span class="op">],</span> cmp_int<span class="op">);</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> key <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>hit <span class="op">=</span> bsearch<span class="op">(&amp;</span>key<span class="op">,</span> arr<span class="op">,</span> n<span class="op">,</span> <span class="kw">sizeof</span> arr<span class="op">[</span><span class="dv">0</span><span class="op">],</span> cmp_int<span class="op">);</span>   <span class="co">/* NULL if missing; array must be sorted */</span></span></code></pre></div>
+<p><code class="verbatim">qsort</code> is not stable and its comparator
+must define a consistent ordering (otherwise behavior is undefined).
+Sorting structs by a string field uses the same pattern with <code
+class="verbatim">strcmp</code>.</p>
+<h4 id="random-numbers">Random numbers</h4>
+<p><code class="verbatim">rand()</code> returns an integer in [0, <code
+class="verbatim">RAND_MAX=] (at least 32767), with low and unspecified quality. =srand(seed)</code>
+seeds it. Use it for toys; for statistics use a proper generator (such
+as xoshiro or PCG you implement), and for security use <code
+class="verbatim">getrandom</code>, <code
+class="verbatim">arc4random</code>, or <code
+class="verbatim">/dev/urandom</code>, never <code
+class="verbatim">rand</code>. Computing a bounded value with <code
+class="verbatim">rand() % n</code> is biased.</p>
+<h4 id="environment-and-process">Environment and process</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>home <span class="op">=</span> getenv<span class="op">(</span><span class="st">&quot;HOME&quot;</span><span class="op">);</span>        <span class="co">/* NULL if unset; do not modify the string */</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>atexit<span class="op">(</span>cleanup<span class="op">);</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>exit<span class="op">(</span>EXIT_FAILURE<span class="op">);</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> status <span class="op">=</span> system<span class="op">(</span><span class="st">&quot;ls&quot;</span><span class="op">);</span>                <span class="co">/* runs a shell command: avoid with untrusted input */</span></span></code></pre></div>
+<h3 id="ctype.h">4. &lt;ctype.h&gt;</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>isdigit<span class="op">((</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)</span>c<span class="op">);</span>   isalpha<span class="op">((</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)</span>c<span class="op">);</span>   isspace<span class="op">((</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)</span>c<span class="op">);</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>toupper<span class="op">((</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)</span>c<span class="op">);</span>   tolower<span class="op">((</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)</span>c<span class="op">);</span></span></code></pre></div>
+<p>Pass a value representable as <code
+class="verbatim">unsigned char</code> (or <code
+class="verbatim">EOF</code>); a negative <code
+class="verbatim">char</code> is undefined behavior. The functions are
+locale-dependent and work on single bytes, so they do not understand
+UTF-8 multi-byte characters.</p>
+<h3 id="math.h">5. &lt;math.h&gt;</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sqrt<span class="op">(</span>x<span class="op">);</span>  pow<span class="op">(</span>x<span class="op">,</span> y<span class="op">);</span>  fabs<span class="op">(</span>x<span class="op">);</span>  floor<span class="op">(</span>x<span class="op">);</span>  ceil<span class="op">(</span>x<span class="op">);</span>  round<span class="op">(</span>x<span class="op">);</span>  fmod<span class="op">(</span>x<span class="op">,</span> y<span class="op">);</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>sin<span class="op">(</span>x<span class="op">);</span>  cos<span class="op">(</span>x<span class="op">);</span>  atan2<span class="op">(</span>y<span class="op">,</span> x<span class="op">);</span>  exp<span class="op">(</span>x<span class="op">);</span>  log<span class="op">(</span>x<span class="op">);</span>  log10<span class="op">(</span>x<span class="op">);</span>  hypot<span class="op">(</span>x<span class="op">,</span> y<span class="op">);</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>isnan<span class="op">(</span>x<span class="op">);</span>  isinf<span class="op">(</span>x<span class="op">);</span>  isfinite<span class="op">(</span>x<span class="op">);</span></span></code></pre></div>
+<ul>
+<li>Link with <code class="verbatim">-lm</code> on Linux.</li>
+<li><code class="verbatim">abs</code> and <code
+class="verbatim">labs</code> are for integers (<code
+class="verbatim">&lt;stdlib.h&gt;</code>); <code
+class="verbatim">fabs</code> is for doubles (<code
+class="verbatim">&lt;math.h&gt;</code>).</li>
+<li>Domain errors (<code class="verbatim">sqrt(-1)</code>, <code
+class="verbatim">log(0)</code>) return NaN or infinity and may set <code
+class="verbatim">errno</code> or floating-point flags; check inputs if
+it matters.</li>
+<li><code class="verbatim">float</code> variants end in <code
+class="verbatim">f</code> (<code class="verbatim">sqrtf</code>), and
+<code class="verbatim">long double</code> variants in <code
+class="verbatim">l</code>.</li>
+</ul>
+<h3 id="time.h">6. &lt;time.h&gt;</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;time.h&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">time_t</span> now <span class="op">=</span> time<span class="op">(</span>NULL<span class="op">);</span>                       <span class="co">/* seconds since the epoch (usually) */</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>clock_t c0 <span class="op">=</span> clock<span class="op">();</span>                          <span class="co">/* CPU time used by the process, not wall time */</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> secs <span class="op">=</span> <span class="op">(</span><span class="dt">double</span><span class="op">)(</span>clock<span class="op">()</span> <span class="op">-</span> c0<span class="op">)</span> <span class="op">/</span> CLOCKS_PER_SEC<span class="op">;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> tm tm_utc<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>gmtime_r<span class="op">(&amp;</span>now<span class="op">,</span> <span class="op">&amp;</span>tm_utc<span class="op">);</span>                       <span class="co">/* POSIX; thread-safe */</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> out<span class="op">[</span><span class="dv">64</span><span class="op">];</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>strftime<span class="op">(</span>out<span class="op">,</span> <span class="kw">sizeof</span> out<span class="op">,</span> <span class="st">&quot;%Y-%m-</span><span class="sc">%d</span><span class="st"> %H:%M:%S&quot;</span><span class="op">,</span> <span class="op">&amp;</span>tm_utc<span class="op">);</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> timespec ts<span class="op">;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>timespec_get<span class="op">(&amp;</span>ts<span class="op">,</span> TIME_UTC<span class="op">);</span>                   <span class="co">/* C11: sub-second wall time */</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>clock_gettime<span class="op">(</span>CLOCK_MONOTONIC<span class="op">,</span> <span class="op">&amp;</span>ts<span class="op">);</span>           <span class="co">/* POSIX: use this to measure elapsed time */</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">gmtime</code> and <code
+class="verbatim">localtime</code> return a pointer to a shared static
+object; use <code class="verbatim">gmtime_r</code> / <code
+class="verbatim">localtime_r</code> (POSIX) in threaded code.</li>
+<li>The epoch and the width of <code class="verbatim">time_t</code> are
+not fixed by ISO C (64-bit nearly everywhere today).</li>
+<li>Wall-clock time can jump (NTP, daylight saving); measure intervals
+with a monotonic clock.</li>
+<li><code class="verbatim">difftime(t1, t0)</code> subtracts two <code
+class="verbatim">time_t</code> values portably.</li>
+</ul>
+<h3 id="stdarg.h-and-signal.h-briefly">7. &lt;stdarg.h&gt; and
+&lt;signal.h&gt; briefly</h3>
+<p>Variadic functions are covered in <code
+class="verbatim">03_functions.org</code>. Signals:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;signal.h&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">volatile</span> <span class="dt">sig_atomic_t</span> stop<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> on_sigint<span class="op">(</span><span class="dt">int</span> sig<span class="op">)</span> <span class="op">{</span> <span class="op">(</span><span class="dt">void</span><span class="op">)</span>sig<span class="op">;</span> stop <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    signal<span class="op">(</span>SIGINT<span class="op">,</span> on_sigint<span class="op">);</span>               <span class="co">/* sigaction is more reliable on POSIX */</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!</span>stop<span class="op">)</span> <span class="op">{</span> <span class="co">/* work */</span> <span class="op">}</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A signal handler may only call async-signal-safe functions (not <code
+class="verbatim">printf</code> or <code class="verbatim">malloc</code>)
+and may only portably touch <code
+class="verbatim">volatile sig_atomic_t</code> objects. The usual
+pattern: set a flag in the handler and act on it in the main loop.</p>
+<h3 id="stdckdint.h-c23">8. &lt;stdckdint.h&gt; (C23)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdckdint.h&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> r<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>ckd_add<span class="op">(&amp;</span>r<span class="op">,</span> a<span class="op">,</span> b<span class="op">))</span> <span class="op">{</span> <span class="co">/* overflow; r holds the wrapped result */</span> <span class="op">}</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>ckd_mul<span class="op">(&amp;</span>size<span class="op">,</span> n<span class="op">,</span> elem_size<span class="op">);</span>                <span class="co">/* safe size computations for allocation */</span></span></code></pre></div>
+<h3 id="annex-k-and-other-things-you-will-see">9. Annex K and other
+things you will see</h3>
+<p>Annex K (<code class="verbatim">strcpy_s</code>, <code
+class="verbatim">fopen_s</code>, …) is optional and almost unimplemented
+outside MSVC; do not rely on it. POSIX supplies the rest of a typical
+systems API (sockets, <code class="verbatim">mmap</code>, <code
+class="verbatim">fork</code>, threads), and libraries such as libc
+extensions (<code class="verbatim">getline</code>, <code
+class="verbatim">strlcpy</code>, <code class="verbatim">asprintf</code>)
+vary by platform.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Know the dangerous string functions and their safe alternatives
+(<code class="verbatim">snprintf</code>, <code
+class="verbatim">memcpy</code> with explicit lengths).</li>
+<li>Parse numbers with <code class="verbatim">strtol</code> / <code
+class="verbatim">strtod</code>, check <code class="verbatim">end</code>
+and <code class="verbatim">errno</code>; avoid <code
+class="verbatim">atoi</code>.</li>
+<li>Comparators for <code class="verbatim">qsort</code> use comparison,
+not subtraction.</li>
+<li><code class="verbatim">isalpha</code> and friends need <code
+class="verbatim">unsigned char</code>.</li>
+<li>Measure elapsed time with a monotonic clock; use the <code
+class="verbatim">_r</code> variants of time functions in threaded
+code.</li>
+<li><code class="verbatim">rand()</code> is not a good random number
+generator.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

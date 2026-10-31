@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tokens and Standards</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/07-tokens-and-standards.html">
+  <meta property="og:title" content="Tokens and Standards">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/07-tokens-and-standards.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Tokens and Standards</h1>
+<h2 id="tokens-and-standards-1">Tokens and Standards</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Tokens are the shared vocabulary of Web3: money, claims, access
+rights, shares, collectibles, governance power. Standards make tokens
+interoperable, and non-standard behavior is the root of many integration
+bugs. At Staff and Principal scope you are expected to:</p>
+<ul>
+<li>choose, extend, and integrate token standards deliberately, knowing
+their quirks and the failure modes of non-conforming tokens;</li>
+<li>treat tokens you integrate as untrusted code with specific
+hazards;</li>
+<li>design token mechanics (supply, distribution, permissions,
+governance) with their security, economic, and regulatory consequences
+in mind;</li>
+<li>read and contribute to the standards process, and evaluate emerging
+standards before adopting them.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">03_smart-contract-security.org</code> (token quirks),
+<code class="verbatim">08_wallets-and-cryptography.org</code> (permits,
+signatures), <code class="verbatim">14_protocol-design.org</code>
+(tokenomics and governance), <code
+class="verbatim">15_deployment-and-upgrades.org</code>.</p>
+<h3 id="the-standards-process">1. The standards process</h3>
+<ul>
+<li><strong>EIPs and ERCs</strong>: Ethereum Improvement Proposals
+include protocol changes (Core) and application-level standards (ERCs,
+the contract and token interfaces). A proposal progresses through Draft,
+Review, Last Call, and Final; Final does not mean good, only specified,
+and several ERCs have known issues. Read the Security Considerations and
+the discussion thread, not only the abstract.</li>
+<li><strong>Conformance</strong> is behavioral, not nominal: a token
+that claims ERC-20 but returns nothing from <code>transfer</code>,
+charges fees, or reverts for some addresses breaks integrators.
+Integrations must defend against deviations.</li>
+<li><strong>ERC-165</strong> (interface detection) lets contracts
+advertise supported interfaces via <code>supportsInterface</code>; do
+not trust it blindly for security decisions.</li>
+<li><strong>Evaluating a new standard</strong>: how many production
+users, independent implementations, audits, and known incidents? What do
+wallets and indexers support? Adopt early standards only behind
+abstraction and with an exit.</li>
+</ul>
+<h3 id="fungible-tokens-erc-20-and-extensions">2. Fungible tokens:
+ERC-20 and extensions</h3>
+<ul>
+<li><strong>Interface</strong>: <code>totalSupply</code>,
+<code>balanceOf</code>, <code>transfer</code>,
+<code>transferFrom</code>, <code>approve</code>, <code>allowance</code>,
+<code>Transfer</code> and <code>Approval</code> events, optional
+<code>name</code>, <code>symbol</code>, <code>decimals</code> (not
+guaranteed to be 18).</li>
+<li><strong>Well-known quirks</strong> (design integrations to handle
+them):
+<ul>
+<li>missing return values (older tokens) or returning false instead of
+reverting;</li>
+<li>fee-on-transfer and deflationary tokens (received amount differs
+from the amount sent);</li>
+<li>rebasing and elastic-supply tokens (balances change without
+transfers);</li>
+<li>blocklists and freezes (issuer can block addresses), pausable
+transfers, upgradeable tokens whose behavior can change;</li>
+<li>non-standard decimals; <code>approve</code> that requires setting
+the allowance to zero first; reentrancy hooks (ERC-777 and
+similar);</li>
+<li>the approval race (changing an allowance from n to m lets a spender
+use both); mitigated by setting to zero first, using allowance
+increases, or permits.</li>
+</ul></li>
+<li><strong>Integration practice</strong>: use SafeERC20 wrappers;
+measure the balance before and after a transfer to learn what was
+actually received; maintain an allowlist of supported tokens for
+protocols that hold funds; test against a suite of mock misbehaving
+tokens (see <code
+class="verbatim">04_smart-contract-testing.org</code>); do not assume
+<code>decimals()</code> is 18; avoid unbounded approvals to untrusted
+contracts.</li>
+<li><strong>ERC-2612 permit</strong>: gasless approvals via an EIP-712
+signature with nonce and deadline; saves a transaction and a UX step but
+creates signature-phishing risks (users sign messages that move funds),
+and some tokens implement permit incorrectly or not at all. Uniswap's
+Permit2 provides a shared, standardized approval and signature-transfer
+layer across tokens; it concentrates approvals in one contract that must
+be trusted.</li>
+<li><strong>Votes and snapshots</strong>: ERC20Votes (ERC-5805) tracks
+historical voting power with checkpoints and delegation, used for
+governance; flash-loan and snapshot semantics matter (see <code
+class="verbatim">14_protocol-design.org</code>).</li>
+<li><strong>Minimal implementation</strong> with OpenZeppelin (v5
+style):</li>
+</ul>
+<pre class="solidity"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {ERC20} from &quot;@openzeppelin/contracts/token/ERC20/ERC20.sol&quot;;
+import {Ownable} from &quot;@openzeppelin/contracts/access/Ownable.sol&quot;;
+
+contract ExampleToken is ERC20, Ownable {
+    constructor(address initialOwner) ERC20(&quot;Example&quot;, &quot;EXM&quot;) Ownable(initialOwner) {}
+
+    // Illustrative: unrestricted minting by an owner is a trust assumption users must accept.
+    function mint(address to, uint256 amount) external onlyOwner {
+        _mint(to, amount);
+    }
+}
+</code></pre>
+<p>(Not compiled here. Decide the supply policy, roles, and the owner (a
+multisig with a timelock) explicitly; document it.)</p>
+<h3 id="non-fungible-and-multi-token-standards">3. Non-fungible and
+multi-token standards</h3>
+<ul>
+<li><strong>ERC-721</strong>: unique tokens with ownership, approvals,
+and metadata; <code>safeTransferFrom</code> calls
+<code>onERC721Received</code> on contract recipients (a reentrancy
+surface, and a way for receivers to reject). Metadata via
+<code>tokenURI</code> pointing off-chain (see storage below).</li>
+<li><strong>ERC-1155</strong>: many token types in one contract
+(fungible, semi-fungible, and non-fungible), with batch operations and
+receiver hooks; efficient for games and editions.</li>
+<li><strong>Metadata and storage</strong>: on-chain data is expensive;
+most NFTs store a URI to content on IPFS, Arweave, or a web server.
+Mutable or centralized metadata is a trust assumption (the owner can
+change what the token "is"); content addressing (CID) with pinning
+improves integrity and availability; permanence requires an explicit
+storage plan.</li>
+<li><strong>Royalties</strong>: ERC-2981 exposes a royalty suggestion,
+but enforcement is up to marketplaces; designs that enforce royalties
+through transfer restrictions reduce composability.</li>
+<li><strong>Soulbound and non-transferable tokens</strong> (for example
+ERC-5192) represent credentials or membership; they raise privacy and
+revocation questions.</li>
+<li><strong>Token-bound accounts</strong> and smart-wallet-owned tokens
+extend ownership semantics; evaluate complexity before adopting.</li>
+<li><strong>Marketplace and approval risks</strong>: setApprovalForAll
+grants broad power; phishing signatures and approvals are a major theft
+vector (see <code
+class="verbatim">08_wallets-and-cryptography.org</code>).</li>
+</ul>
+<h3 id="vaults-yield-bearing-tokens-and-wrappers">4. Vaults,
+yield-bearing tokens, and wrappers</h3>
+<ul>
+<li><strong>ERC-4626</strong> standardizes tokenized vaults:
+<code>asset</code>, <code>totalAssets</code>, <code>deposit</code>,
+<code>mint</code>, <code>withdraw</code>, <code>redeem</code>,
+<code>convertToShares</code>, <code>convertToAssets</code>, and preview
+functions. Shares represent a claim on assets; the share price rises as
+yield accrues. Hazards: the first-depositor inflation (donation) attack,
+rounding direction errors (round shares down on deposit and up on
+withdrawal in the vault's favor), manipulable <code>totalAssets</code>,
+and trust in strategies. Modern libraries offer virtual offsets and
+decimals offsets as mitigations.</li>
+<li><strong>Liquid staking and restaking tokens</strong>: represent
+staked assets; they bring slashing, withdrawal-queue, depeg, and
+governance risks, and concentrate stake (see <code
+class="verbatim">01_blockchain-fundamentals.org</code>).</li>
+<li><strong>Wrapped assets</strong>: WETH wraps ETH to fit ERC-20;
+bridged and wrapped tokens carry the bridge's and issuer's risk (see
+<code class="verbatim">11_layer-2-and-cross-chain.org</code>).</li>
+<li><strong>Receipt and LP tokens</strong>: represent positions in AMMs
+or lending markets; valuing them requires understanding the underlying
+pool (manipulation via flash loans is a classic oracle bug).</li>
+</ul>
+<h3 id="stablecoins">5. Stablecoins</h3>
+<table>
+<thead>
+<tr>
+<th>Design</th>
+<th>Backing and mechanism</th>
+<th>Main risks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fiat-backed</td>
+<td>Reserves held by an issuer</td>
+<td>Issuer and bank risk, freezes and blocklists, redemption limits,
+regulation</td>
+</tr>
+<tr>
+<td>Crypto-collateralized</td>
+<td>Over-collateralized on-chain positions</td>
+<td>Liquidation cascades, collateral correlation, oracle risk,
+governance</td>
+</tr>
+<tr>
+<td>Synthetic and delta-neutral</td>
+<td>Hedged positions in derivatives</td>
+<td>Funding rates, venue and counterparty risk, basis moves</td>
+</tr>
+<tr>
+<td>Algorithmic (under-collateralized)</td>
+<td>Incentives and a second token absorb volatility</td>
+<td>Reflexive death spirals; the 2022 Terra collapse is the canonical
+example</td>
+</tr>
+</tbody>
+</table>
+<p>Treat "stable" as a claim to test: what backs it, who can freeze or
+mint, how does redemption work under stress, what are the oracle and
+governance dependencies? Integrate stablecoins with depeg-aware logic
+(price deviation checks, caps, pause conditions).</p>
+<h3 id="token-design">6. Token design</h3>
+<ul>
+<li><strong>Purpose first</strong>: what function does the token serve
+(payment, access, governance, collateral, incentive), and does it need
+to exist? A token without a clear function creates liability.</li>
+<li><strong>Supply</strong>: fixed, inflationary, or elastic; who can
+mint or burn, under what limits, and with what delay. Document in the
+code and the public documentation.</li>
+<li><strong>Distribution and vesting</strong>: allocation among users,
+investors, team, treasury; cliffs and unlock schedules; on-chain vesting
+contracts with revocation rules; concentration and unlock-driven sell
+pressure.</li>
+<li><strong>Value accrual and incentives</strong>: fees, buybacks,
+staking, rewards; incentives attract mercenary capital and can be gamed;
+emissions are a cost.</li>
+<li><strong>Governance rights</strong>: who votes, how power is
+measured, delegation, timelocks, and attack resistance (see <code
+class="verbatim">14_protocol-design.org</code>).</li>
+<li><strong>Permissions and controls</strong>: pausing, blocklists,
+upgradeability, role holders; each is a power users must trust and that
+regulators may expect.</li>
+<li><strong>Regulatory considerations</strong>: depending on
+jurisdiction, tokens may fall under securities, commodities, payment, or
+crypto-asset frameworks (for example the EU's Markets in Crypto-Assets
+Regulation); disclosure, marketing, and distribution rules apply. This
+is not legal advice: involve counsel before designing or launching a
+token.</li>
+<li><strong>Security of the token contract</strong>: use audited
+libraries, minimize custom logic, restrict privileged functions, test
+with fuzzing, and plan emergency procedures.</li>
+</ul>
+<h3 id="related-standards-worth-knowing">7. Related standards worth
+knowing</h3>
+<table>
+<thead>
+<tr>
+<th>Standard</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ERC-1271</td>
+<td>Contracts validate signatures (<code>isValidSignature</code>); used
+by smart wallets and multisigs</td>
+</tr>
+<tr>
+<td>ERC-6492</td>
+<td>Signature validation for contracts not yet deployed (counterfactual
+accounts)</td>
+</tr>
+<tr>
+<td>ERC-4337</td>
+<td>Account abstraction without protocol changes (user operations,
+bundlers, paymasters)</td>
+</tr>
+<tr>
+<td>EIP-7702</td>
+<td>EOAs delegate execution to contract code (set-code
+transactions)</td>
+</tr>
+<tr>
+<td>ERC-2771</td>
+<td>Trusted forwarders for meta-transactions</td>
+</tr>
+<tr>
+<td>ERC-1967, ERC-1822</td>
+<td>Proxy storage slots and UUPS</td>
+</tr>
+<tr>
+<td>ERC-7201</td>
+<td>Namespaced storage for upgradeable contracts</td>
+</tr>
+<tr>
+<td>ERC-3643</td>
+<td>Permissioned tokens with identity and compliance checks</td>
+</tr>
+<tr>
+<td>ERC-5805</td>
+<td>Voting power with delegation and checkpoints</td>
+</tr>
+<tr>
+<td>ERC-3668 (CCIP-Read)</td>
+<td>Off-chain data lookups with on-chain verification (used by ENS)</td>
+</tr>
+</tbody>
+</table>
+<p>Verify the current status and adoption of each before relying on
+it.</p>
+<h3 id="self-check">8. Self-check</h3>
+<ol>
+<li>List five ways a contract that holds ERC-20 tokens can be broken by
+a non-standard token, and the defense for each.</li>
+<li>Explain the ERC-4626 inflation attack and two mitigations.</li>
+<li>Why is <code>approve</code> with an unlimited amount risky, and how
+do permits and Permit2 change the risk?</li>
+<li>How would you decide whether to adopt a Draft-stage ERC in
+production?</li>
+<li>What trust assumptions does an NFT with off-chain metadata carry,
+and how do you reduce them?</li>
+<li>A stablecoin you integrate trades at 0.97. What should your protocol
+do automatically, and what should require governance?</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: deploy an ERC-20 with OpenZeppelin on a local node and
+write tests for transfer, allowance, and the approval race.</li>
+<li>Core: build mock tokens (no return value, fee on transfer, rebasing,
+blocklist, reentrant hook) and make a simple vault safe against all of
+them.</li>
+<li>Core: implement an ERC-4626 vault with virtual offsets; demonstrate
+the inflation attack on a naive version and show the fix.</li>
+<li>Core: write a vesting contract with cliff, linear release, and
+revocation; fuzz-test its accounting.</li>
+<li>Stretch: implement ERC-2612 permit end-to-end (contract and client
+signing), including replay tests across chains.</li>
+<li>Stretch: write a token design document (purpose, supply,
+distribution, permissions, governance, risks, legal review items) for a
+hypothetical protocol.</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>EIPs and ERCs: <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a> (ERC-20,
+721, 1155, 4626, 2612, 165, 2981, 1271, 4337, 5805, 7201)</li>
+<li>OpenZeppelin Contracts documentation (ERC20, ERC721, ERC1155,
+ERC4626, access, governance, upgradeable): <a
+href="https://docs.openzeppelin.com/contracts">https://docs.openzeppelin.com/contracts</a></li>
+<li>Uniswap documentation for Permit2; Aave and Maker documentation for
+collateral and stablecoin mechanics.</li>
+<li>Weird ERC-20 catalogs (public repositories listing token quirks) and
+the audit reports of token and vault integrations as training
+material.</li>
+<li>Regulatory sources for your jurisdictions (for example MiCA in the
+EU), via qualified counsel.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Standards define interfaces; real tokens deviate. Integrate
+defensively and test with misbehaving tokens.</li>
+<li>ERC-4626, permits, and approvals concentrate classic attack
+surfaces: inflation, signatures, and broad allowances.</li>
+<li>Token design is security, economics, governance, and law together;
+document every power.</li>
+<li>Stablecoins are claims to verify, not constants.</li>
+<li>Adopt new standards behind abstractions, with an exit.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

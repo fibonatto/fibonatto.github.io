@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logic and Proofs</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/02-logic-and-proofs.html">
+  <meta property="og:title" content="Logic and Proofs">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/02-logic-and-proofs.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Logic and Proofs</h1>
+<h2 id="logic-and-proofs-1">Logic and Proofs</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Proof is the engineering skill of knowing why something is true, not
+merely that tests pass. At Staff scope you will be the person asked "is
+this protocol safe?", "can this cache ever serve stale data after a
+failover?", or "does this migration preserve the invariant?". You do not
+need to formalize everything. You need to:</p>
+<ul>
+<li>state invariants and pre/postconditions precisely, in writing;</li>
+<li>spot the hidden quantifier ("for all inputs" versus "for the inputs
+I tried");</li>
+<li>recognize which claims are worth a proof, which a model checker,
+which a property-based test, and which a type;</li>
+<li>read a proof sketch in a design document and find where it assumes
+more than it states.</li>
+</ul>
+<h3 id="propositional-logic">1. Propositional logic</h3>
+<p>Propositions are statements that are true or false. Connectives:
+negation, conjunction (and), disjunction (or), implication (p implies
+q), equivalence.</p>
+<p>Key equivalences:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Equivalence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>De Morgan</td>
+<td>not (p and q) is (not p) or (not q); dually for or</td>
+</tr>
+<tr>
+<td>Implication</td>
+<td>p implies q is (not p) or q</td>
+</tr>
+<tr>
+<td>Contrapositive</td>
+<td>p implies q is (not q) implies (not p)</td>
+</tr>
+<tr>
+<td>Distribution</td>
+<td>p and (q or r) is (p and q) or (p and r); dually</td>
+</tr>
+<tr>
+<td>Double negation</td>
+<td>not not p is p (classically; not in intuitionistic logic)</td>
+</tr>
+</tbody>
+</table>
+<p>Remember that "p implies q" is true when p is false (vacuous truth).
+The <em>converse</em> (q implies p) is a different statement, and
+confusing the two is the most common reasoning error in postmortems.</p>
+<p><strong>Normal forms</strong>: CNF (conjunction of clauses, each a
+disjunction of literals) and DNF. Any formula converts to CNF, possibly
+with exponential blowup; the Tseitin transformation produces an
+equisatisfiable CNF with linear growth by introducing fresh
+variables.</p>
+<p><strong>Satisfiability (SAT)</strong>: is there an assignment making
+the formula true? SAT is NP-complete (see <code
+class="verbatim">04_complexity.org</code>), yet modern CDCL solvers
+handle industrial instances with millions of variables. SAT and SMT
+solvers power hardware verification, package version resolution,
+configuration checking, symbolic execution, and many static
+analyzers.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> product</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> equivalent(f, g, n):</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">all</span>(f(<span class="op">*</span>v) <span class="op">==</span> g(<span class="op">*</span>v) <span class="cf">for</span> v <span class="kw">in</span> product([<span class="va">False</span>, <span class="va">True</span>], repeat<span class="op">=</span>n))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> equivalent(<span class="kw">lambda</span> p, q: <span class="kw">not</span> (p <span class="kw">and</span> q), <span class="kw">lambda</span> p, q: (<span class="kw">not</span> p) <span class="kw">or</span> (<span class="kw">not</span> q), <span class="dv">2</span>)   <span class="co"># De Morgan</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> equivalent(<span class="kw">lambda</span> p, q: (<span class="kw">not</span> p) <span class="kw">or</span> q, <span class="kw">lambda</span> p, q: q <span class="kw">or</span> (<span class="kw">not</span> p), <span class="dv">2</span>)          <span class="co"># contrapositive</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="kw">not</span> equivalent(<span class="kw">lambda</span> p, q: (<span class="kw">not</span> p) <span class="kw">or</span> q, <span class="kw">lambda</span> p, q: (<span class="kw">not</span> q) <span class="kw">or</span> p, <span class="dv">2</span>)      <span class="co"># converse differs</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># A tiny DPLL SAT solver: clauses are lists of nonzero ints; -k means &quot;not x_k&quot;.</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simplify(clauses, lit):</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> []</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> c <span class="kw">in</span> clauses:</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> lit <span class="kw">in</span> c:</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        reduced <span class="op">=</span> [l <span class="cf">for</span> l <span class="kw">in</span> c <span class="cf">if</span> l <span class="op">!=</span> <span class="op">-</span>lit]</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> reduced:</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="va">None</span>                     <span class="co"># empty clause: conflict</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        out.append(reduced)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dpll(clauses, model<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> <span class="bu">dict</span>(model <span class="kw">or</span> {})</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:                             <span class="co"># unit propagation</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        unit <span class="op">=</span> <span class="bu">next</span>((c[<span class="dv">0</span>] <span class="cf">for</span> c <span class="kw">in</span> clauses <span class="cf">if</span> <span class="bu">len</span>(c) <span class="op">==</span> <span class="dv">1</span>), <span class="va">None</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> unit <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        model[<span class="bu">abs</span>(unit)] <span class="op">=</span> unit <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        clauses <span class="op">=</span> simplify(clauses, unit)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> clauses <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> clauses:</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> model</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    lit <span class="op">=</span> clauses[<span class="dv">0</span>][<span class="dv">0</span>]</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> choice <span class="kw">in</span> (lit, <span class="op">-</span>lit):              <span class="co"># branch</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        reduced <span class="op">=</span> simplify(clauses, choice)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> reduced <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>            m <span class="op">=</span> <span class="bu">dict</span>(model)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>            m[<span class="bu">abs</span>(choice)] <span class="op">=</span> choice <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>            res <span class="op">=</span> dpll(reduced, m)</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> res <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> res</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>cnf <span class="op">=</span> [[<span class="dv">1</span>, <span class="dv">2</span>], [<span class="op">-</span><span class="dv">1</span>, <span class="dv">2</span>], [<span class="op">-</span><span class="dv">2</span>, <span class="dv">3</span>]]            <span class="co"># (x1 or x2) and (not x1 or x2) and (not x2 or x3)</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> dpll(cnf)</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> model <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">all</span>(<span class="bu">any</span>(model.get(<span class="bu">abs</span>(l), <span class="va">False</span>) <span class="op">==</span> (l <span class="op">&gt;</span> <span class="dv">0</span>) <span class="cf">for</span> l <span class="kw">in</span> c) <span class="cf">for</span> c <span class="kw">in</span> cnf)</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> dpll([[<span class="dv">1</span>], [<span class="op">-</span><span class="dv">1</span>]]) <span class="kw">is</span> <span class="va">None</span>            <span class="co"># unsatisfiable</span></span></code></pre></div>
+<h3 id="predicate-logic">2. Predicate logic</h3>
+<p>Predicate logic adds variables, predicates, and quantifiers: for all
+(universal) and there exists (existential).</p>
+<ul>
+<li>Negation swaps quantifiers: not (for all x, P(x)) is (there exists
+x, not P(x)).</li>
+<li><strong>Order of quantifiers matters</strong>: "for every user there
+is a server that stores their data" differs from "there is a server that
+stores every user's data".</li>
+<li>Typical specification statements: "for all replicas r1, r2, if both
+committed index i then their entries at i are equal" (state-machine
+safety); "for all requests, eventually a response is sent" (liveness;
+needs time or temporal operators).</li>
+<li>Free versus bound variables, substitution, and scope behave exactly
+as in programming languages.</li>
+<li>Many bugs are quantifier bugs: an unstated universal ("this lock is
+always held") that holds only on the main path.</li>
+</ul>
+<h3 id="proof-techniques">3. Proof techniques</h3>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Direct proof</td>
+<td>Assume the hypothesis, derive the conclusion</td>
+</tr>
+<tr>
+<td>Contrapositive</td>
+<td>The negated conclusion gives more to work with</td>
+</tr>
+<tr>
+<td>Contradiction</td>
+<td>Assume the claim false and derive an impossibility (sqrt 2
+irrational, infinitely many primes, halting problem)</td>
+</tr>
+<tr>
+<td>Cases</td>
+<td>Split into exhaustive cases and prove each</td>
+</tr>
+<tr>
+<td>Induction</td>
+<td>Statements over naturals or recursive structures</td>
+</tr>
+<tr>
+<td>Counterexample</td>
+<td>To refute a universal claim, one instance suffices</td>
+</tr>
+<tr>
+<td>Construction</td>
+<td>To prove an existential claim, exhibit the object</td>
+</tr>
+<tr>
+<td>Pigeonhole / counting</td>
+<td>Existence without construction</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Induction in three forms</strong>:</p>
+<ol>
+<li><strong>Ordinary</strong>: prove P(0) (base) and P(n) implies P(n+1)
+(step).</li>
+<li><strong>Strong</strong>: assume P(k) for all k &lt; n, prove P(n).
+Natural for recursive algorithms whose subproblems have arbitrary
+smaller sizes.</li>
+<li><strong>Structural</strong>: for lists, trees, and syntax: prove P
+of the empty/leaf case, and P of a compound given P of its parts. Proofs
+about interpreters and type systems are structural inductions.</li>
+</ol>
+<p>Common mistakes: strengthening neither the base case nor the
+hypothesis; induction hypothesis too weak (strengthen the statement to
+make the proof go through, as with loop invariants); proving only for
+one size; circular reasoning; using "WLOG" without justification.</p>
+<h3 id="invariants-and-state-machines">4. Invariants and state
+machines</h3>
+<p>An <strong>invariant</strong> is a property true in every reachable
+state. To prove one:</p>
+<ol>
+<li>it holds in the initial state;</li>
+<li>every transition that starts in a state satisfying it ends in a
+state satisfying it (inductive step over transitions).</li>
+</ol>
+<p>This is induction on the length of an execution. The same shape
+proves loop invariants, protocol safety, and data-structure
+well-formedness (a red-black tree stays valid after insert).</p>
+<p>Two families of correctness properties (Lamport,
+Alpern-Schneider):</p>
+<ul>
+<li><strong>Safety</strong>: "nothing bad ever happens" (mutual
+exclusion, no two leaders in one term). A violation has a finite witness
+trace.</li>
+<li><strong>Liveness</strong>: "something good eventually happens"
+(every request is answered). Needs fairness assumptions and cannot be
+refuted by a finite prefix.</li>
+</ul>
+<p>Most protocol bugs found in industry are safety violations under
+unusual interleavings, partitions, or restarts.</p>
+<h3 id="program-correctness-and-hoare-logic">5. Program correctness and
+Hoare logic</h3>
+<p>A <strong>Hoare triple</strong> {P} C {Q} says: if P holds before C
+runs and C terminates, then Q holds afterwards (partial correctness).
+Total correctness also requires termination, shown with a
+<strong>variant</strong>: a quantity that strictly decreases and is
+bounded below.</p>
+<p>Rules (informally):</p>
+<ul>
+<li>Assignment: {Q[e/x]} x := e {Q}.</li>
+<li>Sequence: {P} C1 {R} and {R} C2 {Q} give {P} C1; C2 {Q}.</li>
+<li>Conditional: prove both branches under the branch condition.</li>
+<li>Loop: choose an invariant I; show I holds before, that {I and cond}
+body {I}, and conclude {I and not cond} after the loop.</li>
+<li>Consequence: strengthen the precondition or weaken the postcondition
+freely.</li>
+</ul>
+<p><strong>Weakest precondition</strong> calculus works backwards from
+the postcondition and underlies tools such as Dafny and Why3.
+<strong>Separation logic</strong> extends this to pointers and heaps
+(ownership of memory regions); Rust's borrow checker is a lightweight,
+automated cousin.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math, bisect, random</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> gcd(a, b):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    a0, b0 <span class="op">=</span> a, b</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> b <span class="op">!=</span> <span class="dv">0</span>:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">assert</span> math.gcd(a, b) <span class="op">==</span> math.gcd(a0, b0)    <span class="co"># invariant: gcd is preserved</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        a, b <span class="op">=</span> b, a <span class="op">%</span> b                              <span class="co"># variant: b strictly decreases</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lower_bound(xs, x):</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    lo, hi <span class="op">=</span> <span class="dv">0</span>, <span class="bu">len</span>(xs)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> lo <span class="op">&lt;</span> hi:</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># invariant: everything before lo is &lt; x, everything from hi on is &gt;= x</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">assert</span> <span class="bu">all</span>(v <span class="op">&lt;</span> x <span class="cf">for</span> v <span class="kw">in</span> xs[:lo]) <span class="kw">and</span> <span class="bu">all</span>(v <span class="op">&gt;=</span> x <span class="cf">for</span> v <span class="kw">in</span> xs[hi:])</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        mid <span class="op">=</span> lo <span class="op">+</span> (hi <span class="op">-</span> lo) <span class="op">//</span> <span class="dv">2</span>                    <span class="co"># avoids overflow in fixed-width ints</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> xs[mid] <span class="op">&lt;</span> x:</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            lo <span class="op">=</span> mid <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            hi <span class="op">=</span> mid</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> lo                                        <span class="co"># at exit lo == hi, so the invariant pins the answer</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> gcd(<span class="dv">1071</span>, <span class="dv">462</span>) <span class="op">==</span> <span class="dv">21</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">7</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">200</span>):</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    xs <span class="op">=</span> <span class="bu">sorted</span>(random.randint(<span class="dv">0</span>, <span class="dv">20</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(random.randint(<span class="dv">0</span>, <span class="dv">15</span>)))</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> random.randint(<span class="op">-</span><span class="dv">1</span>, <span class="dv">21</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> lower_bound(xs, x) <span class="op">==</span> bisect.bisect_left(xs, x)</span></code></pre></div>
+<h3 id="temporal-logic-specification-languages-and-model-checking">6.
+Temporal logic, specification languages, and model checking</h3>
+<ul>
+<li><strong>Linear temporal logic (LTL)</strong> adds operators "always"
+(G), "eventually" (F), "next" (X), "until" (U) to describe behaviors
+over time. Safety: G (not bad). Liveness: G (request implies F
+response).</li>
+<li><strong>TLA+</strong> (Lamport) specifies systems as state machines
+plus temporal properties; the TLC model checker explores states
+exhaustively up to a bound, and a proof system exists for unbounded
+claims. It is widely used for concurrent and distributed protocols
+because design bugs show up in small models.</li>
+<li><strong>Alloy</strong> models structural constraints with relational
+logic; <strong>Dafny</strong>, <strong>Why3</strong>,
+<strong>Frama-C</strong> verify programs with annotations; <strong>SMT
+solvers</strong> (Z3, cvc5) discharge the verification conditions.</li>
+<li>A practical hierarchy of assurance, from cheap to expensive: types,
+assertions, unit tests, property-based tests, fuzzing, model checking
+small instances, bounded verification, full proof. Spend assurance where
+failure is expensive and the logic is subtle: consensus, memory
+allocators, cryptographic code, financial ledgers, migrations.</li>
+</ul>
+<h3 id="proof-assistants-and-the-link-to-programs">7. Proof assistants
+and the link to programs</h3>
+<p>In a proof assistant (Lean 4, Rocq, Isabelle, Agda), propositions are
+types and proofs are programs (Curry-Howard; see <code
+class="verbatim">10_type-systems.org</code>). The kernel checks every
+step, so a proof is trusted without trusting the proof-search code.</p>
+<pre class="text"><code>-- Lean 4 (checked by the Lean kernel; verify in your installation)
+theorem and_swap (p q : Prop) (h : p ∧ q) : q ∧ p := ⟨h.2, h.1⟩
+
+theorem zero_add&#39; : ∀ n : Nat, 0 + n = n
+  | 0     =&gt; rfl
+  | n + 1 =&gt; congrArg Nat.succ (zero_add&#39; n)       -- induction is recursion
+
+theorem add_comm&#39; (a b : Nat) : a + b = b + a := Nat.add_comm a b
+</code></pre>
+<p>The workflow: state the theorem as a type, build the proof with
+tactics (<code class="verbatim">induction</code>, <code
+class="verbatim">simp</code>, <code class="verbatim">omega</code>, <code
+class="verbatim">rw</code>), and let the kernel reject mistakes.
+Learning paths: <em>Theorem Proving in Lean 4</em> and <em>Functional
+Programming in Lean</em> for Lean; <em>Software Foundations</em> volume
+1 (Logical Foundations) and volume 2 (Programming Language Foundations)
+for Rocq/Coq. Verified software exists at production scale (the seL4
+microkernel, the CompCert C compiler), but at a cost of many
+person-years: formal proof is for the highest-value, most stable
+components.</p>
+<h3 id="reasoning-habits-that-transfer-to-engineering">8. Reasoning
+habits that transfer to engineering</h3>
+<ul>
+<li>Write the invariant next to the data structure or protocol, in the
+code or the design document. Violations then become findable.</li>
+<li>State the assumptions about failures, timing, and ordering
+explicitly (crash-stop, partial synchrony, at-least-once delivery). A
+protocol proven under one failure model says nothing about another.</li>
+<li>Distinguish "I tested it" (existential evidence) from "it always
+holds" (universal claim).</li>
+<li>When you cannot prove a claim, ask what the smallest counterexample
+would look like; that is often a test case or a missing guard.</li>
+<li>Prefer making invalid states unrepresentable (types, constructors)
+to proving that invalid states never occur.</li>
+</ul>
+<h3 id="self-check">9. Self-check</h3>
+<ol>
+<li>Negate: "for every request there exists a replica that acknowledged
+it". Which counterexample would a chaos test need to produce?</li>
+<li>Prove by structural induction that the length of the concatenation
+of two lists is the sum of their lengths.</li>
+<li>Find the invariant that proves a two-pointer partition loop correct,
+and the variant that proves it terminates.</li>
+<li>Why can a finite trace never refute a liveness property?</li>
+<li>Explain why strengthening the induction hypothesis sometimes makes a
+proof easier.</li>
+<li>A design document claims "no message is lost". Write the precise
+quantified statement and the failure model under which it is true.</li>
+</ol>
+<h3 id="exercises">10. Exercises</h3>
+<ul>
+<li>Warm-up: prove (by contradiction) there are infinitely many primes;
+(by induction) that 1 + 2 + … + n = n(n+1)/2.</li>
+<li>Core: add runtime-checked loop invariants to three algorithms you
+use regularly (binary search, partition, merge) and run randomized tests
+against them.</li>
+<li>Core: write a TLA+ spec (or a Python state-space explorer) for a
+two-process mutual-exclusion protocol; find the bug in a deliberately
+broken version.</li>
+<li>Stretch: formalize and prove in Lean the correctness of list
+reversal (reverse of reverse is identity) and of binary-search
+lower<sub>bound</sub> on a sorted list.</li>
+<li>Stretch: work through the first six chapters of Software
+Foundations, volume 1.</li>
+</ul>
+<h3 id="resources">11. Resources</h3>
+<ul>
+<li>Lehman, Leighton, Meyer, <em>Mathematics for Computer Science</em>
+(Part I: proofs, induction; also state machines and invariants): <a
+href="https://ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-spring-2015/resources/mit6_042js15_textbook_pdf/">https://ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-spring-2015/resources/mit6_042js15_textbook_pdf/</a></li>
+<li>Levin, <em>Discrete Mathematics: An Open Introduction</em> (symbolic
+logic and proofs): <a
+href="https://discrete.openmathbooks.org/">https://discrete.openmathbooks.org/</a></li>
+<li>Avigad, de Moura, Kong, Ullrich, <em>Theorem Proving in Lean 4</em>:
+<a
+href="https://lean-lang.org/theorem_proving_in_lean4/">https://lean-lang.org/theorem_proving_in_lean4/</a>
+; the Lean learning hub (also lists <em>Functional Programming in
+Lean</em> and <em>Mathematics in Lean</em>): <a
+href="https://lean-lang.org/learn">https://lean-lang.org/learn</a></li>
+<li>Pierce et al., <em>Software Foundations</em> (volumes on logic,
+programming-language theory, verified algorithms; all free and
+machine-checked): <a
+href="https://softwarefoundations.cis.upenn.edu/">https://softwarefoundations.cis.upenn.edu/</a></li>
+<li>Huth and Ryan, <em>Logic in Computer Science</em>; Velleman, <em>How
+to Prove It</em>; Hammack, <em>Book of Proof</em> (books for the
+proof-writing basics).</li>
+<li>Lamport's TLA+ materials (the TLA+ site and <em>Specifying
+Systems</em>) for protocol specification.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>An implication is not its converse; quantifier order changes
+meaning.</li>
+<li>Invariants plus induction over transitions prove safety; liveness
+needs fairness and a variant.</li>
+<li>Choose the cheapest assurance technique that matches the cost of
+failure.</li>
+<li>Proofs are programs; a proof assistant is a type checker for
+reasoning.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

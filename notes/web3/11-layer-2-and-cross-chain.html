@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layer 2 and Cross-Chain</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/11-layer-2-and-cross-chain.html">
+  <meta property="og:title" content="Layer 2 and Cross-Chain">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/11-layer-2-and-cross-chain.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Layer 2 and Cross-Chain</h1>
+<h2 id="layer-2-and-cross-chain-1">Layer 2 and Cross-Chain</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Most users and much liquidity now live on rollups and other chains,
+and most architectures span several. Scaling and interoperability
+introduce new trust assumptions (sequencers, provers, bridges, upgrade
+keys) that are easy to misjudge, and bridges have historically been the
+largest source of losses. At Staff and Principal scope you are expected
+to:</p>
+<ul>
+<li>evaluate L2s and bridges from their actual security properties
+(proof system, data availability, upgrade control, exit mechanisms), not
+from marketing;</li>
+<li>choose where to deploy and how to connect chains, with a clear risk
+and cost rationale;</li>
+<li>design multi-chain applications that tolerate delays, reorderings,
+and failures of cross-chain messages;</li>
+<li>keep up with a fast-moving landscape using primary sources.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">01_blockchain-fundamentals.org</code>, <code
+class="verbatim">06_transactions-and-gas.org</code>, <code
+class="verbatim">09_on-chain-and-off-chain.org</code>, <code
+class="verbatim">10_oracles-and-mev.org</code>, <code
+class="verbatim">12_distributed-systems.org</code>, <code
+class="verbatim">15_deployment-and-upgrades.org</code>.</p>
+<h3 id="scaling-approaches">1. Scaling approaches</h3>
+<ul>
+<li><strong>Why</strong>: L1 capacity is limited by what every node must
+verify; scaling moves execution elsewhere while inheriting L1 security
+as far as possible.</li>
+<li><strong>Rollups</strong> execute transactions off L1, post
+transaction data to L1 (calldata or blobs), and rely on L1 to settle.
+Two verification models:
+<ul>
+<li><strong>Optimistic rollups</strong> assume state updates are valid
+and allow a challenge period in which anyone can submit a <strong>fraud
+proof</strong>. Withdrawals to L1 take at least the challenge window
+(commonly about a week) unless fast bridges front liquidity. Security
+requires a working and permissionless dispute system and at least one
+honest watcher.</li>
+<li><strong>Validity (ZK) rollups</strong> post a cryptographic proof
+that the state transition is correct; L1 verifies it. Withdrawals can
+finalize as soon as the proof is verified. Security depends on the
+soundness of the proof system, circuits, and prover, and on the upgrade
+controls around them.</li>
+</ul></li>
+<li><strong>Validiums and optimistic validiums</strong> keep data off
+Ethereum (a data availability committee or external DA layer) for lower
+cost and weaker guarantees: if data is withheld, users may be unable to
+exit.</li>
+<li><strong>Sidechains</strong> (own consensus) and
+<strong>appchains</strong> have their own validator sets and security;
+bridging inherits that security, not Ethereum's.</li>
+<li><strong>State channels and plasma</strong> are older designs with
+narrower use cases.</li>
+<li><strong>L3 and application-specific rollups</strong> build on L2s
+for customization.</li>
+<li><strong>EVM equivalence versus compatibility</strong>: zkEVMs span a
+spectrum from byte-for-byte equivalence to compatibility at the source
+level; differences affect opcodes, precompiles, gas costs, tooling, and
+proof costs.</li>
+<li><strong>Data availability and blobs</strong>: since EIP-4844,
+rollups post data to blobs, which are separately priced and temporary;
+Fusaka's PeerDAS and the blob-parameter-only forks increase blob
+capacity over time, which has pushed L2 data costs down. When blob
+capacity is not saturated, fees are dominated by L2 execution and
+operator margins.</li>
+</ul>
+<h3 id="the-security-properties-that-matter">2. The security properties
+that matter</h3>
+<p>For any L2, find and record the answers to these:</p>
+<ul>
+<li><strong>Who can censor or reorder?</strong> A single sequencer can
+delay or censor transactions; look for <strong>forced inclusion</strong>
+via L1 and the delay involved.</li>
+<li><strong>Who can upgrade the system and how fast?</strong> Upgrade
+keys (multisigs or a "security council") can often change contracts
+instantly. A long enough <strong>exit window</strong> before upgrades
+take effect lets users leave. This is the single most important question
+for many risk assessments.</li>
+<li><strong>What proof system secures state?</strong> Is it live,
+permissionless, audited, and tested in production? Do external parties
+actually run provers or challengers?</li>
+<li><strong>Is data available?</strong> On L1 (strongest), with a DA
+layer, or with a committee.</li>
+<li><strong>Can users always exit?</strong> Is there an escape hatch
+independent of the sequencer and operators? How long does it take and
+what does it cost?</li>
+<li><strong>Bridge and messaging contracts</strong>: how are deposits
+and withdrawals verified? What assets are canonical?</li>
+<li><strong>Operational maturity</strong>: incident history, monitoring,
+sequencer decentralization plans, client diversity.</li>
+</ul>
+<p><strong>Maturity frameworks</strong>: L2BEAT's stages framework
+classifies rollups by decentralization of their security mechanisms:
+Stage 0 (training wheels fully on: the operator can override the proof
+system), Stage 1 (a functioning proof system with a constrained security
+council and exit windows for unwanted upgrades), and Stage 2
+(permissionless proofs and a council limited to resolving provably
+on-chain-detectable bugs, with long exit windows). The framework
+measures decentralization rather than security as a whole. At the time
+of writing most rollups sat at Stage 0 or Stage 1 and few had reached
+Stage 2; the criteria and classifications change, so read the current
+framework and each project's risk summary on L2BEAT before choosing.</p>
+<h3 id="choosing-where-to-deploy">3. Choosing where to deploy</h3>
+<ul>
+<li><strong>Criteria</strong>: security stage and trust assumptions;
+liquidity and users; ecosystem, wallets, and infrastructure (indexers,
+oracles, bridges, explorers); fees and predictability; finality and
+withdrawal times; EVM compatibility and opcode differences; sequencer
+behavior and MEV policy; regulatory posture; vendor and team risk;
+interoperability with other chains; roadmap and governance; and exit
+options.</li>
+<li><strong>Options</strong>: deploy on L1 for the highest security and
+composability (and highest cost); on a major rollup for users and fees;
+on an appchain or your own rollup for customization and sovereignty (and
+the burden of operating security, sequencer, bridge, and
+community).</li>
+<li><strong>Deploying multi-chain</strong>: each chain is a separate
+deployment and risk domain; prefer a core on the chain with the
+strongest guarantees and thin deployments elsewhere; use deterministic
+deployment (CREATE2 or CREATE3 factories) to obtain the same addresses;
+keep per-chain configuration (oracle feeds, token addresses, fee
+parameters) explicit and tested.</li>
+<li><strong>Decision records</strong>: write an ADR comparing options,
+listing trust assumptions and review triggers such as a change in the
+chain's stage or an upgrade-council incident (see <code
+class="verbatim">18_architecture-decisions.org</code>).</li>
+</ul>
+<h3 id="building-on-l2s-practical-differences">4. Building on L2s:
+practical differences</h3>
+<ul>
+<li><strong>Gas and fees</strong>: two components (L2 execution and L1
+data); estimate both; fee APIs and precompiles for L1 fee queries are
+chain-specific.</li>
+<li><strong>Block and time semantics</strong>: block numbers and
+timestamps may advance differently from L1; some L2s expose L1 block
+data through special contracts; do not assume 12-second blocks or L1
+finality.</li>
+<li><strong>Finality levels</strong>: unsafe (sequencer-promised), safe
+(posted to L1), finalized (L1 finalized or proof verified). Choose
+confirmation policy accordingly (see <code
+class="verbatim">06_transactions-and-gas.org</code>).</li>
+<li><strong>Opcode and precompile differences</strong>: unsupported or
+different opcodes, gas costs for calldata and storage, and contract size
+limits; test on the target chain with the correct EVM version.</li>
+<li><strong>Sequencer downtime</strong>: transactions may stall; oracle
+feeds may be stale; protocols should check sequencer status and use
+grace periods (see <code
+class="verbatim">10_oracles-and-mev.org</code>).</li>
+<li><strong>L1 to L2 and L2 to L1 messaging</strong>: address aliasing
+for contracts calling across layers on some stacks, retry and replay
+semantics, and delays; handle failed messages explicitly.</li>
+<li><strong>Account types and gas payment</strong>: some L2s have native
+account abstraction or paymasters.</li>
+<li><strong>Infrastructure</strong>: RPC providers, indexers, explorers,
+and monitoring must support each chain; budget for operating more
+endpoints.</li>
+</ul>
+<h3 id="bridges-and-cross-chain-messaging">5. Bridges and cross-chain
+messaging</h3>
+<ul>
+<li><strong>Asset bridges</strong> by design:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Design</th>
+<th>Mechanism</th>
+<th>Trust assumption</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Native (canonical) rollup bridge</td>
+<td>Contracts on L1 and L2 verified by the rollup's proof system</td>
+<td>The rollup's security and upgrade controls</td>
+</tr>
+<tr>
+<td>Lock-and-mint</td>
+<td>Lock on source, mint a wrapped asset on destination</td>
+<td>The verification of the lock event; the minter's integrity</td>
+</tr>
+<tr>
+<td>Burn-and-mint</td>
+<td>Burn on source, mint on destination (native multi-chain tokens)</td>
+<td>The messaging layer and token's issuer</td>
+</tr>
+<tr>
+<td>Liquidity-pool bridges</td>
+<td>Liquidity on both sides; relayers or LPs front funds</td>
+<td>Pool solvency; message verification; fast-path risk</td>
+</tr>
+<tr>
+<td>Light-client bridges</td>
+<td>Destination verifies source consensus via an on-chain light client
+(for example IBC)</td>
+<td>Light client correctness; finality assumptions</td>
+</tr>
+<tr>
+<td>Validator or multisig bridges</td>
+<td>A committee attests to events</td>
+<td>The committee's honesty and key security</td>
+</tr>
+<tr>
+<td>Optimistic bridges</td>
+<td>Claims valid unless challenged</td>
+<td>At least one honest watcher; delay</td>
+</tr>
+<tr>
+<td>ZK light-client bridges</td>
+<td>Proofs of source-chain consensus verified on destination</td>
+<td>Soundness and maturity of proofs</td>
+</tr>
+<tr>
+<td>Intent-based bridging</td>
+<td>Solvers deliver funds; are repaid after verification</td>
+<td>Solver competition; settlement verification</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>General messaging protocols</strong> (for example LayerZero,
+Wormhole, Chainlink CCIP, Hyperlane, Axelar) carry arbitrary messages.
+Their security differs: some rely on an oracle plus relayer pair, some
+on a guardian set, some on a decentralized oracle network, some on
+configurable security modules chosen per application. The application is
+responsible for choosing and monitoring the security configuration.</li>
+<li><strong>Why bridges fail</strong>: they hold concentrated value and
+rely on weak assumptions: compromised validator keys, flawed signature
+or proof verification, wrong initialization (a trusted root set to a
+default value), replayed or forged messages, upgrade key compromise, and
+bugs in the application contracts that handle messages. Many of the
+largest historical hacks were bridges (see <code
+class="verbatim">03_smart-contract-security.org</code>).</li>
+<li><strong>Design principles for cross-chain applications</strong>:
+<ul>
+<li>minimize the value and trust placed on a bridge; cap flows with rate
+limits and per-message limits;</li>
+<li>verify the message origin (chain id, sender contract) and add domain
+separation; ignore unknown senders;</li>
+<li>handle replay, reordering, delay, and failure of messages
+(idempotent handlers, nonces, expiry);</li>
+<li>account for different finality on source and destination (wait for
+finality before acting on irreversible destination effects);</li>
+<li>use circuit breakers and pausing for the messaging path, governed by
+multiple parties;</li>
+<li>avoid dependence on a single messaging provider for critical
+functions, or design the application to tolerate provider failure and
+migration;</li>
+<li>monitor message latency, backlog, and invariant checks (supply
+across chains equals total supply);</li>
+<li>treat upgrades of messaging configuration as high-risk privileged
+actions.</li>
+</ul></li>
+<li><strong>Wrapped and bridged assets</strong>: a bridged version of a
+token is a different asset with the bridge's risk; list which versions
+you accept and prefer canonical or issuer-native variants (for example
+native stablecoin issuance with burn-and-mint across chains).</li>
+<li><strong>Chain abstraction and unified liquidity</strong>: wallets
+and solvers hide chain choice from users; this shifts complexity and
+trust to intent protocols and relayers.</li>
+</ul>
+<h3 id="multi-chain-engineering-concerns">6. Multi-chain engineering
+concerns</h3>
+<ul>
+<li><strong>Consistent configuration</strong>: contract addresses, chain
+ids, token lists, oracle feeds, and parameters per chain; a registry and
+a deployment manifest checked in CI.</li>
+<li><strong>Deterministic addresses</strong>: CREATE2 with a standard
+factory, or CREATE3 for addresses independent of init code; careful with
+chains where the factory is not deployed at the same address.</li>
+<li><strong>Testing across chains</strong>: fork tests per chain,
+message simulation, differential tests of per-chain behavior (see <code
+class="verbatim">04_smart-contract-testing.org</code>).</li>
+<li><strong>Governance across chains</strong>: how do parameters and
+upgrades propagate? Messaging-based governance executors on each chain
+widen the attack surface; use timelocks per chain and verify the
+origin.</li>
+<li><strong>Monitoring</strong>: per-chain health, finality, sequencer
+status, bridge flows, and cross-chain invariants (see <code
+class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+<li><strong>Incident response</strong>: the ability to pause on each
+chain, revoke bridge permissions, and communicate; practice cross-chain
+incident drills.</li>
+<li><strong>Liquidity and users</strong>: fragmentation across chains
+harms depth and complicates risk; limit the number of chains to those
+you can monitor and secure.</li>
+</ul>
+<h3 id="self-check">7. Self-check</h3>
+<ol>
+<li>Compare the withdrawal path and security assumptions of an
+optimistic rollup and a ZK rollup; which questions do you ask about each
+before deploying?</li>
+<li>What does a rollup's "exit window" protect against, and why does the
+upgrade key matter more than the proof system for many risk
+assessments?</li>
+<li>A protocol needs to move tokens between L1 and three L2s. Compare
+using canonical bridges, a messaging protocol with burn-and-mint, and a
+liquidity bridge.</li>
+<li>List the checks a destination-chain contract should perform on an
+incoming cross-chain message.</li>
+<li>What breaks if an application assumes L1 block time and finality on
+an L2?</li>
+<li>Design the monitoring for a multi-chain token whose total supply
+must equal the sum across chains.</li>
+</ol>
+<h3 id="exercises">8. Exercises</h3>
+<ul>
+<li>Warm-up: read the L2BEAT risk summary for two rollups and write a
+one-page comparison of their trust assumptions and exit mechanisms.</li>
+<li>Core: deploy a contract on a local node and on a rollup testnet;
+compare gas, block semantics, and opcode behavior; note differences that
+would affect your code.</li>
+<li>Core: implement a toy cross-chain messenger between two local chains
+with nonces, domain separation, rate limits, and a pause; fuzz message
+handling for replays and reordering.</li>
+<li>Core: write a deployment manifest and CI check that verifies
+addresses, constructor arguments, and role setup across three
+chains.</li>
+<li>Stretch: build an invariant monitor that compares total supply
+across chains and alerts on mismatch or message backlog.</li>
+<li>Stretch: write an ADR choosing a chain for a new protocol, with
+weighted criteria, trust assumptions, and review triggers.</li>
+</ul>
+<h3 id="resources">9. Resources</h3>
+<ul>
+<li>L2BEAT (risk analysis, stages framework, bridge risks): <a
+href="https://l2beat.com">https://l2beat.com</a> ; the stages framework:
+<a href="https://l2beat.com/stages">https://l2beat.com/stages</a> and
+its discussion: <a
+href="https://forum.l2beat.com/t/the-stages-framework/291">https://forum.l2beat.com/t/the-stages-framework/291</a></li>
+<li>Ethereum Foundation posts on blob scaling and Fusaka: <a
+href="https://blog.ethereum.org/2025/08/22/protocol-update-002">https://blog.ethereum.org/2025/08/22/protocol-update-002</a>
+and <a
+href="https://blog.ethereum.org/2025/11/06/fusaka-mainnet-announcement">https://blog.ethereum.org/2025/11/06/fusaka-mainnet-announcement</a></li>
+<li>Documentation of the rollup stacks and messaging protocols you use
+(OP Stack, Arbitrum, zk rollup SDKs, CCIP, LayerZero, Wormhole,
+Hyperlane, IBC).</li>
+<li>Buterin, <em>Different types of layer 2s</em> and posts on
+EVM-equivalence types for zkEVMs; Bridges and security reviews published
+by auditors.</li>
+<li>ethereum.org scaling documentation: <a
+href="https://ethereum.org/en/developers/docs/scaling/">https://ethereum.org/en/developers/docs/scaling/</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Rollups inherit L1 security only to the extent that proofs, data
+availability, upgrade control, and exits are sound; read the upgrade and
+exit details.</li>
+<li>Bridges concentrate value and trust; minimize, rate-limit, and
+verify messages; design for delay and failure.</li>
+<li>Each chain is a separate risk and operations domain; fewer chains
+well run beat many chains.</li>
+<li>L2 differences (fees, time, opcodes, finality) break L1 assumptions;
+test on the target chain.</li>
+<li>Re-check maturity classifications and chain facts from primary
+sources regularly.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

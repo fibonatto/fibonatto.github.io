@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learn C</title>
+  <meta name="description" content="Study notes on C covering program structure, types, expressions, control flow, functions, pointers, arrays, strings, structs, dynamic memory allocation, undefined behavior, linkage, the preprocessor, function pointers, I/O, error handling, compilation, debugging, and sanitizers.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/00-learn.html">
+  <meta property="og:title" content="Learn C">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/00-learn.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Learn C</h1>
+<h2 id="learn-c-1">Learn C</h2>
+<h3 id="program-structure">1. Program structure</h3>
+<p>A C program is a set of functions. Execution starts at <code
+class="verbatim">main</code>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;hello</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Compile with warnings enabled and a fixed standard:</p>
+<div class="sourceCode" id="cb2" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-std</span><span class="op">=</span>c17 <span class="at">-Wall</span> <span class="at">-Wextra</span> <span class="at">-Wpedantic</span> <span class="at">-g</span> hello.c <span class="at">-o</span> hello</span></code></pre></div>
+<p>Reaching the end of <code class="verbatim">main</code> returns 0
+(since C99); every other function needs an explicit <code
+class="verbatim">return</code>.</p>
+<h3 id="types-and-sizes">2. Types and sizes</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stddef.h&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span>      i <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span>   d <span class="op">=</span> <span class="fl">3.14</span><span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span>     c <span class="op">=</span> <span class="ch">&#39;a&#39;</span><span class="op">;</span>          <span class="co">/* a small integer, not a &quot;character type&quot; in the Lisp sense */</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span>  b <span class="op">=</span> <span class="dv">255</span><span class="op">;</span>          <span class="co">/* exact width: &lt;stdint.h&gt; */</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span>  big <span class="op">=</span> <span class="dv">1</span><span class="bu">LL</span> <span class="op">&lt;&lt;</span> <span class="dv">40</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span>   n <span class="op">=</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">int</span><span class="op">);</span>  <span class="co">/* unsigned, result of sizeof */</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">int</code>, <code
+class="verbatim">long</code>, <code class="verbatim">char</code> have
+implementation-defined sizes. Use <code
+class="verbatim">&lt;stdint.h&gt;</code> when width matters.</li>
+<li>Print <code class="verbatim">size_t</code> with <code
+class="verbatim">%zu</code>, <code class="verbatim">int64_t</code> with
+<code class="verbatim">PRId64</code> from <code
+class="verbatim">&lt;inttypes.h&gt;</code>.</li>
+<li>Signed overflow is undefined behavior. Unsigned overflow wraps
+modulo 2<sup>N</sup>.</li>
+<li>Whether plain <code class="verbatim">char</code> is signed is
+implementation-defined.</li>
+</ul>
+<h3 id="expressions-and-operators">3. Expressions and operators</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dv">7</span> <span class="op">/</span> <span class="dv">2</span>        <span class="co">/* 3: integer division truncates toward zero (C99+) */</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">-</span><span class="dv">7</span> <span class="op">/</span> <span class="dv">2</span>       <span class="co">/* -3 */</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">-</span><span class="dv">7</span> <span class="op">%</span> <span class="dv">2</span>       <span class="co">/* -1: the sign follows the dividend */</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dv">7</span> <span class="op">/</span> <span class="fl">2.0</span>      <span class="co">/* 3.5 */</span></span></code></pre></div>
+<ul>
+<li>Small integer types are promoted to <code
+class="verbatim">int</code> before arithmetic.</li>
+<li>Mixing signed and unsigned converts to unsigned: <code
+class="verbatim">-1 &lt; 1u</code> is false.</li>
+<li>Any nonzero scalar is true; <code class="verbatim">0</code> is
+false. Comparisons yield <code class="verbatim">int</code> 0 or 1.</li>
+<li><code class="verbatim">&amp;&amp;</code> and <code
+class="verbatim">||</code> short-circuit. The evaluation order of
+function arguments and of most operands is unspecified.</li>
+</ul>
+<h3 id="control-flow">4. Control flow</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>x <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>x <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>cond<span class="op">)</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span> <span class="cf">while</span> <span class="op">(</span>cond<span class="op">);</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">switch</span> <span class="op">(</span>kind<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="dv">1</span><span class="op">:</span>  f<span class="op">();</span> <span class="cf">break</span><span class="op">;</span>       <span class="co">/* without break, control falls through */</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="dv">2</span><span class="op">:</span>  g<span class="op">();</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="cf">default</span><span class="op">:</span> h<span class="op">();</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Always use braces. <code class="verbatim">goto</code> exists and is
+conventionally used for cleanup paths.</p>
+<h3 id="functions">5. Functions</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> square<span class="op">(</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">*</span> x<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> swap<span class="op">(</span><span class="dt">int</span> <span class="op">*</span>a<span class="op">,</span> <span class="dt">int</span> <span class="op">*</span>b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> t <span class="op">=</span> <span class="op">*</span>a<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>a <span class="op">=</span> <span class="op">*</span>b<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>b <span class="op">=</span> t<span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Arguments are always passed by value. To let a function modify the
+caller's variable, pass a pointer. A function must be declared (a
+prototype) before it is called:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> square<span class="op">(</span><span class="dt">int</span> x<span class="op">);</span>   <span class="co">/* declaration, usually in a header */</span></span></code></pre></div>
+<p><code class="verbatim">int f()</code> (empty parentheses) does not
+mean "no parameters" before C23. Write <code
+class="verbatim">int f(void)</code>.</p>
+<h3 id="pointers-and-arrays">6. Pointers and arrays</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>p <span class="op">=</span> <span class="op">&amp;</span>x<span class="op">;</span>     <span class="co">/* p holds the address of x */</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>p <span class="op">=</span> <span class="dv">20</span><span class="op">;</span>         <span class="co">/* x is now 20 */</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a<span class="op">[</span><span class="dv">4</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span><span class="op">};</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>a<span class="op">[</span><span class="dv">1</span><span class="op">];</span>            <span class="co">/* same as *(a + 1) */</span></span></code></pre></div>
+<p>An array expression decays to a pointer to its first element in most
+contexts. Pointer arithmetic scales by the element size.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> f<span class="op">(</span><span class="dt">int</span> a<span class="op">[])</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">sizeof</span><span class="op">(</span>a<span class="op">);</span>          <span class="co">/* sizeof(int *): the parameter is really a pointer */</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a<span class="op">[</span><span class="dv">4</span><span class="op">];</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">sizeof</span><span class="op">(</span>a<span class="op">)</span> <span class="op">/</span> <span class="kw">sizeof</span><span class="op">(</span>a<span class="op">[</span><span class="dv">0</span><span class="op">]);</span>   <span class="co">/* 4, only valid where a is a real array */</span></span></code></pre></div>
+<p>Pass the length separately: <code
+class="verbatim">void f(int *a, size_t n)</code>. Pointer arithmetic
+outside an array (or one past its end) is undefined behavior.</p>
+<h3 id="strings">7. Strings</h3>
+<p>A string is a <code class="verbatim">char</code> array terminated by
+<code class="verbatim">'\0'</code>.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> s<span class="op">[]</span> <span class="op">=</span> <span class="st">&quot;abc&quot;</span><span class="op">;</span>          <span class="co">/* 4 bytes: &#39;a&#39; &#39;b&#39; &#39;c&#39; &#39;\0&#39;, modifiable copy */</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>t <span class="op">=</span> <span class="st">&quot;abc&quot;</span><span class="op">;</span>     <span class="co">/* points to a string literal: do not modify */</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>strlen<span class="op">(</span>s<span class="op">);</span>                 <span class="co">/* 3, excludes the terminator */</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>strcmp<span class="op">(</span>s<span class="op">,</span> <span class="st">&quot;abc&quot;</span><span class="op">)</span> <span class="op">==</span> <span class="dv">0</span><span class="op">;</span>     <span class="co">/* compare contents, never use == */</span></span></code></pre></div>
+<p><code class="verbatim">strcpy</code>, <code
+class="verbatim">strcat</code>, and <code class="verbatim">gets</code>
+do not check bounds. Prefer <code class="verbatim">snprintf</code> and
+explicit lengths:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> buf<span class="op">[</span><span class="dv">32</span><span class="op">];</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> n <span class="op">=</span> snprintf<span class="op">(</span>buf<span class="op">,</span> <span class="kw">sizeof</span> buf<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">-</span><span class="sc">%d</span><span class="st">&quot;</span><span class="op">,</span> name<span class="op">,</span> id<span class="op">);</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">||</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)</span>n <span class="op">&gt;=</span> <span class="kw">sizeof</span> buf<span class="op">)</span> <span class="op">{</span> <span class="co">/* truncated or error */</span> <span class="op">}</span></span></code></pre></div>
+<h3 id="structs-unions-enums">8. Structs, unions, enums</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> point <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y<span class="op">;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> point p <span class="op">=</span> <span class="op">{</span> <span class="op">.</span>x <span class="op">=</span> <span class="fl">1.0</span><span class="op">,</span> <span class="op">.</span>y <span class="op">=</span> <span class="fl">2.0</span> <span class="op">};</span>   <span class="co">/* designated initializers */</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>p<span class="op">.</span>x <span class="op">=</span> <span class="fl">3.0</span><span class="op">;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> point <span class="op">*</span>q <span class="op">=</span> <span class="op">&amp;</span>p<span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>q<span class="op">-&gt;</span>y <span class="op">=</span> <span class="fl">4.0</span><span class="op">;</span>                                <span class="co">/* same as (*q).y */</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> point Point<span class="op">;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> color <span class="op">{</span> RED<span class="op">,</span> GREEN<span class="op">,</span> BLUE <span class="op">};</span>           <span class="co">/* integer constants 0, 1, 2 */</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">union</span> value <span class="op">{</span>                              <span class="co">/* members share storage */</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span>    i<span class="op">;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span>  f<span class="op">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>Struct layout includes padding, so <code
+class="verbatim">sizeof(struct)</code> can exceed the sum of the
+members. Structs are copied by assignment and passed by value.</p>
+<h3 id="dynamic-memory">9. Dynamic memory</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>a <span class="op">=</span> malloc<span class="op">(</span>n <span class="op">*</span> <span class="kw">sizeof</span> <span class="op">*</span>a<span class="op">);</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>a <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span> <span class="co">/* handle failure */</span> <span class="op">}</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>a<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>free<span class="op">(</span>a<span class="op">);</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> NULL<span class="op">;</span></span></code></pre></div>
+<ul>
+<li>Every successful <code class="verbatim">malloc</code>, <code
+class="verbatim">calloc</code>, or <code class="verbatim">realloc</code>
+needs exactly one <code class="verbatim">free</code>.</li>
+<li><code class="verbatim">calloc(n, size)</code> zero-fills and checks
+the multiplication for overflow.</li>
+<li>Never use memory after <code class="verbatim">free</code> and never
+free twice.</li>
+<li><code class="verbatim">realloc</code> can fail and leave the
+original block valid, so do not overwrite the only pointer:</li>
+</ul>
+<div class="sourceCode" id="cb15"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">*</span>tmp <span class="op">=</span> realloc<span class="op">(</span>a<span class="op">,</span> new_n <span class="op">*</span> <span class="kw">sizeof</span> <span class="op">*</span>a<span class="op">);</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>tmp <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span> free<span class="op">(</span>a<span class="op">);</span> <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> tmp<span class="op">;</span></span></code></pre></div>
+<h3 id="undefined-behavior">10. Undefined behavior</h3>
+<p>The compiler assumes it never happens, and the result can be
+anything. Common sources:</p>
+<table>
+<thead>
+<tr>
+<th>Cause</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Signed integer overflow</td>
+<td><code class="verbatim">INT_MAX + 1</code></td>
+</tr>
+<tr>
+<td>Out-of-bounds access</td>
+<td><code class="verbatim">a[n]</code> on <code
+class="verbatim">int a[n]</code></td>
+</tr>
+<tr>
+<td>Null or dangling pointer dereference</td>
+<td>use after <code class="verbatim">free</code></td>
+</tr>
+<tr>
+<td>Reading an uninitialized automatic variable</td>
+<td><code class="verbatim">int x; return x;</code></td>
+</tr>
+<tr>
+<td>Shift by negative or &gt;= width</td>
+<td><code class="verbatim">1 &lt;&lt; 32</code> on 32-bit <code
+class="verbatim">int</code></td>
+</tr>
+<tr>
+<td>Modifying an object twice without sequencing</td>
+<td><code class="verbatim">i = i++ + 1</code></td>
+</tr>
+<tr>
+<td>Violating strict aliasing</td>
+<td>reading a <code class="verbatim">float</code> as <code
+class="verbatim">int</code></td>
+</tr>
+<tr>
+<td>Modifying a string literal</td>
+<td><code>char *s = "a"; s[0]='b';</code></td>
+</tr>
+</tbody>
+</table>
+<p>Tests that "work" do not rule out UB. Use the sanitizers (section
+15).</p>
+<h3 id="const-static-extern">11. const, static, extern</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">const</span> <span class="dt">int</span> limit <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>        <span class="co">/* cannot be modified through this name */</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>p<span class="op">;</span>                <span class="co">/* pointer to const char */</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span><span class="dt">const</span> q <span class="op">=</span> buf<span class="op">;</span>          <span class="co">/* const pointer to char */</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">int</span> counter<span class="op">;</span>           <span class="co">/* file scope: internal linkage */</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> f<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">static</span> <span class="dt">int</span> calls <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>     <span class="co">/* function scope: persists between calls */</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    calls<span class="op">++;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="dt">int</span> shared<span class="op">;</span>            <span class="co">/* declared here, defined in another file */</span></span></code></pre></div>
+<p>Globals and <code class="verbatim">static</code> variables are
+zero-initialized; automatic (local) variables are not.</p>
+<h3 id="the-preprocessor">12. The preprocessor</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span><span class="pp">       </span><span class="co">/* system header */</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;mylib.h&quot;</span><span class="pp">       </span><span class="co">/* local header */</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MAX </span><span class="dv">100</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SQUARE</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="op">((</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="op">*</span><span class="pp"> </span><span class="op">(</span><span class="pp">x</span><span class="op">))</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef MYLIB_H</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MYLIB_H</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">/* header contents */</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<p>Macros are textual substitution. Parenthesize the parameters and the
+whole body, and remember that arguments can be evaluated more than once:
+<code class="verbatim">SQUARE(i++)</code> is undefined behavior. Prefer
+<code class="verbatim">static inline</code> functions and <code
+class="verbatim">enum</code> constants when possible.</p>
+<h3 id="function-pointers">13. Function pointers</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="op">(*</span>op<span class="op">)(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">int</span><span class="op">)</span> <span class="op">=</span> add<span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>op<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span>                       <span class="co">/* 5 */</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> cmp<span class="op">(</span><span class="dt">const</span> <span class="dt">void</span> <span class="op">*</span>a<span class="op">,</span> <span class="dt">const</span> <span class="dt">void</span> <span class="op">*</span>b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> x <span class="op">=</span> <span class="op">*(</span><span class="dt">const</span> <span class="dt">int</span> <span class="op">*)</span>a<span class="op">,</span> y <span class="op">=</span> <span class="op">*(</span><span class="dt">const</span> <span class="dt">int</span> <span class="op">*)</span>b<span class="op">;</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span>x <span class="op">&gt;</span> y<span class="op">)</span> <span class="op">-</span> <span class="op">(</span>x <span class="op">&lt;</span> y<span class="op">);</span>   <span class="co">/* avoids overflow from x - y */</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>qsort<span class="op">(</span>arr<span class="op">,</span> n<span class="op">,</span> <span class="kw">sizeof</span> arr<span class="op">[</span><span class="dv">0</span><span class="op">],</span> cmp<span class="op">);</span></span></code></pre></div>
+<h3 id="io-and-errors">14. I/O and errors</h3>
+<div class="sourceCode" id="cb19"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;errno.h&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string.h&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>f <span class="op">=</span> fopen<span class="op">(</span><span class="st">&quot;data.txt&quot;</span><span class="op">,</span> <span class="st">&quot;r&quot;</span><span class="op">);</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>f <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>stderr<span class="op">,</span> <span class="st">&quot;open: </span><span class="sc">%s\n</span><span class="st">&quot;</span><span class="op">,</span> strerror<span class="op">(</span>errno<span class="op">));</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> line<span class="op">[</span><span class="dv">256</span><span class="op">];</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>fgets<span class="op">(</span>line<span class="op">,</span> <span class="kw">sizeof</span> line<span class="op">,</span> f<span class="op">)</span> <span class="op">!=</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* process line */</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>fclose<span class="op">(</span>f<span class="op">);</span></span></code></pre></div>
+<p>C has no exceptions. Functions signal failure through return values
+(<code class="verbatim">NULL</code>, <code class="verbatim">-1</code>,
+an error code) and sometimes <code class="verbatim">errno</code>. Check
+them.</p>
+<h3 id="tools">15. Tools</h3>
+<div class="sourceCode" id="cb20" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-std</span><span class="op">=</span>c17 <span class="at">-Wall</span> <span class="at">-Wextra</span> <span class="at">-g</span> <span class="at">-fsanitize</span><span class="op">=</span>address,undefined hello.c <span class="at">-o</span> hello</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> ./hello       <span class="co"># alternative on Linux</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">gdb</span> ./hello</span></code></pre></div>
+<p>AddressSanitizer catches out-of-bounds access, use after free, and
+leaks. UBSan catches signed overflow, bad shifts, and null dereferences
+at run time.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Everything is passed by value; pointers are how you share or
+mutate.</li>
+<li>An array is not a pointer, but it decays into one almost
+everywhere.</li>
+<li>Strings are NUL-terminated arrays; check bounds yourself.</li>
+<li>You own the memory you allocate: free once, never use after.</li>
+<li>Undefined behavior is not an error message; it is a license for the
+compiler.</li>
+<li>Compile with <code class="verbatim">-Wall -Wextra</code> and test
+under sanitizers.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

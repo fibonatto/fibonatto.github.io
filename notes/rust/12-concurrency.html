@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Concurrency</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/12-concurrency.html">
+  <meta property="og:title" content="Rust Concurrency">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/12-concurrency.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Concurrency</h1>
+<h2 id="rust-concurrency-1">Rust Concurrency</h2>
+<p>Rust prevents data races at compile time: the ownership and borrowing
+rules, together with the <code class="verbatim">Send</code> and <code
+class="verbatim">Sync</code> traits, make unsynchronized shared mutation
+a type error. Deadlocks, logic races, and starvation are still possible.
+The memory model matches C11/C++11 (the C concurrency notes explain the
+underlying ideas).</p>
+<h3 id="threads">1. Threads</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>thread<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> handle <span class="op">=</span> <span class="pp">thread::</span>spawn(<span class="op">||</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;in a thread&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dv">42</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result <span class="op">=</span> handle<span class="op">.</span>join()<span class="op">.</span>unwrap()<span class="op">;</span>          <span class="co">// wait; Err if the thread panicked</span></span></code></pre></div>
+<p>A spawned thread may outlive the function that created it, so its
+closure must own its data (<code class="verbatim">move</code>) and
+satisfy <code class="verbatim">'static</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> h <span class="op">=</span> <span class="pp">thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span>               <span class="co">// v is moved into the thread</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{v:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>h<span class="op">.</span>join()<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// println!(&quot;{v:?}&quot;);                         // error: v was moved</span></span></code></pre></div>
+<p><strong>Scoped threads</strong> (<code
+class="verbatim">thread::scope</code>, stable since 1.63) are joined
+before the scope ends, so they may borrow locals:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>]<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (a<span class="op">,</span> b) <span class="op">=</span> v<span class="op">.</span>split_at(<span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (sa<span class="op">,</span> sb) <span class="op">=</span> <span class="pp">thread::</span>scope(<span class="op">|</span>s<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ha <span class="op">=</span> s<span class="op">.</span>spawn(<span class="op">||</span> a<span class="op">.</span>iter()<span class="op">.</span><span class="pp">sum::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>())<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> hb <span class="op">=</span> s<span class="op">.</span>spawn(<span class="op">||</span> b<span class="op">.</span>iter()<span class="op">.</span><span class="pp">sum::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>())<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    (ha<span class="op">.</span>join()<span class="op">.</span>unwrap()<span class="op">,</span> hb<span class="op">.</span>join()<span class="op">.</span>unwrap())</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// sa == 3, sb == 7</span></span></code></pre></div>
+<p>Dropping a <code class="verbatim">JoinHandle</code> detaches the
+thread; the program does not wait for detached threads when <code
+class="verbatim">main</code> returns. Threads have a 2 MiB default stack
+(configurable with <code class="verbatim">thread::Builder</code>).</p>
+<h3 id="shared-state-arc-and-mutex">2. Shared state: Arc and Mutex</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span><span class="op">{</span>Arc<span class="op">,</span> Mutex<span class="op">};</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>thread<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> counter <span class="op">=</span> <span class="pp">Arc::</span>new(<span class="pp">Mutex::</span>new(<span class="dv">0u64</span>))<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> handles <span class="op">=</span> <span class="pp">Vec::</span>new()<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">4</span> <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> c <span class="op">=</span> <span class="pp">Arc::</span>clone(<span class="op">&amp;</span>counter)<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        handles<span class="op">.</span>push(<span class="pp">thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _ <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">100_000</span> <span class="op">{</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                <span class="op">*</span>c<span class="op">.</span>lock()<span class="op">.</span>unwrap() <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>))<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> h <span class="kw">in</span> handles <span class="op">{</span> h<span class="op">.</span>join()<span class="op">.</span>unwrap()<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> <span class="op">*</span>counter<span class="op">.</span>lock()<span class="op">.</span>unwrap())<span class="op">;</span>    <span class="co">// 400000</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">Arc&lt;T&gt;</code> is an atomically
+reference-counted pointer: cloning it gives each thread an owner.</li>
+<li><code class="verbatim">Mutex&lt;T&gt;</code> <em>owns</em> the data
+it protects. You can reach the data only through the guard that <code
+class="verbatim">lock()</code> returns, so it is impossible to forget to
+lock (unlike a C mutex next to a variable).</li>
+<li>The guard unlocks when it is dropped, at the end of its scope; keep
+the scope small. To release early, wrap the use in a block or call <code
+class="verbatim">drop(guard)</code>.</li>
+<li><code class="verbatim">lock()</code> returns <code
+class="verbatim">Result</code>: if a thread panicked while holding the
+lock, the mutex is <em>poisoned</em> and <code
+class="verbatim">lock()</code> returns <code
+class="verbatim">Err</code>. <code class="verbatim">unwrap()</code>
+propagates the panic; use <code
+class="verbatim">unwrap_or_else(|e| e.into_inner())</code> to recover
+the data.</li>
+<li><code class="verbatim">RwLock&lt;T&gt;</code> allows many readers or
+one writer.</li>
+<li>Deadlock is still your problem: acquire several locks in one
+consistent order, and never hold a guard while calling unknown code or
+blocking.</li>
+</ul>
+<h3 id="message-passing">3. Message passing</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>mpsc<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>thread<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (tx<span class="op">,</span> rx) <span class="op">=</span> <span class="pp">mpsc::</span>channel()<span class="op">;</span>               <span class="co">// multiple producers, single consumer</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> id <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">3</span> <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> tx <span class="op">=</span> tx<span class="op">.</span>clone()<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        tx<span class="op">.</span>send(id <span class="op">*</span> <span class="dv">10</span>)<span class="op">.</span>unwrap()<span class="op">;</span>            <span class="co">// moves the value into the channel</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>drop(tx)<span class="op">;</span>                                      <span class="co">// drop the original sender, or the loop below never ends</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> got<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> rx<span class="op">.</span>iter()<span class="op">.</span>collect()<span class="op">;</span>   <span class="co">// ends when every sender is dropped</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>got<span class="op">.</span>sort()<span class="op">;</span>                                    <span class="co">// [0, 10, 20]</span></span></code></pre></div>
+<ul>
+<li>Sending moves ownership, so the sender cannot touch the value
+afterwards: data is handed off, not shared.</li>
+<li><code class="verbatim">recv()</code> blocks, <code
+class="verbatim">try_recv()</code> does not, <code
+class="verbatim">recv_timeout(d)</code> waits up to a limit; <code
+class="verbatim">send</code> fails if the receiver is gone.</li>
+<li><code class="verbatim">mpsc::sync_channel(n)</code> has a bounded
+buffer and blocks senders when it is full, giving back-pressure.
+Unbounded channels can grow without limit.</li>
+<li>Prefer channels when work flows in one direction (pipeline, worker
+pool); prefer a mutex for a shared table everyone updates. The <code
+class="verbatim">crossbeam-channel</code> crate adds multi-consumer and
+<code class="verbatim">select</code>.</li>
+</ul>
+<h3 id="condition-variables">4. Condition variables</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span><span class="op">{</span>Arc<span class="op">,</span> Condvar<span class="op">,</span> Mutex<span class="op">};</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>thread<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair <span class="op">=</span> <span class="pp">Arc::</span>new((<span class="pp">Mutex::</span>new(<span class="cn">false</span>)<span class="op">,</span> <span class="pp">Condvar::</span>new()))<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair2 <span class="op">=</span> <span class="pp">Arc::</span>clone(<span class="op">&amp;</span>pair)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (lock<span class="op">,</span> cv) <span class="op">=</span> <span class="op">&amp;*</span>pair2<span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>lock<span class="op">.</span>lock()<span class="op">.</span>unwrap() <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">.</span>notify_one()<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (lock<span class="op">,</span> cv) <span class="op">=</span> <span class="op">&amp;*</span>pair<span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> ready <span class="op">=</span> lock<span class="op">.</span>lock()<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">!*</span>ready <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    ready <span class="op">=</span> cv<span class="op">.</span>wait(ready)<span class="op">.</span>unwrap()<span class="op">;</span>           <span class="co">// releases the lock while waiting</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Always wait in a loop on the predicate (or use <code
+class="verbatim">cv.wait_while(guard, |r| !*r)</code>): wake-ups can be
+spurious. The pattern is the same as in C.</p>
+<h3 id="atomics">5. Atomics</h3>
+<p>For a single shared integer or flag, atomics avoid a lock.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::atomic::</span><span class="op">{</span>AtomicBool<span class="op">,</span> AtomicUsize<span class="op">,</span> Ordering<span class="op">};</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>Arc<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> HITS<span class="op">:</span> AtomicUsize <span class="op">=</span> <span class="pp">AtomicUsize::</span>new(<span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>HITS<span class="op">.</span>fetch_add(<span class="dv">1</span><span class="op">,</span> <span class="pp">Ordering::</span>SeqCst)<span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> HITS<span class="op">.</span>load(<span class="pp">Ordering::</span>SeqCst)<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> ready <span class="op">=</span> <span class="pp">Arc::</span>new(<span class="pp">AtomicBool::</span>new(<span class="cn">false</span>))<span class="op">;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">// writer:  data written first, then</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>ready<span class="op">.</span>store(<span class="cn">true</span><span class="op">,</span> <span class="pp">Ordering::</span>Release)<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">// reader:</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">!</span>ready<span class="op">.</span>load(<span class="pp">Ordering::</span>Acquire) <span class="op">{</span> <span class="pp">std::hint::</span>spin_loop()<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">// ... everything the writer did before the Release store is now visible</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Ordering</th>
+<th>Guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">SeqCst</code></td>
+<td>One total order of all <code class="verbatim">SeqCst</code>
+operations; the safe default</td>
+</tr>
+<tr>
+<td><code class="verbatim">Acquire</code></td>
+<td>On a load: later accesses are not moved before it</td>
+</tr>
+<tr>
+<td><code class="verbatim">Release</code></td>
+<td>On a store: earlier accesses are not moved after it</td>
+</tr>
+<tr>
+<td><code class="verbatim">AcqRel</code></td>
+<td>Both, for read-modify-write operations</td>
+</tr>
+<tr>
+<td><code class="verbatim">Relaxed</code></td>
+<td>Atomicity only, no ordering with other memory; for counters and
+stats</td>
+</tr>
+</tbody>
+</table>
+<p>There are also <code class="verbatim">compare_exchange</code> and
+<code class="verbatim">fetch_*</code> families. Use <code
+class="verbatim">SeqCst</code> unless you can justify a weaker order.
+Atomics protect one variable; invariants across several need a
+mutex.</p>
+<h3 id="send-and-sync">6. Send and Sync</h3>
+<p>These marker traits are what make the guarantees work. The compiler
+derives them from a type's fields.</p>
+<ul>
+<li><code class="verbatim">T: Send</code>: ownership of a <code
+class="verbatim">T</code> can move to another thread.</li>
+<li><code class="verbatim">T: Sync</code>: a <code
+class="verbatim">&amp;T</code> can be shared among threads
+(equivalently, <code class="verbatim">&amp;T: Send</code>).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Send</th>
+<th>Sync</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">i32</code>, <code
+class="verbatim">String</code>, <code
+class="verbatim">Vec&lt;T&gt;</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>plain owned data</td>
+</tr>
+<tr>
+<td><code class="verbatim">Rc&lt;T&gt;</code></td>
+<td>no</td>
+<td>no</td>
+<td>non-atomic reference count</td>
+</tr>
+<tr>
+<td><code class="verbatim">Arc&lt;T&gt;</code></td>
+<td>if <code class="verbatim">T: Send + Sync</code></td>
+<td>if <code class="verbatim">T: Send + Sync</code></td>
+<td>atomic count</td>
+</tr>
+<tr>
+<td><code class="verbatim">Cell&lt;T&gt;</code>, <code
+class="verbatim">RefCell&lt;T&gt;</code></td>
+<td>yes</td>
+<td>no</td>
+<td>unsynchronized interior mutability</td>
+</tr>
+<tr>
+<td><code class="verbatim">Mutex&lt;T&gt;</code></td>
+<td>if <code class="verbatim">T: Send</code></td>
+<td>if <code class="verbatim">T: Send</code></td>
+<td>the lock provides the synchronization</td>
+</tr>
+<tr>
+<td>raw pointers</td>
+<td>no</td>
+<td>no</td>
+<td>the compiler cannot reason about them</td>
+</tr>
+<tr>
+<td><code class="verbatim">MutexGuard&lt;T&gt;</code></td>
+<td>no</td>
+<td>yes</td>
+<td>must unlock on the thread that locked</td>
+</tr>
+</tbody>
+</table>
+<p>The error "<code class="verbatim">Rc&lt;...&gt;</code> cannot be sent
+between threads safely" means: use <code class="verbatim">Arc</code>
+(and <code class="verbatim">Mutex</code> if you mutate). Implementing
+<code class="verbatim">Send</code> or <code class="verbatim">Sync</code>
+by hand needs <code class="verbatim">unsafe impl</code>: you are
+promising the compiler it is sound.</p>
+<h3 id="thread-locals-and-one-time-initialization">7. Thread-locals and
+one-time initialization</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::cell::</span>Cell<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>OnceLock<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="pp">thread_local!</span> <span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">static</span> DEPTH<span class="op">:</span> Cell<span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">Cell::</span>new(<span class="dv">0</span>)<span class="op">;</span>   <span class="co">// one copy per thread</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>DEPTH<span class="op">.</span>with(<span class="op">|</span>d<span class="op">|</span> d<span class="op">.</span>set(d<span class="op">.</span>get() <span class="op">+</span> <span class="dv">1</span>))<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> CONFIG<span class="op">:</span> OnceLock<span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">OnceLock::</span>new()<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> c <span class="op">=</span> CONFIG<span class="op">.</span>get_or_init(<span class="op">||</span> <span class="pp">String::</span>from(<span class="st">&quot;loaded once&quot;</span>))<span class="op">;</span></span></code></pre></div>
+<h3 id="data-parallelism-with-rayon">8. Data parallelism with rayon</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">rayon::prelude::</span><span class="op">*;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> total<span class="op">:</span> <span class="dt">u64</span> <span class="op">=</span> (<span class="dv">0</span><span class="op">..</span><span class="dv">1_000_000u64</span>)<span class="op">.</span>into_par_iter()<span class="op">.</span>map(<span class="op">|</span>x<span class="op">|</span> x <span class="op">*</span> x <span class="op">%</span> <span class="dv">7</span>)<span class="op">.</span>sum()<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> sorted <span class="op">=</span> <span class="op">{</span> <span class="kw">let</span> <span class="kw">mut</span> v <span class="op">=</span> data<span class="op">.</span>clone()<span class="op">;</span> v<span class="op">.</span>par_sort()<span class="op">;</span> v <span class="op">};</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> lens<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;</span> <span class="op">=</span> words<span class="op">.</span>par_iter()<span class="op">.</span>map(<span class="op">|</span>w<span class="op">|</span> w<span class="op">.</span>len())<span class="op">.</span>collect()<span class="op">;</span></span></code></pre></div>
+<p><code class="verbatim">rayon</code> (a crate) spreads iterator
+adaptors across a work-stealing thread pool, so you change <code
+class="verbatim">iter()</code> to <code
+class="verbatim">par_iter()</code> and keep the code. It pays off for
+CPU-bound work on large inputs; for small inputs the overhead dominates,
+so measure.</p>
+<h3 id="async-in-one-page">9. Async in one page</h3>
+<p><code class="verbatim">async fn</code> returns a <em>future</em>: a
+state machine that does nothing until polled. <code
+class="verbatim">.await</code> suspends it until the awaited future
+completes, letting the thread run other tasks. An <em>executor</em> (a
+runtime such as <code class="verbatim">tokio</code>) polls many futures
+on a few threads.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// requires: tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">tokio::</span>main<span class="at">]</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> a <span class="op">=</span> <span class="pp">tokio::</span>spawn(<span class="kw">async</span> <span class="op">{</span> fetch(<span class="st">&quot;a&quot;</span>)<span class="op">.</span><span class="kw">await</span> <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> b <span class="op">=</span> <span class="pp">tokio::</span>spawn(<span class="kw">async</span> <span class="op">{</span> fetch(<span class="st">&quot;b&quot;</span>)<span class="op">.</span><span class="kw">await</span> <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (ra<span class="op">,</span> rb) <span class="op">=</span> (a<span class="op">.</span><span class="kw">await</span><span class="op">.</span>unwrap()<span class="op">,</span> b<span class="op">.</span><span class="kw">await</span><span class="op">.</span>unwrap())<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Choose async for many mostly-waiting tasks (network servers,
+thousands of connections); choose threads (or <code
+class="verbatim">rayon</code>) for CPU-bound work or a few long-running
+tasks.</li>
+<li>Futures run on a runtime that is not in <code
+class="verbatim">std</code>; the major runtimes are <code
+class="verbatim">tokio</code>, <code class="verbatim">async-std</code>,
+and <code class="verbatim">smol</code>.</li>
+<li>Do not block inside async code (<code
+class="verbatim">thread::sleep</code>, heavy computation, blocking I/O);
+use the runtime's async equivalents or <code
+class="verbatim">spawn_blocking</code>.</li>
+<li>Do not hold a <code class="verbatim">std::sync::MutexGuard</code>
+across an <code class="verbatim">.await</code>; futures that do so are
+not <code class="verbatim">Send</code>. Use <code
+class="verbatim">tokio::sync::Mutex</code> or restructure.</li>
+<li>Tasks spawned with <code class="verbatim">tokio::spawn</code> must
+be <code class="verbatim">'static</code> and <code
+class="verbatim">Send</code>, like threads.</li>
+</ul>
+<h3 id="hazards-the-compiler-does-not-catch">10. Hazards the compiler
+does not catch</h3>
+<table>
+<thead>
+<tr>
+<th>Hazard</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deadlock</td>
+<td>Lock ordering; one lock at a time; <code
+class="verbatim">try_lock</code>; keep critical sections small</td>
+</tr>
+<tr>
+<td>Logic race (check, then act, in separate critical sections)</td>
+<td>Do the check and the act under one lock</td>
+</tr>
+<tr>
+<td>Lost updates with atomics</td>
+<td>Use <code class="verbatim">fetch_add</code> / <code
+class="verbatim">compare_exchange</code>, not load-then-store</td>
+</tr>
+<tr>
+<td>Unbounded channels</td>
+<td>Use <code class="verbatim">sync_channel</code> for
+back-pressure</td>
+</tr>
+<tr>
+<td><code class="verbatim">Arc</code> reference cycles</td>
+<td>Use <code class="verbatim">Weak</code> for back-references</td>
+</tr>
+<tr>
+<td>Poisoned mutex</td>
+<td>Decide a recovery policy; do not just <code
+class="verbatim">unwrap</code> everywhere</td>
+</tr>
+<tr>
+<td>False sharing</td>
+<td>Pad hot per-thread data to a cache line (<code
+class="verbatim">#[repr(align(64))]</code>)</td>
+</tr>
+<tr>
+<td>Blocking in async code</td>
+<td><code class="verbatim">spawn_blocking</code>, async I/O</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tools">11. Tools</h3>
+<div class="sourceCode" id="cb11" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test                                         <span class="co"># tests run in parallel threads by default</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--</span> <span class="at">--test-threads</span><span class="op">=</span>1                     <span class="co"># serialize when tests share state</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> +nightly miri test                           <span class="co"># detects UB, including some data races in unsafe code</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="va">RUSTFLAGS</span><span class="op">=</span><span class="st">&quot;-Zsanitizer=thread&quot;</span> <span class="ex">cargo</span> +nightly run <span class="at">--target</span> x86_64-unknown-linux-gnu   <span class="co"># ThreadSanitizer</span></span></code></pre></div>
+<p>The <code class="verbatim">loom</code> crate model-checks concurrent
+code by exploring interleavings; it is worth using for lock-free
+structures. In gdb, <code class="verbatim">thread apply all bt</code>
+shows what every thread is doing in a hung program.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>The compiler rejects data races; <code class="verbatim">Send</code>
+and <code class="verbatim">Sync</code> encode what may cross
+threads.</li>
+<li><code class="verbatim">thread::spawn</code> needs owned (<code
+class="verbatim">move</code>) data; <code
+class="verbatim">thread::scope</code> lets threads borrow.</li>
+<li><code class="verbatim">Arc&lt;Mutex&lt;T&gt;&gt;</code> for shared
+mutable state; the mutex owns the data and the guard unlocks on
+drop.</li>
+<li>Channels hand off ownership; bound them when producers can outrun
+consumers.</li>
+<li>Atomics for single values, <code class="verbatim">SeqCst</code> by
+default; wait on condvars in a loop.</li>
+<li>Async is for many waiting tasks, not for speed on its own; never
+block inside it.</li>
+<li>Deadlocks and logic races remain your job.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

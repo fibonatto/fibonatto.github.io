@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programming Paradigms</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/08-paradigms.html">
+  <meta property="og:title" content="Programming Paradigms">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/08-paradigms.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Programming Paradigms</h1>
+<h2 id="programming-paradigms-1">Programming Paradigms</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>A paradigm is a set of concepts a language gives you for structuring
+computation: state and control (imperative), objects and messages,
+functions and immutability, relations and constraints, processes and
+channels. At Staff scope you will:</p>
+<ul>
+<li>pick (and defend) the paradigm and language for a system or a
+component, weighing the problem, the team, the ecosystem, and
+operational risk;</li>
+<li>design APIs and module boundaries whose abstractions do not
+leak;</li>
+<li>review code written in styles you do not prefer, judging on the
+problem's fit, not taste;</li>
+<li>recognize that most real languages are multi-paradigm and that the
+interesting question is <em>which concepts you rely on</em>, not which
+label applies.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">09_functional-programming.org</code> and <code
+class="verbatim">10_type-systems.org</code> (the two paradigms with the
+deepest theory), <code class="verbatim">12_concurrency.org</code>
+(concurrency models), <code
+class="verbatim">11_memory-management.org</code>.</p>
+<h3 id="paradigms-as-sets-of-concepts">1. Paradigms as sets of
+concepts</h3>
+<p>Van Roy and Haridi's <em>Concepts, Techniques, and Models of Computer
+Programming</em> argues that paradigms differ by a small number of
+concepts layered over a common kernel: adding mutable state,
+concurrency, laziness, or search each changes which programs are simple
+to write and to reason about. Useful corollaries:</p>
+<ul>
+<li>Fewer concepts in play means easier reasoning (a purely functional
+component has no hidden state to track).</li>
+<li>Add a concept only when the problem needs it (use mutable state for
+a hot loop, not everywhere).</li>
+<li>Different parts of one system may sensibly use different paradigms:
+a functional core with an imperative shell, a declarative query language
+over an imperative engine, a message-passing outer layer over
+shared-memory internals.</li>
+</ul>
+<h3 id="imperative-and-structured-programming">2. Imperative and
+structured programming</h3>
+<p>Programs are sequences of commands that change state; control flow is
+explicit (loops, conditionals, functions). Dijkstra's
+structured-programming discipline (sequence, selection, iteration; avoid
+unrestricted <code class="verbatim">goto</code>) is the basis of
+Hoare-logic reasoning (<code
+class="verbatim">02_logic-and-proofs.org</code>). Strengths: close to
+the machine, predictable cost, easy to optimize. Weaknesses: aliasing
+and shared mutable state make local reasoning hard; ordering bugs and
+temporal coupling. Procedural languages (C, Pascal), systems languages
+(C, Rust, Zig), and the core of every mainstream language belong
+here.</p>
+<h3 id="object-oriented-programming">3. Object-oriented programming</h3>
+<p>Objects bundle state with behavior and communicate through methods.
+Concepts to separate:</p>
+<ul>
+<li><strong>Encapsulation</strong>: hide representation behind an
+interface so it can change. This, not inheritance, is the lasting
+value.</li>
+<li><strong>Subtype polymorphism</strong>: use any object satisfying an
+interface where that interface is expected; implemented by dynamic
+dispatch (vtables; one indirect call, usually non-inlinable, which
+matters in hot paths).</li>
+<li><strong>Inheritance</strong>: reuse and specialization by extending
+a class. Frequent source of fragile base classes and tangled
+hierarchies; many guides recommend composition over inheritance.</li>
+<li><strong>Liskov substitution principle</strong>: a subtype must honor
+the contract of its supertype (preconditions no stronger, postconditions
+no weaker); a Square that extends Rectangle breaks it if width and
+height can be set independently.</li>
+<li><strong>Message passing</strong> (Smalltalk, Erlang's processes)
+versus class-based OO (Java, C++): the original idea of objects as
+isolated components exchanging messages is closer to actors than to
+class hierarchies.</li>
+<li><strong>Interfaces and traits</strong> (Go, Rust, Swift protocols)
+give polymorphism without implementation inheritance; prefer them for
+open extension (the traits-and-generics file in the Rust notes).</li>
+</ul>
+<p>Design heuristics: small interfaces; depend on abstractions at
+boundaries (where change or testing happens) and on concrete types
+inside; avoid deep hierarchies; make invalid states unrepresentable. The
+SOLID principles are guidance, not laws; they can be overapplied into
+needless indirection.</p>
+<h3 id="functional-programming">4. Functional programming</h3>
+<p>Computation as evaluating expressions and applying functions;
+immutability by default; higher-order functions; algebraic data types.
+Strengths: local reasoning, easy testing, safe concurrency, powerful
+abstraction. Costs: allocation and garbage collection, learning curve,
+awkwardness for some stateful algorithms. See <code
+class="verbatim">09_functional-programming.org</code>.</p>
+<h3 id="declarative-logic-and-constraint-programming">5. Declarative,
+logic, and constraint programming</h3>
+<p>You state <em>what</em> holds; the system decides <em>how</em>.</p>
+<ul>
+<li><strong>SQL and relational algebra</strong>: a query describes a
+result; the optimizer chooses the plan. The cost shows when the
+optimizer chooses badly: you then read plans and add indexes.</li>
+<li><strong>Datalog</strong>: logic rules over facts with guaranteed
+termination; used for program analysis, access-control policy, and
+incremental computation.</li>
+<li><strong>Prolog</strong>: unification and backtracking search;
+relations run in several directions.</li>
+<li><strong>Constraint, SAT, SMT, and ILP solvers</strong>: model the
+problem as constraints and let a solver search (<code
+class="verbatim">04_complexity.org</code>). Infrastructure tools
+(Terraform, Kubernetes manifests, build systems like Make and Bazel) are
+declarative about desired state or dependencies, with a reconciling
+engine underneath.</li>
+</ul>
+<p>Declarative systems trade control for conciseness; debugging means
+understanding the engine's strategy.</p>
+<h3 id="concurrent-and-distributed-paradigms">6. Concurrent and
+distributed paradigms</h3>
+<ul>
+<li><strong>Shared-memory threads with locks</strong>: closest to
+hardware; hardest to get right.</li>
+<li><strong>Message passing / actors</strong> (Erlang, Akka): isolated
+processes with mailboxes; failure handling by supervision ("let it
+crash").</li>
+<li><strong>CSP</strong> (Go channels, Rust channels): processes
+synchronize on channels.</li>
+<li><strong>Software transactional memory</strong> (Clojure, Haskell):
+composable atomic blocks.</li>
+<li><strong>Async/await and event loops</strong>: single-threaded
+cooperative concurrency for I/O-bound work (JavaScript, Python asyncio,
+Rust futures).</li>
+<li><strong>Dataflow and reactive programming</strong>: values update
+when their inputs change (spreadsheets, RxJS, signals).</li>
+<li><strong>Data parallelism</strong>: SIMD, GPUs, MapReduce-style
+jobs.</li>
+</ul>
+<p>Detailed treatment, with correctness criteria and trade-offs, is in
+<code class="verbatim">12_concurrency.org</code>.</p>
+<h3 id="data-oriented-and-array-programming">7. Data-oriented and array
+programming</h3>
+<ul>
+<li><strong>Data-oriented design</strong> organizes code around the
+layout and flow of data through the machine: arrays of homogeneous
+records, systems processing batches, entity-component-system (ECS)
+architectures in games. It gains cache efficiency and parallelism, at
+some cost to object-style abstraction (<code
+class="verbatim">05_data-structures.org</code>).</li>
+<li><strong>Array programming</strong> (APL, J, NumPy, MATLAB, R,
+dataframes) expresses whole-array operations and compiles to vectorized
+kernels; high leverage in numerical and analytic work.</li>
+</ul>
+<h3 id="metaprogramming-and-dsls">8. Metaprogramming and DSLs</h3>
+<p>Programs that manipulate programs:</p>
+<ul>
+<li><strong>Macros</strong> (Lisp and Rust <code
+class="verbatim">macro_rules!</code>, Scheme, Racket): syntactic
+transformation; hygiene prevents accidental capture. Lisp's homogeneous
+syntax (code as lists) makes macros natural.</li>
+<li><strong>Reflection and annotations</strong> (Java, C#, Python):
+inspect and modify programs at run time; flexible, hard to analyze
+statically, and often slow.</li>
+<li><strong>Code generation and templates</strong> (C++ templates,
+protocol-buffer compilers, OpenAPI generators): compile-time
+instantiation or build-step generation.</li>
+<li><strong>Staging and partial evaluation</strong>: split computation
+into stages to specialize code.</li>
+<li><strong>Embedded versus external DSLs</strong>: an embedded DSL
+reuses the host language's tools and types; an external DSL gets custom
+syntax and analysis but needs its own parser, tooling, and
+documentation. Apply the principle of least power (<code
+class="verbatim">07_theory-of-computation.org</code>).</li>
+</ul>
+<p>Metaprogramming makes code shorter and harder to read, debug, and
+analyze; use it where the repeated pattern is large and stable.</p>
+<h3 id="language-design-axes">9. Language design axes</h3>
+<p>Languages are points in a design space; know where each sits.</p>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Typing</th>
+<th>Memory management</th>
+<th>Evaluation</th>
+<th>Concurrency idiom</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C</td>
+<td>Static, weak</td>
+<td>Manual</td>
+<td>Strict</td>
+<td>Threads, atomics (library)</td>
+</tr>
+<tr>
+<td>C++</td>
+<td>Static</td>
+<td>Manual and RAII</td>
+<td>Strict</td>
+<td>Threads, atomics, coroutines</td>
+</tr>
+<tr>
+<td>Rust</td>
+<td>Static, strong, ownership</td>
+<td>Ownership, no GC</td>
+<td>Strict</td>
+<td>Threads, channels, async; data-race freedom</td>
+</tr>
+<tr>
+<td>Go</td>
+<td>Static</td>
+<td>Tracing GC</td>
+<td>Strict</td>
+<td>Goroutines and channels</td>
+</tr>
+<tr>
+<td>Java / C#</td>
+<td>Static</td>
+<td>Tracing GC</td>
+<td>Strict</td>
+<td>Threads, executors, async</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>Dynamic, strong</td>
+<td>Reference counting plus cycle GC</td>
+<td>Strict</td>
+<td>Threads (GIL), asyncio, processes</td>
+</tr>
+<tr>
+<td>JavaScript / TypeScript</td>
+<td>Dynamic / static, gradual</td>
+<td>Tracing GC</td>
+<td>Strict</td>
+<td>Event loop, promises, workers</td>
+</tr>
+<tr>
+<td>Haskell</td>
+<td>Static, strong, inferred</td>
+<td>Tracing GC</td>
+<td>Lazy</td>
+<td>STM, lightweight threads, purity</td>
+</tr>
+<tr>
+<td>Common Lisp</td>
+<td>Dynamic, strong (optional declarations)</td>
+<td>Tracing GC</td>
+<td>Strict</td>
+<td>Library-level threads</td>
+</tr>
+<tr>
+<td>Erlang / Elixir</td>
+<td>Dynamic</td>
+<td>Per-process GC</td>
+<td>Strict</td>
+<td>Actors with supervision</td>
+</tr>
+</tbody>
+</table>
+<p>Axes to evaluate when choosing: type system (what is checked before
+run time), memory model (latency and safety), evaluation strategy
+(strict, lazy, by-name), effect and error handling (exceptions versus
+result types), module and abstraction mechanisms, concurrency model,
+ecosystem and tooling, runtime and deployment, hiring and training
+cost.</p>
+<h3 id="evaluating-abstractions">10. Evaluating abstractions</h3>
+<ul>
+<li><strong>Leaky abstractions</strong>: every abstraction hides details
+that sometimes matter (ORMs and SQL, network file systems, garbage
+collection, virtual memory). Know the layer below the one you use.</li>
+<li><strong>Zero-cost abstractions</strong> (C++, Rust): abstractions
+that compile away. Not all abstractions are free: dynamic dispatch,
+boxing, allocation, and exceptions have costs to measure.</li>
+<li><strong>API design</strong>: make the common case easy and the wrong
+case hard (the "pit of success"); prefer types that prevent misuse; keep
+the surface small; stable contracts, versioned changes.</li>
+<li><strong>Cohesion and coupling</strong>: modules should hide
+decisions likely to change (Parnas). Conway's law: system structure
+mirrors the communication structure of the organization; design both
+deliberately.</li>
+<li><strong>Decision records</strong>: write architecture decision
+records (ADRs) naming alternatives, constraints, and reversibility. The
+Staff-engineering literature emphasizes writing as the main tool for
+such decisions.</li>
+</ul>
+<h3 id="interpreters-as-a-paradigm-laboratory">11. Interpreters as a
+paradigm laboratory</h3>
+<p>Implementing a small language teaches paradigms better than reading
+about them. Nystrom's <em>Crafting Interpreters</em> builds two
+interpreters for one language (a tree-walking interpreter in Java and a
+bytecode virtual machine in C), covering scanning, parsing, closures,
+classes, inheritance, and garbage collection. The metacircular evaluator
+in SICP shows an interpreter written in the language it interprets.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One task, three styles. Word frequency.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> <span class="bu">reduce</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>TEXT <span class="op">=</span> <span class="st">&quot;the cat and the hat and the bat&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> freq_imperative(text):</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    counts <span class="op">=</span> {}</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> w <span class="kw">in</span> text.split():</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        counts[w] <span class="op">=</span> counts.get(w, <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> counts</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WordCounter:                                   <span class="co"># object-oriented: state behind an interface</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._counts <span class="op">=</span> {}</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> add(<span class="va">self</span>, word):</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._counts[word] <span class="op">=</span> <span class="va">self</span>._counts.get(word, <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> result(<span class="va">self</span>):</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">dict</span>(<span class="va">self</span>._counts)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> freq_oo(text):</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    wc <span class="op">=</span> WordCounter()</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> w <span class="kw">in</span> text.split():</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        wc.add(w)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> wc.result()</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> freq_functional(text):                           <span class="co"># no mutation of shared state: a fold over the words</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">reduce</span>(<span class="kw">lambda</span> acc, w: {<span class="op">**</span>acc, w: acc.get(w, <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span>}, text.split(), {})</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>expected <span class="op">=</span> {<span class="st">&quot;the&quot;</span>: <span class="dv">3</span>, <span class="st">&quot;cat&quot;</span>: <span class="dv">1</span>, <span class="st">&quot;and&quot;</span>: <span class="dv">2</span>, <span class="st">&quot;hat&quot;</span>: <span class="dv">1</span>, <span class="st">&quot;bat&quot;</span>: <span class="dv">1</span>}</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> freq_imperative(TEXT) <span class="op">==</span> freq_oo(TEXT) <span class="op">==</span> freq_functional(TEXT) <span class="op">==</span> <span class="bu">dict</span>(Counter(TEXT.split())) <span class="op">==</span> expected</span></code></pre></div>
+<p>All three are correct; compare them on testability, performance (the
+functional fold copies a dict each step, O(n<sup>2</sup>) overall, a
+typical cost of naive immutability that persistent maps avoid), and how
+each extends to "count by a different key" or "count in parallel".</p>
+<h3 id="self-check">12. Self-check</h3>
+<ol>
+<li>What does encapsulation buy you that inheritance does not? Give a
+design where inheritance was the wrong choice.</li>
+<li>Why is a declarative description often easier to optimize than
+imperative code, and what do you lose?</li>
+<li>For a latency-critical service with a small team and a 10-year
+lifetime, argue for and against Rust, Go, and Java.</li>
+<li>Which paradigm would you choose for (a) a rules engine edited by
+analysts, (b) a game engine's per-frame update, (c) an event-sourced
+ledger? Why?</li>
+<li>Describe a leaky abstraction you have hit in production and what
+knowledge of the lower layer fixed it.</li>
+<li>When is metaprogramming justified, and what safeguards do you
+require in review?</li>
+</ol>
+<h3 id="exercises">13. Exercises</h3>
+<ul>
+<li>Warm-up: solve one small problem (an event scheduler) imperatively,
+object-orientedly, and functionally; compare line counts, tests, and
+extension cost.</li>
+<li>Core: implement a tree-walking interpreter for a tiny language with
+closures (follow the first half of <em>Crafting Interpreters</em>).</li>
+<li>Core: implement a miniature Datalog engine (naive bottom-up
+evaluation) and use it to compute reachability and access-control
+rules.</li>
+<li>Core: build a small embedded DSL (a query builder or a state-machine
+definition) and compare it with an external one.</li>
+<li>Stretch: write a short technology-selection document for a real
+decision, with alternatives, risks, a reversal plan, and measurable
+criteria.</li>
+<li>Stretch: implement the same concurrent pipeline with threads and
+locks, with channels, and with async tasks; compare bugs found and
+performance.</li>
+</ul>
+<h3 id="resources">14. Resources</h3>
+<ul>
+<li>Nystrom, <em>Crafting Interpreters</em> (free to read online): <a
+href="https://craftinginterpreters.com">https://craftinginterpreters.com</a></li>
+<li>Abelson and Sussman, <em>Structure and Interpretation of Computer
+Programs</em>, including the JavaScript edition, with an online version:
+<a
+href="https://sicp.sourceacademy.org/sicpjs.pdf">https://sicp.sourceacademy.org/sicpjs.pdf</a></li>
+<li>Van Roy and Haridi, <em>Concepts, Techniques, and Models of Computer
+Programming</em>; Scott, <em>Programming Language Pragmatics</em>;
+Harper, <em>Practical Foundations for Programming Languages</em>
+(Cambridge University Press).</li>
+<li>Larson, <em>Staff Engineer: Leadership Beyond the Management
+Track</em> and the StaffEng guides (technical decision making, writing,
+strategy): <a
+href="https://staffeng.com/guides/">https://staffeng.com/guides/</a></li>
+<li>ACM/IEEE-CS/AAAI <em>Computer Science Curricula 2023</em> (the
+Foundations of Programming Languages knowledge area): <a
+href="https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf">https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Paradigms are sets of concepts; add one only when the problem needs
+it.</li>
+<li>Encapsulation and interfaces are the durable part of OO; inheritance
+is the risky part.</li>
+<li>Declarative systems trade control for conciseness; learn the engine
+underneath.</li>
+<li>Principle of least power: choose the least expressive tool that
+works.</li>
+<li>Write decisions down, with alternatives and reversibility.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

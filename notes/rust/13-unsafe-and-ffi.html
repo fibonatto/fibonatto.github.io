@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Unsafe and FFI</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/13-unsafe-and-ffi.html">
+  <meta property="og:title" content="Rust Unsafe and FFI">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/13-unsafe-and-ffi.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Unsafe and FFI</h1>
+<h2 id="rust-unsafe-and-ffi-1">Rust Unsafe and FFI</h2>
+<p>Safe Rust guarantees memory safety and the absence of data races.
+<code class="verbatim">unsafe</code> is a marked escape hatch for things
+the compiler cannot verify: talking to C, implementing low-level data
+structures, and squeezing out performance. Inside it the guarantees
+become <strong>your</strong> obligation.</p>
+<h3 id="what-unsafe-allows">1. What unsafe allows</h3>
+<p>An <code class="verbatim">unsafe</code> block unlocks five
+operations, and nothing else:</p>
+<ol>
+<li>Dereference a raw pointer.</li>
+<li>Call an <code class="verbatim">unsafe</code> function or method
+(including foreign functions).</li>
+<li>Access or modify a mutable <code
+class="verbatim">static</code>.</li>
+<li>Implement an <code class="verbatim">unsafe</code> trait (for example
+<code class="verbatim">Send</code>, <code
+class="verbatim">Sync</code>).</li>
+<li>Access a field of a <code class="verbatim">union</code>.</li>
+</ol>
+<p>The borrow checker, type checker, and bounds checks still run inside
+<code class="verbatim">unsafe</code>. It does not turn Rust into C; it
+lets you assert facts the compiler cannot check.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> p <span class="op">=</span> <span class="op">&amp;</span>x <span class="kw">as</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">i32</span><span class="op">;</span>          <span class="co">// creating a raw pointer is safe</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="op">*</span>p <span class="op">};</span>             <span class="co">// dereferencing it is not</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="kw">fn</span> dangerous(p<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="op">*</span>p <span class="op">}</span> <span class="op">}</span>   <span class="co">// caller must uphold the contract</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v2 <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> dangerous(p) <span class="op">};</span></span></code></pre></div>
+<h3 id="soundness-and-safety-contracts">2. Soundness and safety
+contracts</h3>
+<p>A function is <em>sound</em> if no use of it from safe code can cause
+undefined behavior. The craft is to confine <code
+class="verbatim">unsafe</code> to a small module and expose a safe API
+whose checks establish the preconditions.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// # Safety</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// `ptr` must be valid for reads of `len` consecutive `u8` values</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// and must not be mutated for the duration of the call.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> checksum(ptr<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">u8</span><span class="op">,</span> len<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> bytes <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">std::slice::</span>from_raw_parts(ptr<span class="op">,</span> len) <span class="op">};</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    bytes<span class="op">.</span>iter()<span class="op">.</span>fold(<span class="dv">0u32</span><span class="op">,</span> <span class="op">|</span>a<span class="op">,</span> <span class="op">&amp;</span>b<span class="op">|</span> a<span class="op">.</span>wrapping_add(b <span class="kw">as</span> <span class="dt">u32</span>))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> checksum_slice(data<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">u8</span>]) <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// SAFETY: a slice is valid for reads of data.len() bytes.</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span> checksum(data<span class="op">.</span>as_ptr()<span class="op">,</span> data<span class="op">.</span>len()) <span class="op">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Document an <code class="verbatim">unsafe fn</code> with a <code
+class="verbatim"># Safety</code> section listing what the caller must
+guarantee.</li>
+<li>Put a <code class="verbatim">// SAFETY:</code> comment on each <code
+class="verbatim">unsafe</code> block explaining why the preconditions
+hold.</li>
+<li>Keep blocks as small as possible; do the safe work outside
+them.</li>
+<li>Crates that need no unsafe code can say so: <code
+class="verbatim">#![forbid(unsafe_code)]</code>.</li>
+<li>Edition 2024: the <code
+class="verbatim">unsafe_op_in_unsafe_fn</code> lint warns when an <code
+class="verbatim">unsafe fn</code> body performs unsafe operations
+without an inner <code class="verbatim">unsafe {}</code> block, so the
+above style is the default there.</li>
+</ul>
+<h3 id="undefined-behavior-in-rust">3. Undefined behavior in Rust</h3>
+<p>Even in <code class="verbatim">unsafe</code>, these are undefined
+behavior:</p>
+<ul>
+<li>Dereferencing a null, dangling, or misaligned pointer.</li>
+<li>Reading uninitialized memory as a value of a type that does not
+allow it.</li>
+<li>Producing an invalid value: a <code class="verbatim">bool</code>
+other than 0 or 1, an invalid <code class="verbatim">char</code>, an
+invalid enum discriminant, a null or dangling reference, a reference to
+a <code class="verbatim">!</code> or an uninhabited type.</li>
+<li>Violating the aliasing rules: a live <code
+class="verbatim">&amp;mut T</code> must be unique; a live <code
+class="verbatim">&amp;T</code> must not see mutation (except through
+<code class="verbatim">UnsafeCell</code>).</li>
+<li>Data races.</li>
+<li>Out-of-bounds access, including via unchecked indexing (<code
+class="verbatim">get_unchecked</code>).</li>
+<li>Calling a function through the wrong ABI or with the wrong
+signature.</li>
+<li>Unwinding out of a function with a non-unwinding ABI (such as plain
+<code class="verbatim">extern "C"</code>) used across FFI.</li>
+</ul>
+<p>Creating a reference to a <code class="verbatim">static mut</code> is
+also denied by default in edition 2024; use atomics, <code
+class="verbatim">Mutex</code>, or <code class="verbatim">OnceLock</code>
+instead of <code class="verbatim">static mut</code>.</p>
+<h3 id="raw-pointers">4. Raw pointers</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>ptr<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> a <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>]<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> p<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">i32</span> <span class="op">=</span> a<span class="op">.</span>as_mut_ptr()<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>p<span class="op">.</span>add(<span class="dv">1</span>) <span class="op">=</span> <span class="dv">20</span><span class="op">;</span>                   <span class="co">// pointer arithmetic in units of i32</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> p<span class="op">.</span>add(<span class="dv">1</span>)<span class="op">.</span>read()<span class="op">;</span>     <span class="co">// read without creating a reference</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    p<span class="op">.</span>add(<span class="dv">2</span>)<span class="op">.</span>write(<span class="dv">30</span>)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">ptr::</span>swap(p<span class="op">,</span> p<span class="op">.</span>add(<span class="dv">3</span>))<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// a == [4, 20, 30, 1]</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">i32</span> <span class="op">=</span> <span class="pp">ptr::</span>null()<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>n<span class="op">.</span>is_null()<span class="op">;</span>                          <span class="co">// true: raw pointers can be null</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::ptr::</span>NonNull<span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nn<span class="op">:</span> NonNull<span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">NonNull::</span>new(p)<span class="op">.</span>unwrap()<span class="op">;</span>   <span class="co">// never null; Option&lt;NonNull&lt;T&gt;&gt; is pointer-sized</span></span></code></pre></div>
+<p>Pointer arithmetic must stay within one allocated object (or one past
+its end), as in C. Use <code class="verbatim">read_unaligned</code> /
+<code class="verbatim">write_unaligned</code> for data that may be
+misaligned. <code class="verbatim">ptr::copy_nonoverlapping</code> is
+<code class="verbatim">memcpy</code>, <code
+class="verbatim">ptr::copy</code> is <code
+class="verbatim">memmove</code>.</p>
+<h3 id="uninitialized-memory-and-transmute">5. Uninitialized memory and
+transmute</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::mem::</span>MaybeUninit<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> buf<span class="op">:</span> [MaybeUninit<span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;;</span> <span class="dv">4</span>] <span class="op">=</span> [<span class="pp">MaybeUninit::</span>uninit()<span class="op">;</span> <span class="dv">4</span>]<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i<span class="op">,</span> slot) <span class="kw">in</span> buf<span class="op">.</span>iter_mut()<span class="op">.</span>enumerate() <span class="op">{</span> slot<span class="op">.</span>write(i <span class="kw">as</span> <span class="dt">u8</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> bytes<span class="op">:</span> [<span class="dt">u8</span><span class="op">;</span> <span class="dv">4</span>] <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">std::mem::</span>transmute(buf) <span class="op">};</span>   <span class="co">// all slots were written</span></span></code></pre></div>
+<p><code class="verbatim">MaybeUninit&lt;T&gt;</code> is the only
+correct way to hold not-yet-initialized memory; <code
+class="verbatim">mem::uninitialized()</code> is deprecated and unsound.
+<code class="verbatim">mem::transmute</code> reinterprets bits and is
+easy to misuse: prefer <code class="verbatim">from_ne_bytes</code>,
+<code class="verbatim">to_bits</code>, <code class="verbatim">as</code>
+casts, or <code class="verbatim">bytemuck</code>-style safe
+wrappers.</p>
+<h3 id="calling-c-from-rust">6. Calling C from Rust</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::ffi::</span><span class="op">{</span>CStr<span class="op">,</span> CString<span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::os::raw::</span><span class="op">{</span><span class="dt">c_char</span><span class="op">,</span> <span class="dt">c_int</span><span class="op">};</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="op">{</span>                          <span class="co">// edition 2024; before that: extern &quot;C&quot; { ... }</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> abs(x<span class="op">:</span> <span class="dt">c_int</span>) <span class="op">-&gt;</span> <span class="dt">c_int</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> strlen(s<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">c_char</span>) <span class="op">-&gt;</span> <span class="dt">usize</span><span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> getenv(name<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">c_char</span>) <span class="op">-&gt;</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">c_char</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> c_strlen(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">,</span> <span class="pp">std::ffi::</span>NulError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> c <span class="op">=</span> <span class="pp">CString::</span>new(s)<span class="op">?;</span>                <span class="co">// adds a NUL terminator; fails on interior NULs</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(<span class="kw">unsafe</span> <span class="op">{</span> strlen(c<span class="op">.</span>as_ptr()) <span class="op">}</span>)        <span class="co">// c is alive for the whole call</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> env_var(name<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> key <span class="op">=</span> <span class="pp">CString::</span>new(name)<span class="op">.</span>ok()<span class="op">?;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> p <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> getenv(key<span class="op">.</span>as_ptr()) <span class="op">};</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> p<span class="op">.</span>is_null() <span class="op">{</span> <span class="cf">return</span> <span class="cn">None</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Some</span>(<span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">CStr::</span>from_ptr(p) <span class="op">}.</span>to_string_lossy()<span class="op">.</span>into_owned())</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Rules:</p>
+<ul>
+<li>Foreign functions are <code class="verbatim">unsafe</code> to call:
+the compiler cannot check their signatures. A wrong declaration is
+undefined behavior.</li>
+<li>Use C-compatible types: <code class="verbatim">c_int</code>, <code
+class="verbatim">c_char</code>, <code class="verbatim">c_void</code>,
+raw pointers, and <code class="verbatim">#[repr(C)]</code> structs.</li>
+<li><code class="verbatim">CString</code> owns a NUL-terminated buffer,
+<code class="verbatim">CStr</code> borrows one. Never pass <code
+class="verbatim">s.as_ptr()</code> of a Rust <code
+class="verbatim">&amp;str</code> to C: it is not NUL-terminated.</li>
+<li>Link a library with <code
+class="verbatim">#[link(name = "m")]</code> on the <code
+class="verbatim">extern</code> block, or from a <code
+class="verbatim">build.rs</code>. The standard C library is linked
+already.</li>
+<li>Wrap each foreign call in a small safe function that checks
+arguments and converts results, as above.</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>repr<span class="at">(</span>C<span class="at">)]</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="at">)]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span>          <span class="co">// same layout and field order as the C struct</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>repr<span class="at">(</span><span class="dt">u8</span><span class="at">)]</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Mode <span class="op">{</span> <span class="bu">Read</span> <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="bu">Write</span> <span class="op">=</span> <span class="dv">1</span> <span class="op">}</span>        <span class="co">// fixed integer representation</span></span></code></pre></div>
+<p><code class="verbatim">#[repr(C)]</code> fixes field order and
+padding like C; <code class="verbatim">#[repr(transparent)]</code> gives
+a wrapper the layout of its single field; plain <code
+class="verbatim">#[repr(Rust)]</code> (the default) may reorder.</p>
+<h3 id="exposing-rust-to-c">7. Exposing Rust to C</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="kw">unsafe</span><span class="at">(</span>no_mangle<span class="at">)]</span>                     <span class="co">// before edition 2024: #[no_mangle]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> rs_add(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> a <span class="op">+</span> b <span class="op">}</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="kw">unsafe</span><span class="at">(</span>no_mangle<span class="at">)]</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> rs_new_counter() <span class="op">-&gt;</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">u64</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Box::</span>into_raw(<span class="pp">Box::</span>new(<span class="dv">0u64</span>))        <span class="co">// give ownership to C</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="kw">unsafe</span><span class="at">(</span>no_mangle<span class="at">)]</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> rs_free_counter(p<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">u64</span>) <span class="op">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>p<span class="op">.</span>is_null() <span class="op">{</span> drop(<span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">Box::</span>from_raw(p) <span class="op">}</span>)<span class="op">;</span> <span class="op">}</span>    <span class="co">// take ownership back and drop</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargo.toml</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[lib]</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">crate-type</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;cdylib&quot;</span><span class="op">,</span> <span class="st">&quot;staticlib&quot;</span><span class="op">]</span>     <span class="co"># shared or static library for C to link</span></span></code></pre></div>
+<ul>
+<li>Define who allocates and who frees every pointer that crosses the
+boundary: memory from <code class="verbatim">Box::into_raw</code> must
+be freed by <code class="verbatim">Box::from_raw</code>, never by C's
+<code class="verbatim">free</code>.</li>
+<li>A panic must not unwind into C: catch it with <code
+class="verbatim">std::panic::catch_unwind</code> at the boundary, or
+compile with <code class="verbatim">panic = "abort"</code>, or declare
+the function <code class="verbatim">extern "C-unwind"</code>.</li>
+<li><code class="verbatim">cbindgen</code> generates a C header from the
+Rust declarations.</li>
+<li>Callbacks from C use <code class="verbatim">extern "C" fn</code>
+pointers with an explicit <code class="verbatim">void *</code> user-data
+argument, as in C.</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Callback <span class="op">=</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span>(value<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> user<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> <span class="pp">std::ffi::</span><span class="dt">c_void</span>)<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> print_value(v<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> _user<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> <span class="pp">std::ffi::</span><span class="dt">c_void</span>) <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{v}&quot;</span>)<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<h3 id="generating-bindings-and-building-c-code">8. Generating bindings
+and building C code</h3>
+<ul>
+<li><code class="verbatim">bindgen</code> reads C headers and generates
+the <code class="verbatim">extern</code> declarations and <code
+class="verbatim">#[repr(C)]</code> types. The convention is a separate
+<code class="verbatim">foo-sys</code> crate containing only raw bindings
+and a safe <code class="verbatim">foo</code> crate on top.</li>
+<li>The <code class="verbatim">cc</code> crate compiles C/C++ sources
+from <code class="verbatim">build.rs</code>:</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// build.rs</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">cc::Build::</span>new()<span class="op">.</span>file(<span class="st">&quot;src/helper.c&quot;</span>)<span class="op">.</span>compile(<span class="st">&quot;helper&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;cargo:rerun-if-changed=src/helper.c&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Use <code class="verbatim">pkg-config</code> (via the <code
+class="verbatim">pkg-config</code> crate) to find system libraries.</li>
+</ul>
+<h3 id="checking-unsafe-code">9. Checking unsafe code</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it finds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">cargo +nightly miri test</code></td>
+<td>Undefined behavior in the code paths your tests run: invalid
+pointers, aliasing violations, uninitialized reads, leaks (Rust-only;
+cannot run real FFI)</td>
+</tr>
+<tr>
+<td>AddressSanitizer / ThreadSanitizer</td>
+<td>Memory errors and races, including across FFI (nightly: <code
+class="verbatim">RUSTFLAGS</code>-Zsanitizer=address=)</td>
+</tr>
+<tr>
+<td><code class="verbatim">valgrind</code></td>
+<td>Memory errors in the final binary</td>
+</tr>
+<tr>
+<td><code class="verbatim">cargo geiger</code></td>
+<td>Counts <code class="verbatim">unsafe</code> use in your dependency
+tree</td>
+</tr>
+<tr>
+<td><code class="verbatim">#![forbid(unsafe_code)]</code></td>
+<td>Guarantees a crate has none</td>
+</tr>
+<tr>
+<td>Clippy lints</td>
+<td><code class="verbatim">clippy::missing_safety_doc</code>, <code
+class="verbatim">clippy::undocumented_unsafe_blocks</code></td>
+</tr>
+</tbody>
+</table>
+<p>Test the safe wrapper hard (including with Miri), since a bug in it
+is a memory bug in every user.</p>
+<h3 id="rules-of-thumb">10. Rules of thumb</h3>
+<ul>
+<li>First look for a safe solution: standard library types (<code
+class="verbatim">Vec</code>, <code class="verbatim">Cell</code>, <code
+class="verbatim">RefCell</code>, <code class="verbatim">Arc</code>,
+<code class="verbatim">split_at_mut</code>) already encapsulate most
+needs.</li>
+<li>Prefer a well-reviewed crate (<code
+class="verbatim">bytemuck</code>, <code
+class="verbatim">zerocopy</code>, <code class="verbatim">libc</code>,
+<code class="verbatim">memmap2</code>) to your own <code
+class="verbatim">unsafe</code>.</li>
+<li>One invariant per <code class="verbatim">unsafe</code> block,
+written down.</li>
+<li>Never use <code class="verbatim">unsafe</code> to silence a
+borrow-checker error; the error usually points at a real aliasing
+problem.</li>
+<li>Treat every <code class="verbatim">extern</code> declaration as part
+of your trusted base: copy signatures from the header exactly, or
+generate them.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li><code class="verbatim">unsafe</code> unlocks five operations; the
+compiler still checks everything else.</li>
+<li>Build a safe API around each unsafe core; document <code
+class="verbatim"># Safety</code> and write <code
+class="verbatim">// SAFETY:</code>.</li>
+<li>Rust's undefined behavior list includes invalid values and aliasing
+violations, not just bad pointers.</li>
+<li>FFI: <code class="verbatim">extern "C"</code>, <code
+class="verbatim">#[repr(C)]</code>, <code
+class="verbatim">CString</code> / <code class="verbatim">CStr</code>,
+and explicit ownership across the boundary; do not let panics cross
+it.</li>
+<li>Use Miri and sanitizers; use <code
+class="verbatim">forbid(unsafe_code)</code> wherever you can.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

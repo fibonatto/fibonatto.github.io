@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haskell Functions</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/haskell/functions.html">
+  <meta property="og:title" content="Haskell Functions">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/haskell/functions.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Haskell Functions</h1>
+<h2 id="haskell-functions-1">Haskell Functions</h2>
+<h3 id="define-a-function">1. Define a function</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">square ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>square x <span class="ot">=</span> x <span class="op">*</span> x</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>square <span class="dv">5</span>      <span class="co">-- 25</span></span></code></pre></div>
+<p>A definition is one or more equations. The type signature is optional
+but strongly recommended for top-level functions. Function application
+is juxtaposition: <code class="verbatim">f x y</code>, not <code
+class="verbatim">f(x, y)</code>.</p>
+<h3 id="several-equations-and-local-definitions">2. Several equations
+and local definitions</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">fact ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>fact <span class="dv">0</span> <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>fact n <span class="ot">=</span> n <span class="op">*</span> fact (n <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ot">bmiLabel ::</span> <span class="dt">Double</span> <span class="ot">-&gt;</span> <span class="dt">Double</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>bmiLabel w h</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> b <span class="op">&lt;</span> <span class="fl">18.5</span>  <span class="ot">=</span> <span class="st">&quot;under&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> b <span class="op">&lt;</span> <span class="dv">25</span>    <span class="ot">=</span> <span class="st">&quot;normal&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="st">&quot;over&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">=</span> w <span class="op">/</span> h <span class="op">^</span> <span class="dv">2</span></span></code></pre></div>
+<p>Equations are tried from top to bottom. <code
+class="verbatim">where</code> scopes over all guards of one equation.
+Local bindings may be functions, and they are mutually recursive by
+default:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parity ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>parity n <span class="ot">=</span> <span class="kw">if</span> isEven (<span class="fu">abs</span> n) <span class="kw">then</span> <span class="st">&quot;even&quot;</span> <span class="kw">else</span> <span class="st">&quot;odd&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    isEven <span class="dv">0</span> <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    isEven k <span class="ot">=</span> isOdd (k <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    isOdd <span class="dv">0</span> <span class="ot">=</span> <span class="dt">False</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    isOdd k <span class="ot">=</span> isEven (k <span class="op">-</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>Here <code class="verbatim">isEven</code> and <code
+class="verbatim">isOdd</code> call each other, which works because all
+bindings in one <code class="verbatim">where</code> (or <code
+class="verbatim">let</code>) are visible to each other.</p>
+<h3 id="lambdas-and-sections">3. Lambdas and sections</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">\</span>x <span class="ot">-&gt;</span> x <span class="op">*</span> x</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">\</span>x y <span class="ot">-&gt;</span> x <span class="op">+</span> y</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (<span class="op">\</span>x <span class="ot">-&gt;</span> x <span class="op">*</span> x) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]       <span class="co">-- [1,4,9]</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (<span class="op">*</span> <span class="dv">2</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]               <span class="co">-- [2,4,6]   right section</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (<span class="dv">2</span> <span class="op">*</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]               <span class="co">-- [2,4,6]   left section</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (<span class="fu">subtract</span> <span class="dv">1</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]        <span class="co">-- [0,1,2]   (- 1) would be the number -1</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>(<span class="ot">`div`</span> <span class="dv">2</span>) <span class="dv">10</span>                      <span class="co">-- 5         infix function in a section</span></span></code></pre></div>
+<h3 id="currying-and-partial-application">4. Currying and partial
+application</h3>
+<p>Every function takes exactly one argument. <code
+class="verbatim">Int -&gt; Int -&gt; Int</code> means <code
+class="verbatim">Int -&gt; (Int -&gt; Int)</code>. Supplying fewer
+arguments gives a new function.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">add ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>add x y <span class="ot">=</span> x <span class="op">+</span> y</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ot">inc ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>inc <span class="ot">=</span> add <span class="dv">1</span>               <span class="co">-- partial application</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (add <span class="dv">10</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]    <span class="co">-- [11,12,13]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">uncurry</span> add (<span class="dv">3</span>, <span class="dv">4</span>)        <span class="co">-- 7: takes a tuple</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">curry</span> <span class="fu">fst</span> <span class="dv">1</span> <span class="dv">2</span>             <span class="co">-- 1</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">flip</span> (<span class="op">-</span>) <span class="dv">1</span> <span class="dv">10</span>             <span class="co">-- 9: flip f x y = f y x</span></span></code></pre></div>
+<p>Argument order matters for partial application: put the argument most
+likely to be fixed first.</p>
+<h3 id="composition-and-application">5. Composition and application</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(f <span class="op">.</span> g) x                     <span class="co">-- composition: the same as f (g x)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ot">countWords ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>countWords <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">words</span>   <span class="co">-- point-free: no explicit argument</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>f <span class="op">$</span> g <span class="op">$</span> h x                   <span class="co">-- f (g (h x)): $ has the lowest precedence</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> ((<span class="op">&amp;</span>))</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>] <span class="op">&amp;</span> <span class="fu">map</span> (<span class="op">+</span> <span class="dv">1</span>) <span class="op">&amp;</span> <span class="fu">sum</span>   <span class="co">-- 9: pipeline order</span></span></code></pre></div>
+<p>Define your own operators, with a fixity declaration:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(|&gt;) ::</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>x <span class="op">|&gt;</span> f <span class="ot">=</span> f x</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">infixl</span> <span class="dv">1</span> <span class="op">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>] <span class="op">|&gt;</span> <span class="fu">map</span> (<span class="op">+</span> <span class="dv">1</span>) <span class="op">|&gt;</span> <span class="fu">sum</span>     <span class="co">-- 9</span></span></code></pre></div>
+<h3 id="multiple-arguments-and-results">6. Multiple arguments and
+results</h3>
+<p>Several results are returned as a tuple (or a record).</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">divMod&#39; ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>divMod&#39; a b <span class="ot">=</span> (a <span class="ot">`div`</span> b, a <span class="ot">`mod`</span> b)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (q, r) <span class="ot">=</span> divMod&#39; <span class="dv">17</span> <span class="dv">5</span>         <span class="co">-- q == 3, r == 2</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="dv">17</span> <span class="ot">`divMod`</span> <span class="dv">5</span>                     <span class="co">-- (3,2): from the Prelude</span></span></code></pre></div>
+<h3 id="higher-order-functions">7. Higher-order functions</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span>      (<span class="op">+</span> <span class="dv">1</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]                  <span class="co">-- [2,3,4]</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">filter</span>   <span class="fu">even</span> [<span class="dv">1</span> <span class="op">..</span> <span class="dv">6</span>]                    <span class="co">-- [2,4,6]</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">foldr</span>    (<span class="op">:</span>) [] [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]                 <span class="co">-- [1,2,3]</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zipWith</span>  (<span class="op">+</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>] [<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>]       <span class="co">-- [11,22,33]</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">takeWhile</span> (<span class="op">&lt;</span> <span class="dv">100</span>) (<span class="fu">iterate</span> (<span class="op">*</span> <span class="dv">2</span>) <span class="dv">1</span>)       <span class="co">-- [1,2,4,8,16,32,64]</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span> <span class="fu">odd</span> [<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">5</span>]                         <span class="co">-- True</span></span></code></pre></div>
+<p>Because functions are ordinary values, they can be stored in lists,
+returned from other functions, and passed anywhere:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">twice ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>twice f <span class="ot">=</span> f <span class="op">.</span> f</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>twice (<span class="op">*</span> <span class="dv">3</span>) <span class="dv">5</span>                             <span class="co">-- 45</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ot">compose ::</span> [a <span class="ot">-&gt;</span> a] <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>compose <span class="ot">=</span> <span class="fu">foldr</span> (<span class="op">.</span>) <span class="fu">id</span></span></code></pre></div>
+<h3 id="recursion-and-accumulators">8. Recursion and accumulators</h3>
+<p>Recursion is the basic looping construct.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE BangPatterns #-}</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ot">sumTo ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>sumTo n <span class="ot">=</span> go <span class="dv">0</span> <span class="dv">1</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    go <span class="op">!</span>acc i</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      <span class="op">|</span> i <span class="op">&gt;</span> n     <span class="ot">=</span> acc</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> go (acc <span class="op">+</span> i) (i <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<p><code class="verbatim">go</code> is a local worker with an
+accumulator, the usual way to make a recursion tail-recursive. The bang
+(<code class="verbatim">!acc</code>) forces the accumulator at each
+step; without it, a lazy accumulator builds a chain of thunks and wastes
+memory. For simple cases use a strict fold:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (foldl&#39;)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>foldl&#39; (<span class="op">+</span>) <span class="dv">0</span> [<span class="dv">1</span> <span class="op">..</span> <span class="dv">1000000</span>]</span></code></pre></div>
+<p>Tail calls do not consume stack space in compiled code. Non-tail
+recursion over a lazy list, by contrast, can still be fine (it produces
+output incrementally) or can build deep stacks (as with a lazy <code
+class="verbatim">foldl</code>).</p>
+<h3 id="parametric-polymorphism-and-constraints">9. Parametric
+polymorphism and constraints</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">id</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">id</span> x <span class="ot">=</span> x</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">swap ::</span> (a, b) <span class="ot">-&gt;</span> (b, a)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>swap (x, y) <span class="ot">=</span> (y, x)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="ot">largest ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> a</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>largest <span class="ot">=</span> <span class="fu">maximum</span></span></code></pre></div>
+<p>A lowercase type variable such as <code class="verbatim">a</code>
+means "any type". A function with type <code
+class="verbatim">a -&gt; a</code> can only return its argument: the type
+tells you a lot about what the function can do. <code>Ord a =&gt;</code>
+is a constraint: the function works for any <code
+class="verbatim">a</code> that supports comparison.</p>
+<h3 id="functions-and-purity">10. Functions and purity</h3>
+<p>A function's result depends only on its arguments and it performs no
+effects. Effects are values of type <code class="verbatim">IO a</code>,
+produced by functions and executed only from <code
+class="verbatim">main</code>.</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">pureAdd ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>pureAdd a b <span class="ot">=</span> a <span class="op">+</span> b</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ot">greet ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>greet name <span class="ot">=</span> <span class="fu">putStrLn</span> (<span class="st">&quot;Hello, &quot;</span> <span class="op">++</span> name)    <span class="co">-- an IO action, not run until main reaches it</span></span></code></pre></div>
+<p>Purity is what lets the compiler reorder, share, and delay evaluation
+safely.</p>
+<h3 id="laziness-arguments-are-not-evaluated-up-front">11. Laziness:
+arguments are not evaluated up front</h3>
+<p>Function arguments are evaluated only when (and if) the function
+needs them. This lets ordinary functions behave like control
+structures:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ot">myIf ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>myIf <span class="dt">True</span>  t _ <span class="ot">=</span> t</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>myIf <span class="dt">False</span> _ e <span class="ot">=</span> e</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>myIf <span class="dt">True</span> <span class="dv">1</span> (<span class="fu">error</span> <span class="st">&quot;boom&quot;</span>)      <span class="co">-- 1: the second branch is never evaluated</span></span></code></pre></div>
+<p>In a strict language such as Rust, C, or Common Lisp, a function with
+this signature would evaluate both branches first; that is why those
+languages need <code class="verbatim">if</code> to be a special form or
+a macro. In Haskell, <code class="verbatim">if</code> is syntax, but
+nothing prevents you from writing <code class="verbatim">myIf</code>,
+<code class="verbatim">unless</code>, or <code
+class="verbatim">when</code> as plain functions.</p>
+<h3 id="common-pitfalls">12. Common pitfalls</h3>
+<ul>
+<li><strong>Partial functions</strong>: <code
+class="verbatim">head</code>, <code class="verbatim">tail</code>, <code
+class="verbatim">fromJust</code>, and incomplete pattern matches crash
+at run time. Enable <code class="verbatim">-Wall</code> and prefer total
+alternatives.</li>
+<li><strong>Negative literals</strong>: write <code
+class="verbatim">f (-1)</code>; <code class="verbatim">f -1</code> is
+subtraction.</li>
+<li><strong>Precedence</strong>: function application binds tighter than
+any operator: <code class="verbatim">f x + 1</code> is <code
+class="verbatim">(f x) + 1</code>.</li>
+<li><strong>Indentation</strong>: <code class="verbatim">where</code>,
+<code class="verbatim">let</code>, <code class="verbatim">do</code>, and
+<code class="verbatim">of</code> blocks use layout; align consistently
+with spaces.</li>
+<li><strong>Lazy accumulators</strong>: use <code
+class="verbatim">foldl'</code> or bang patterns.</li>
+</ul>
+<h3 id="quick-reference">Quick reference</h3>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">f :: A -&gt; B -&gt; C</code></td>
+<td>Signature of a two-argument function</td>
+</tr>
+<tr>
+<td><code class="verbatim">f x y = ...</code></td>
+<td>Define by equation</td>
+</tr>
+<tr>
+<td><code class="verbatim">\x -&gt; ...</code></td>
+<td>Lambda</td>
+</tr>
+<tr>
+<td><code class="verbatim">(+ 1)</code>, <code
+class="verbatim">(1 +)</code></td>
+<td>Operator sections</td>
+</tr>
+<tr>
+<td><code class="verbatim">f . g</code></td>
+<td>Composition</td>
+</tr>
+<tr>
+<td><code class="verbatim">f $ x</code></td>
+<td>Application with low precedence</td>
+</tr>
+<tr>
+<td><code class="verbatim">where</code></td>
+<td>Local definitions scoped over guards</td>
+</tr>
+<tr>
+<td><code class="verbatim">let ... in ...</code></td>
+<td>Local definitions as an expression</td>
+</tr>
+<tr>
+<td><code class="verbatim">Ord a =&gt; ...</code></td>
+<td>Constraint on a type variable</td>
+</tr>
+<tr>
+<td><code class="verbatim">foldr</code>, <code
+class="verbatim">foldl'</code></td>
+<td>Fold from the right, strict fold from the left</td>
+</tr>
+<tr>
+<td><code class="verbatim">IO a</code></td>
+<td>An effectful action, run only from <code
+class="verbatim">main</code></td>
+</tr>
+</tbody>
+</table>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

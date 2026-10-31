@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Traits and Generics</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/06-traits-and-generics.html">
+  <meta property="og:title" content="Rust Traits and Generics">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/06-traits-and-generics.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Traits and Generics</h1>
+<h2 id="rust-traits-and-generics-1">Rust Traits and Generics</h2>
+<p>Traits are Rust's mechanism for shared behavior; generics let one
+piece of code work over many types. Together they replace inheritance,
+templates, and interfaces.</p>
+<h3 id="defining-and-implementing-traits">1. Defining and implementing
+traits</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Shape <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> area(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span><span class="op">;</span>                           <span class="co">// required</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> name(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span> <span class="pp">String::</span>from(<span class="st">&quot;shape&quot;</span>) <span class="op">}</span>   <span class="co">// default method</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Circle(<span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Rect <span class="op">{</span> w<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> h<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Shape <span class="cf">for</span> Circle <span class="op">{</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> area(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span> <span class="pp">std::f64::consts::</span>PI <span class="op">*</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span> <span class="op">*</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span> <span class="op">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> name(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span> <span class="pp">String::</span>from(<span class="st">&quot;circle&quot;</span>) <span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Shape <span class="cf">for</span> Rect <span class="op">{</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> area(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>w <span class="op">*</span> <span class="kw">self</span><span class="op">.</span>h <span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A trait is a set of method signatures (and optionally default bodies,
+associated types, and constants). Implementing it is separate from
+defining the type, and the trait must be in scope (<code
+class="verbatim">use</code>) to call its methods.</p>
+<h3 id="generics">2. Generics</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> largest<span class="op">&lt;</span>T<span class="op">:</span> <span class="bu">PartialOrd</span> <span class="op">+</span> <span class="bu">Copy</span><span class="op">&gt;</span>(xs<span class="op">:</span> <span class="op">&amp;</span>[T]) <span class="op">-&gt;</span> T <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> m <span class="op">=</span> xs[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">&amp;</span>x <span class="kw">in</span> xs <span class="op">{</span> <span class="cf">if</span> x <span class="op">&gt;</span> m <span class="op">{</span> m <span class="op">=</span> x<span class="op">;</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    m</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Stack<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span> items<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span>T<span class="op">&gt;</span> Stack<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> new() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> Stack <span class="op">{</span> items<span class="op">:</span> <span class="pp">Vec::</span>new() <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> push(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> x<span class="op">:</span> T) <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>items<span class="op">.</span>push(x)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> pop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>items<span class="op">.</span>pop() <span class="op">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span>T<span class="op">:</span> <span class="pp">std::fmt::</span><span class="bu">Display</span><span class="op">&gt;</span> Stack<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span>          <span class="co">// methods only for T: Display</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> show(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">{</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>items <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{x}&quot;</span>)<span class="op">;</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>largest(<span class="op">&amp;</span>[<span class="dv">3</span><span class="op">,</span> <span class="dv">7</span><span class="op">,</span> <span class="dv">2</span>])<span class="op">;</span>                           <span class="co">// T = i32</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>largest(<span class="op">&amp;</span>[<span class="dv">1.5</span><span class="op">,</span> <span class="dv">0.5</span>])<span class="op">;</span>                          <span class="co">// T = f64</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> Stack<span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">Stack::</span>new()<span class="op">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> <span class="pp">Stack::</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;</span><span class="pp">::</span>new()<span class="op">;</span>                    <span class="co">// turbofish</span></span></code></pre></div>
+<p>Generics are <em>monomorphized</em>: the compiler generates a
+specialized copy for each concrete type used, so calls are as fast as
+hand-written code, at the cost of compile time and binary size. Unlike
+C++ templates, a generic function is checked once against its bounds,
+not at each instantiation: you can only use operations the bounds
+promise.</p>
+<h3 id="bounds-and-where-clauses">3. Bounds and where clauses</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> show_all<span class="op">&lt;</span>T<span class="op">:</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span> <span class="op">+</span> <span class="bu">Clone</span><span class="op">&gt;</span>(xs<span class="op">:</span> <span class="op">&amp;</span>[T]) <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> compare<span class="op">&lt;</span>T<span class="op">,</span> U<span class="op">&gt;</span>(a<span class="op">:</span> T<span class="op">,</span> b<span class="op">:</span> U) <span class="op">-&gt;</span> <span class="dt">bool</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    T<span class="op">:</span> <span class="bu">PartialEq</span><span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="op">+</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span><span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    U<span class="op">:</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    a <span class="op">==</span> b</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> print_it(x<span class="op">:</span> <span class="op">&amp;</span><span class="kw">impl</span> <span class="pp">std::fmt::</span><span class="bu">Display</span>) <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{x}&quot;</span>)<span class="op">;</span> <span class="op">}</span>     <span class="co">// shorthand for a bound</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> make() <span class="op">-&gt;</span> <span class="kw">impl</span> <span class="bu">Iterator</span><span class="op">&lt;</span>Item <span class="op">=</span> <span class="dt">u32</span><span class="op">&gt;</span> <span class="op">{</span> (<span class="dv">0</span><span class="op">..</span><span class="dv">10</span>)<span class="op">.</span>filter(<span class="op">|</span>n<span class="op">|</span> n <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>) <span class="op">}</span>   <span class="co">// return position</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">impl Trait</code> in argument position is
+sugar for a generic parameter. In return position it means "some single
+concrete type that implements this trait", chosen by the function body,
+useful for closures and iterator chains.</li>
+<li>Bounds on an <code class="verbatim">impl</code> block control which
+methods exist for which type arguments.</li>
+<li>The compiler error "the trait bound <code
+class="verbatim">X: Y</code> is not satisfied" means: implement <code
+class="verbatim">Y</code> for <code class="verbatim">X</code>, derive
+it, or loosen the bound.</li>
+</ul>
+<h3 id="trait-objects-and-dynamic-dispatch">4. Trait objects and dynamic
+dispatch</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> shapes<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> Shape<span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">vec!</span>[</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Box::</span>new(Circle(<span class="dv">1.0</span>))<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Box::</span>new(Rect <span class="op">{</span> w<span class="op">:</span> <span class="dv">2.0</span><span class="op">,</span> h<span class="op">:</span> <span class="dv">3.0</span> <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>]<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> total<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> shapes<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>s<span class="op">|</span> s<span class="op">.</span>area())<span class="op">.</span>sum()<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> describe(s<span class="op">:</span> <span class="op">&amp;</span><span class="kw">dyn</span> Shape) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span> <span class="pp">format!</span>(<span class="st">&quot;{} {:.2}&quot;</span><span class="op">,</span> s<span class="op">.</span>name()<span class="op">,</span> s<span class="op">.</span>area()) <span class="op">}</span></span></code></pre></div>
+<p>A <code class="verbatim">dyn Trait</code> value is accessed through a
+pointer (<code class="verbatim">&amp;dyn</code>, <code
+class="verbatim">Box&lt;dyn&gt;</code>, <code
+class="verbatim">Rc&lt;dyn&gt;</code>) holding the data pointer and a
+<em>vtable</em> of method pointers, so the concrete type is resolved at
+run time.</p>
+<table>
+<thead>
+<tr>
+<th>Static dispatch (generics, <code
+class="verbatim">impl Trait</code>)</th>
+<th>Dynamic dispatch (<code class="verbatim">dyn Trait</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Resolved at compile time; inlinable</td>
+<td>Resolved through a vtable at run time</td>
+</tr>
+<tr>
+<td>One compiled copy per type</td>
+<td>One copy of the code</td>
+</tr>
+<tr>
+<td>Collection holds a single type</td>
+<td>Collection may mix types</td>
+</tr>
+<tr>
+<td>Cannot return different types from one branch</td>
+<td>Can</td>
+</tr>
+</tbody>
+</table>
+<p>A trait must be <em>dyn compatible</em> (formerly "object safe") to
+be used as <code class="verbatim">dyn</code>: its methods cannot be
+generic and cannot return <code class="verbatim">Self</code> (unless the
+method is marked <code class="verbatim">where Self: Sized</code>), and
+it needs a receiver. Prefer generics by default; use <code
+class="verbatim">dyn</code> for heterogeneous collections, plugin-style
+boundaries, and to reduce code size.</p>
+<h3 id="associated-types-and-constants">5. Associated types and
+constants</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Container <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Item<span class="op">;</span>                             <span class="co">// one implementation chooses one Item</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> KIND<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> get(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> i<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="pp">Self::</span>Item<span class="op">&gt;;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Container <span class="cf">for</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Item <span class="op">=</span> <span class="dt">i32</span><span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> KIND<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;vec of i32&quot;</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> get(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> i<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>as_slice()<span class="op">.</span>get(i) <span class="op">}</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> first<span class="op">&lt;</span>C<span class="op">:</span> Container<span class="op">&gt;</span>(c<span class="op">:</span> <span class="op">&amp;</span>C) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="pp">C::</span>Item<span class="op">&gt;</span> <span class="op">{</span> c<span class="op">.</span>get(<span class="dv">0</span>) <span class="op">}</span></span></code></pre></div>
+<p>Use an associated type when each implementor has exactly one such
+type (<code class="verbatim">Iterator::Item</code>, <code
+class="verbatim">Add::Output</code>); use a generic parameter (<code
+class="verbatim">trait From&lt;T&gt;</code>) when a type may implement
+the trait several times with different arguments.</p>
+<p><strong>Const generics</strong> take values as parameters:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> sum<span class="op">&lt;</span><span class="kw">const</span> N<span class="op">:</span> <span class="dt">usize</span><span class="op">&gt;</span>(a<span class="op">:</span> [<span class="dt">i32</span><span class="op">;</span> N]) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> a<span class="op">.</span>iter()<span class="op">.</span>sum() <span class="op">}</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Matrix<span class="op">&lt;</span><span class="kw">const</span> R<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> <span class="kw">const</span> C<span class="op">:</span> <span class="dt">usize</span><span class="op">&gt;</span> <span class="op">{</span> data<span class="op">:</span> [[<span class="dt">f64</span><span class="op">;</span> C]<span class="op">;</span> R] <span class="op">}</span></span></code></pre></div>
+<h3 id="operator-overloading">6. Operator overloading</h3>
+<p>Operators are traits in <code class="verbatim">std::ops</code>.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::ops::</span><span class="op">{</span><span class="bu">Add</span><span class="op">,</span> <span class="bu">Mul</span><span class="op">,</span> <span class="bu">Neg</span><span class="op">,</span> <span class="bu">Index</span><span class="op">};</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="at">)]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> V2 <span class="op">{</span> x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Add</span> <span class="cf">for</span> V2 <span class="op">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> V2<span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> add(<span class="kw">self</span><span class="op">,</span> o<span class="op">:</span> V2) <span class="op">-&gt;</span> V2 <span class="op">{</span> V2 <span class="op">{</span> x<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>x <span class="op">+</span> o<span class="op">.</span>x<span class="op">,</span> y<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>y <span class="op">+</span> o<span class="op">.</span>y <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Mul</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span> <span class="cf">for</span> V2 <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> V2<span class="op">;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> mul(<span class="kw">self</span><span class="op">,</span> k<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> V2 <span class="op">{</span> V2 <span class="op">{</span> x<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>x <span class="op">*</span> k<span class="op">,</span> y<span class="op">:</span> <span class="kw">self</span><span class="op">.</span>y <span class="op">*</span> k <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Neg</span> <span class="cf">for</span> V2 <span class="op">{</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Output <span class="op">=</span> V2<span class="op">;</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> neg(<span class="kw">self</span>) <span class="op">-&gt;</span> V2 <span class="op">{</span> V2 <span class="op">{</span> x<span class="op">:</span> <span class="op">-</span><span class="kw">self</span><span class="op">.</span>x<span class="op">,</span> y<span class="op">:</span> <span class="op">-</span><span class="kw">self</span><span class="op">.</span>y <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> V2 <span class="op">{</span> x<span class="op">:</span> <span class="dv">1.0</span><span class="op">,</span> y<span class="op">:</span> <span class="dv">2.0</span> <span class="op">}</span> <span class="op">+</span> V2 <span class="op">{</span> x<span class="op">:</span> <span class="dv">3.0</span><span class="op">,</span> y<span class="op">:</span> <span class="dv">4.0</span> <span class="op">}</span> <span class="op">*</span> <span class="dv">2.0</span><span class="op">;</span></span></code></pre></div>
+<p>Comparison is <code class="verbatim">PartialEq</code> and <code
+class="verbatim">PartialOrd</code> (derivable); indexing is <code
+class="verbatim">Index</code> / <code class="verbatim">IndexMut</code>;
+<code>+=</code> is <code class="verbatim">AddAssign</code>. Only the
+traits in <code class="verbatim">std::ops</code> and <code
+class="verbatim">std::cmp</code> can be overloaded; you cannot invent
+operators.</p>
+<h3 id="blanket-implementations-and-the-orphan-rule">7. Blanket
+implementations and the orphan rule</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Describe <span class="op">{</span> <span class="kw">fn</span> describe(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span>T<span class="op">:</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span><span class="op">&gt;</span> Describe <span class="cf">for</span> T <span class="op">{</span>          <span class="co">// blanket impl: for every Debug type</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> describe(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span> <span class="pp">format!</span>(<span class="st">&quot;&lt;&lt;{:?}&gt;&gt;&quot;</span><span class="op">,</span> <span class="kw">self</span>) <span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span><span class="op">,</span> <span class="st">&quot;a&quot;</span>)<span class="op">.</span>describe()<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span>]<span class="op">.</span>describe()<span class="op">;</span></span></code></pre></div>
+<p>The standard library uses this pattern: <code
+class="verbatim">impl&lt;T: Display&gt; ToString for T</code>, and <code
+class="verbatim">impl&lt;T, U: From&lt;T&gt;&gt; Into&lt;U&gt; for T</code>.</p>
+<p>The <strong>orphan rule</strong> (coherence): you may implement a
+trait for a type only if your crate defines the trait or the type. You
+cannot implement <code class="verbatim">Display</code> for <code
+class="verbatim">Vec&lt;i32&gt;</code>. The workaround is a newtype
+(<code class="verbatim">struct Wrapper(Vec&lt;i32&gt;);</code>). Each
+trait can be implemented at most once for a given type, so there are no
+ambiguous overlaps.</p>
+<h3 id="supertraits-and-composition">8. Supertraits and composition</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Named <span class="op">{</span> <span class="kw">fn</span> name(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Greeter<span class="op">:</span> Named <span class="op">{</span>                     <span class="co">// every Greeter must also be Named</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> greet(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span> <span class="pp">format!</span>(<span class="st">&quot;Hello, {}&quot;</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span>name()) <span class="op">}</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Traits do not provide data inheritance. Share state with composition
+(a struct containing another struct) and share behavior with traits and
+default methods. Where you would use a base class in C++ or Java, use a
+trait for the interface and a field for the reused implementation.</p>
+<h3 id="marker-and-auto-traits">9. Marker and auto traits</h3>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">Copy</code></td>
+<td>Duplicated by bitwise copy; no <code
+class="verbatim">Drop</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">Sized</code></td>
+<td>Size known at compile time (implicit bound on generics; opt out with
+<code class="verbatim">?Sized</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">Send</code></td>
+<td>May be moved to another thread</td>
+</tr>
+<tr>
+<td><code class="verbatim">Sync</code></td>
+<td>May be shared by reference across threads (<code
+class="verbatim">&amp;T: Send</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">Unpin</code></td>
+<td>May be moved after being pinned (async)</td>
+</tr>
+</tbody>
+</table>
+<p><code class="verbatim">Send</code> and <code
+class="verbatim">Sync</code> are <em>auto traits</em>: the compiler
+derives them from a type's fields. Raw pointers and <code
+class="verbatim">Rc&lt;T&gt;</code> are not <code
+class="verbatim">Send</code>; <code
+class="verbatim">RefCell&lt;T&gt;</code> and <code
+class="verbatim">Cell&lt;T&gt;</code> are not <code
+class="verbatim">Sync</code>. See <code
+class="verbatim">12_concurrency.org</code>.</p>
+<h3 id="common-traits-to-derive-or-implement">10. Common traits to
+derive or implement</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="op">,</span> <span class="bu">PartialOrd</span><span class="op">,</span> <span class="bu">Ord</span><span class="op">,</span> <span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Id(<span class="dt">u32</span>)<span class="op">;</span></span></code></pre></div>
+<p>The conversion, formatting, and comparison traits (<code
+class="verbatim">From</code>, <code class="verbatim">Display</code>,
+<code class="verbatim">Ord</code>, <code class="verbatim">Hash</code>,
+<code class="verbatim">Default</code>, <code
+class="verbatim">Deref</code>, <code class="verbatim">Borrow</code>,
+<code class="verbatim">AsRef</code>) are covered in <code
+class="verbatim">09_standard-library.org</code>.</p>
+<h3 id="choosing-between-the-tools">11. Choosing between the tools</h3>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One algorithm over many types, maximum speed</td>
+<td>Generic function with trait bounds</td>
+</tr>
+<tr>
+<td>A collection of mixed concrete types</td>
+<td><code class="verbatim">Vec&lt;Box&lt;dyn Trait&gt;&gt;</code></td>
+</tr>
+<tr>
+<td>Return a closure or iterator chain</td>
+<td><code class="verbatim">impl Trait</code> (or <code
+class="verbatim">Box&lt;dyn ...&gt;</code> for several)</td>
+</tr>
+<tr>
+<td>A closed set of variants</td>
+<td><code class="verbatim">enum</code> (exhaustive <code
+class="verbatim">match</code>)</td>
+</tr>
+<tr>
+<td>An open set of types, added by other crates</td>
+<td>Trait</td>
+</tr>
+<tr>
+<td>Add methods to a foreign type</td>
+<td>Extension trait implemented for that type</td>
+</tr>
+<tr>
+<td>Static configuration by type</td>
+<td>Associated consts and types</td>
+</tr>
+</tbody>
+</table>
+<p>Enums are closed (all variants known; the compiler checks
+completeness). Traits are open (anyone can add an implementation). Pick
+by who needs to extend the set.</p>
+<h3 id="pitfalls">12. Pitfalls</h3>
+<ul>
+<li>Over-generic APIs make errors hard to read. Start concrete,
+generalize when a second use appears.</li>
+<li>A generic parameter used only in a signature may need <code
+class="verbatim">PhantomData&lt;T&gt;</code> in the struct.</li>
+<li>Avoid returning <code class="verbatim">Box&lt;dyn Trait&gt;</code>
+from hot paths when <code class="verbatim">impl Trait</code> would
+do.</li>
+<li><code class="verbatim">impl Trait</code> in return position hides
+the concrete type, so every branch must return the same one; use <code
+class="verbatim">Box&lt;dyn Trait&gt;</code> when branches differ.</li>
+<li>Calling a trait method that is not in scope fails with "no method
+named … found"; add the <code class="verbatim">use</code>.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Traits define behavior; generics with bounds use it with static
+dispatch; <code class="verbatim">dyn Trait</code> uses it with dynamic
+dispatch.</li>
+<li>The compiler checks generic code against its bounds once;
+instantiations cannot fail on a missing operation.</li>
+<li>Associated types for one-per-implementor; type parameters for
+many.</li>
+<li>Operators are traits; implement them for your own types.</li>
+<li>The orphan rule requires owning the trait or the type; use a newtype
+to get around it.</li>
+<li>Enums for closed sets, traits for open sets.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

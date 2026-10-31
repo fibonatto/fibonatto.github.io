@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security Auditing</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/16-security-auditing.html">
+  <meta property="og:title" content="Security Auditing">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/16-security-auditing.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Security Auditing</h1>
+<h2 id="security-auditing-1">Security Auditing</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Auditing is both a craft (finding vulnerabilities in code and
+systems) and a process (scoping, managing, and acting on reviews). Staff
+and Principal engineers are on both sides: reviewing others' code and
+preparing their own systems for external review, and judging what an
+audit result really means. You are expected to:</p>
+<ul>
+<li>run or commission audits that cover the right scope with the right
+depth, and turn findings into fixes and lasting process
+improvements;</li>
+<li>review code and designs systematically, not by intuition alone;</li>
+<li>calibrate severity and communicate risk to non-technical decision
+makers;</li>
+<li>combine audits with contests, bounties, formal methods, monitoring,
+and incident response into a coherent security program.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">03_smart-contract-security.org</code>, <code
+class="verbatim">04_smart-contract-testing.org</code>, <code
+class="verbatim">15_deployment-and-upgrades.org</code>, <code
+class="verbatim">17_reliability-and-monitoring.org</code>, <code
+class="verbatim">19_technical-leadership.org</code>. Software
+Architecture notes: architecture review.</p>
+<h3 id="what-an-audit-is-and-is-not">1. What an audit is and is not</h3>
+<ul>
+<li><strong>Is</strong>: a time-boxed, expert review of defined code
+(and sometimes design, deployment, and integrations) to find
+vulnerabilities, risks, and quality issues, with a report and a
+remediation review.</li>
+<li><strong>Is not</strong>: a guarantee of safety, a certification, a
+substitute for testing, or coverage of out-of-scope code, dependencies,
+economic design, off-chain components, keys, or operations (unless
+explicitly included). "Audited" is a statement about a specific commit
+and scope; later changes void it.</li>
+<li><strong>Value</strong>: independent eyes, specialized knowledge of
+past exploits, and pressure to produce specifications and tests; the
+audit process often improves the system as much as the report does.</li>
+<li><strong>Limits</strong>: reviewers sample risk under time
+constraints; bugs are missed in every audit; complex interactions and
+economic attacks are hard to find; multiple independent reviews and
+other assurance methods raise confidence.</li>
+</ul>
+<h3 id="types-of-security-assurance">2. Types of security assurance</h3>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>What it provides</th>
+<th>Strengths</th>
+<th>Limits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Internal review</td>
+<td>Reviews by the team and security engineers</td>
+<td>Context; continuous; cheap</td>
+<td>Blind spots; conflicts of interest</td>
+</tr>
+<tr>
+<td>Private audit</td>
+<td>A firm or independent reviewers for a fixed period</td>
+<td>Depth, structured report</td>
+<td>Cost; small number of reviewers; time-boxed</td>
+</tr>
+<tr>
+<td>Competitive audit (contest)</td>
+<td>Many reviewers compete for rewards over days or weeks</td>
+<td>Many eyes; diverse skills</td>
+<td>Quality varies; coordination; judging process</td>
+</tr>
+<tr>
+<td>Bug bounty</td>
+<td>Ongoing rewards for responsibly disclosed vulnerabilities</td>
+<td>Continuous incentive; deployed-code testing</td>
+<td>Reactive; depends on reward size and process</td>
+</tr>
+<tr>
+<td>Formal verification</td>
+<td>Proofs or exhaustive checks of specified properties</td>
+<td>Strong guarantees for the specification</td>
+<td>Requires precise specs; expensive; model limits</td>
+</tr>
+<tr>
+<td>Fuzzing and invariant testing</td>
+<td>Automated search for property violations</td>
+<td>Scales; finds deep sequences</td>
+<td>Only as good as properties and handlers</td>
+</tr>
+<tr>
+<td>Monitoring and incident response</td>
+<td>Detection and reaction in production</td>
+<td>Catches what review missed</td>
+<td>Cannot undo irreversible loss without prevention</td>
+</tr>
+</tbody>
+</table>
+<p>Combine them in layers according to value at risk and code
+novelty.</p>
+<h3 id="preparing-for-an-audit-the-client-side">3. Preparing for an
+audit (the client side)</h3>
+<p>Audit quality depends heavily on preparation:</p>
+<ul>
+<li><strong>Freeze the code</strong>: a specific commit, with a tag;
+changes during an audit require a delta review.</li>
+<li><strong>Provide documentation</strong>: architecture overview,
+specification, threat model, trust assumptions, roles and permissions,
+parameters, invariants, known risks, integrations, upgrade and
+deployment plans, and a glossary.</li>
+<li><strong>Tests and tooling</strong>: passing unit, fuzz, and
+invariant tests, coverage reports, static analysis results triaged, and
+instructions to build and run everything in one command.</li>
+<li><strong>NatSpec and comments</strong>: explain intent, especially
+for math and non-obvious choices.</li>
+<li><strong>Scope definition</strong>: list the in-scope contracts (with
+line counts), out-of-scope dependencies, and off-chain components;
+include deployment scripts and configuration; include the economic model
+if it matters.</li>
+<li><strong>Known issues</strong>: list accepted risks and prior
+findings, so reviewers do not waste time and to calibrate severity.</li>
+<li><strong>Access to the team</strong>: a channel with fast answers
+from the authors; scheduled walkthroughs.</li>
+<li><strong>Selecting auditors</strong>: relevant track record (similar
+protocols), the named individuals who will actually review, availability
+and timeline, report quality, references, methodology (manual review,
+tools, fuzzing, formal methods), pricing, and independence. Avoid
+choosing solely on brand.</li>
+<li><strong>Timing</strong>: audit when the design is stable and tests
+are mature; leave time to fix and to re-review; never audit a moving
+target; plan a second audit or contest for high-value launches.</li>
+<li><strong>Budgeting for fixes</strong>: reserve engineering time for
+findings, and for a final remediation review.</li>
+</ul>
+<h3 id="how-to-audit-a-method">4. How to audit: a method</h3>
+<ol>
+<li><strong>Understand the system</strong>: read the documentation; run
+the tests; deploy locally; draw the architecture; list assets, actors,
+roles, and trust assumptions; identify entry points.</li>
+<li><strong>Model the threats</strong>: who can do what; what are the
+worst outcomes; where does value move; what external inputs exist
+(oracles, tokens, callbacks, cross-chain messages, governance).</li>
+<li><strong>Review the specification and invariants</strong>: write them
+if absent; check that the code and docs agree; note ambiguities.</li>
+<li><strong>Run automated tools</strong>: static analyzers (Slither,
+Aderyn), linters, compilers with strict warnings; triage results; use
+fuzzers and invariant tests to explore; symbolic tools on small critical
+functions.</li>
+<li><strong>Manual review, entry point by entry point</strong>: for each
+external function, check authorization, input validation, state changes,
+external calls and their ordering, arithmetic and rounding, events, and
+failure behavior; track state across functions (state machines); look at
+what an attacker contract can do at each call.</li>
+<li><strong>Cross-cutting concerns</strong>: upgradeability and
+initialization, storage layout, DELEGATECALL, signatures, oracles, token
+handling (all standard and nonstandard behaviors), reentrancy including
+read-only, access control matrix, pausing, emergency flows, gas and DoS,
+front-running and MEV, L2 and chain differences, compiler and library
+versions.</li>
+<li><strong>Economic and game-theoretic review</strong>: adversarial
+capital (flash loans), manipulation costs, incentive alignment,
+parameter edge cases, bad-debt scenarios, governance attacks.</li>
+<li><strong>Integration review</strong>: how the code interacts with the
+other protocols it depends on; assumptions about their behavior and
+upgrades.</li>
+<li><strong>Write proofs of concept</strong> for suspected issues: a
+failing Foundry test that demonstrates impact; it removes doubt and
+helps the client reproduce.</li>
+<li><strong>Triage and communicate early</strong>: report critical
+findings immediately, not at the end; keep a shared issue tracker.</li>
+<li><strong>Verify fixes</strong>: review each fix for correctness,
+regression, and new issues; check that tests were added.</li>
+<li><strong>Final report</strong>: scope, methodology, findings,
+severity, status, and observations on code quality and process.</li>
+</ol>
+<p><strong>Reading techniques</strong>: start from the money flow;
+compare similar code to known-good implementations (diff against
+reference libraries); follow every external call and each callback; ask
+"what if this value is zero, maximal, or hostile?"; look for implicit
+assumptions (decimals, ordering, who calls what); read tests to find
+what the authors worried about, and what they did not test.</p>
+<h3 id="findings-severity-writing-and-handling">5. Findings: severity,
+writing, and handling</h3>
+<ul>
+<li><strong>Severity</strong> combines impact and likelihood (and often
+exploitability and preconditions):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Typical meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical</td>
+<td>Direct, realistic loss or lock of significant funds, or protocol
+takeover, without unusual conditions</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Significant loss or disruption under plausible conditions, or
+requires modest preconditions</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Limited loss, griefing, or issues that need specific conditions or
+privileged actions</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Minor impact or defense-in-depth gaps</td>
+</tr>
+<tr>
+<td>Informational</td>
+<td>Best practices, readability, documentation</td>
+</tr>
+<tr>
+<td>Gas</td>
+<td>Optimizations without security impact</td>
+</tr>
+</tbody>
+</table>
+<p>Calibrate consistently: define the matrix (impact by likelihood) and
+apply it; account for admin trust assumptions explicitly ("assuming the
+owner is honest, but…").</p>
+<ul>
+<li><strong>Finding structure</strong>: title, severity, affected code
+(file and lines), description, impact, a proof of concept or scenario,
+and a recommendation; mark status (fixed, acknowledged, mitigated,
+disputed).</li>
+<li><strong>Handling findings as the client</strong>: reproduce,
+understand root causes (not only the symptom), fix with tests, consider
+similar patterns elsewhere in the code, record decisions on accepted
+risks with owners, and request re-review for non-trivial fixes.
+Disputing a finding is legitimate when you can show why it does not
+apply; justify in writing.</li>
+<li><strong>Publishing reports</strong>: public reports build trust and
+help the ecosystem; include the commit, scope, and unresolved items
+honestly. Avoid selective excerpts that overstate assurance.</li>
+</ul>
+<h3 id="tools-of-the-trade-overview">6. Tools of the trade
+(overview)</h3>
+<ul>
+<li><strong>Static analysis</strong>: Slither, Aderyn; fast checks for
+known patterns; tune and triage.</li>
+<li><strong>Fuzzing and invariants</strong>: Foundry (fuzz and invariant
+tests), Echidna, Medusa; write properties from the specification.</li>
+<li><strong>Symbolic and formal tools</strong>: Halmos, hevm (symbolic
+execution of tests), Certora Prover (specification language), the
+SMTChecker; K-based semantics for the EVM.</li>
+<li><strong>Dynamic analysis and debugging</strong>: Foundry traces and
+debugger, local forks, transaction simulators, trace explorers.</li>
+<li><strong>Bytecode and decompilation tools</strong> for unverified or
+unknown contracts.</li>
+<li><strong>Specification aids</strong>: Scribble-style annotations,
+property lists, and invariants as code.</li>
+<li><strong>Reference material</strong>: vulnerability databases and
+previous audit reports; checklists (SWC Registry, the Smart Contract
+Security Verification Standard, community checklists); exploit
+post-mortems.</li>
+</ul>
+<p>Use tools to extend attention, not to replace it: automated tools
+find known patterns; humans find logic and economic flaws.</p>
+<h3 id="bug-bounties-contests-and-responsible-disclosure">7. Bug
+bounties, contests, and responsible disclosure</h3>
+<ul>
+<li><strong>Bug bounty programs</strong>: define scope (contracts,
+chains, front ends, infrastructure), severity tiers, reward ranges tied
+to funds at risk (the reward must compete with the value of an exploit),
+rules of engagement (no testing on mainnet funds beyond what is
+allowed), response SLAs, and payment process. Platforms host programs
+and mediate. Publish a safe harbor policy where possible.</li>
+<li><strong>Competitive audits</strong>: provide a clear scope and
+documentation; reviewers submit findings judged by severity; duplicates
+share rewards; run after a private audit, not instead of one, for
+high-risk launches.</li>
+<li><strong>Responsible disclosure</strong>: reporters notify privately,
+allow time to fix, and avoid exploitation; projects respond promptly,
+credit researchers, and publish post-mortems.</li>
+<li><strong>Whitehat rescue</strong>: in an active exploit, security
+groups may front-run attackers to secure funds; define your policy and
+contacts in advance, and coordinate with emergency responder
+channels.</li>
+<li><strong>Legal and ethical boundaries</strong>: exploiting a live
+contract without authorization may be illegal regardless of intent;
+follow program rules.</li>
+</ul>
+<h3 id="building-a-security-culture-and-program">8. Building a security
+culture and program</h3>
+<ul>
+<li><strong>Security in the lifecycle</strong>: threat models at design,
+secure coding standards, mandatory tests and static analysis in CI,
+internal security review for every change touching value flows, external
+audits before launch and for major upgrades, bounty and monitoring after
+launch.</li>
+<li><strong>Ownership</strong>: name a security owner for the protocol,
+with authority to block launches; separate roles for developers and
+reviewers.</li>
+<li><strong>Learning loop</strong>: tag incidents and findings by root
+cause category; feed them into checklists, linters, and training; run
+internal workshops and capture-the-flag exercises.</li>
+<li><strong>Metrics</strong> (use carefully): findings by severity found
+at each stage (earlier is cheaper), time to fix, escape rate (issues
+found after audit), test and invariant coverage of critical modules, and
+mean time to detect incidents.</li>
+<li><strong>Staff-level leverage</strong>: build reusable secure
+components and templates, review designs early, mentor others in
+reviewing, and keep the security program proportional to the value at
+risk.</li>
+</ul>
+<h3 id="self-check">9. Self-check</h3>
+<ol>
+<li>What can and cannot be concluded from a clean audit report of a
+specific commit?</li>
+<li>Design the audit preparation package for a lending protocol
+(documents, tests, scope, known issues).</li>
+<li>Walk through how you would review a vault's withdraw function line
+by line, and list the questions at each line.</li>
+<li>Classify these findings: a rounding error that lets users withdraw
+one wei extra per call; an owner-only function that can change a fee to
+100 percent; a reentrancy that requires an ERC-777 token the protocol
+supports.</li>
+<li>How would you structure a bug bounty for a protocol with 50 million
+USD at risk, including rewards and rules?</li>
+<li>How do you decide between a second audit, a contest, and formal
+verification for a pre-launch protocol?</li>
+</ol>
+<h3 id="exercises">10. Exercises</h3>
+<ul>
+<li>Warm-up: audit a small open-source contract (such as a minimal
+vault) using the method above; write findings in the standard structure
+with proofs of concept.</li>
+<li>Core: take a public audit report and a vulnerable contract from a
+post-mortem; reproduce the bug on a fork and write the remediation
+test.</li>
+<li>Core: write an audit-readiness package for a protocol you work on
+and have a colleague critique it.</li>
+<li>Core: build a reusable internal review checklist from three incident
+post-mortems and run it on a pull request.</li>
+<li>Stretch: participate in a competitive audit (even as a learner) and
+compare your findings with the final report.</li>
+<li>Stretch: write a formal specification (Certora-style or Halmos
+tests) for the core invariants of a small AMM or vault and verify
+them.</li>
+</ul>
+<h3 id="resources">11. Resources</h3>
+<ul>
+<li>SWC Registry (classic weakness catalog): <a
+href="https://swcregistry.io">https://swcregistry.io</a> ; OWASP smart
+contract security guidance and the Smart Contract Security Verification
+Standard; Secureum and other community curricula.</li>
+<li>Audit reports from reputable firms and competitive platforms (public
+archives) as training material; post-mortem collections of
+exploits.</li>
+<li>Trail of Bits, <em>Building Secure Contracts</em>; ConsenSys
+Diligence best practices; OpenZeppelin security documentation: <a
+href="https://docs.openzeppelin.com/contracts">https://docs.openzeppelin.com/contracts</a></li>
+<li>Tool documentation: Slither, Echidna, Medusa, Halmos, Certora,
+Foundry: <a
+href="https://book.getfoundry.sh">https://book.getfoundry.sh</a></li>
+<li>Software Architecture notes in this repository: architecture review
+(methods and checklists).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>An audit is scoped, time-boxed evidence about a commit, not a
+guarantee.</li>
+<li>Preparation (freeze, docs, tests, scope, known issues) determines
+audit quality; so does choosing reviewers who will actually review.</li>
+<li>Review systematically: assets, entry points, state, external calls,
+invariants, economics, integrations; prove findings with tests.</li>
+<li>Calibrate severity with a stated matrix and state trust assumptions;
+fix root causes and add regression tests.</li>
+<li>Layer audits, contests, bounties, formal methods, fuzzing, and
+monitoring according to value at risk.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

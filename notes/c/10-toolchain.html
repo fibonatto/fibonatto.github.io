@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Toolchain</title>
+  <meta name="description" content="A practical guide to the C development toolchain, from preprocessing and compilation to assembly, linking, and executable generation. Covers compiler warnings, optimization levels, debug symbols, sanitizers, hardening flags, static and shared libraries, symbol inspection, Make, CMake, compile_commands.json, GDB and LLDB, static analysis, formatting, profiling, cross-compilation, and WebAssembly. Explains dependency tracking, linker behavior, platform-specific tooling, and reproducible build practices.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/10-toolchain.html">
+  <meta property="og:title" content="C Toolchain">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/10-toolchain.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C Toolchain</h1>
+<h2 id="c-toolchain-1">C Toolchain</h2>
+<h3 id="the-pipeline">1. The pipeline</h3>
+<div class="sourceCode" id="cb1" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-E</span> main.c            <span class="co"># 1. preprocess  -&gt; text</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-S</span> main.c            <span class="co"># 2. compile     -&gt; main.s (assembly)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-c</span> main.c            <span class="co"># 3. assemble    -&gt; main.o (object file)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> main.o util.o <span class="at">-o</span> app <span class="co"># 4. link        -&gt; executable</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> main.c util.c <span class="at">-o</span> app <span class="co"># all four steps at once</span></span></code></pre></div>
+<p>Each <code class="verbatim">.c</code> file (translation unit) is
+compiled separately into an object file. The linker joins objects and
+libraries, resolving each external symbol to exactly one definition.
+"Undefined reference" errors come from the linker (a declaration with no
+definition), while "implicit declaration" and syntax errors come from
+the compiler.</p>
+<p>Common compilers: GCC (<code class="verbatim">gcc</code>), Clang
+(<code class="verbatim">clang</code>), MSVC (<code
+class="verbatim">cl</code>), and small ones such as TinyCC (<code
+class="verbatim">tcc</code>). On most systems <code
+class="verbatim">cc</code> is an alias for one of them; check with <code
+class="verbatim">cc --version</code>.</p>
+<h3 id="warnings">2. Warnings</h3>
+<p>Warnings catch many bugs at no cost. A strong baseline:</p>
+<div class="sourceCode" id="cb2" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-std</span><span class="op">=</span>c17 <span class="at">-Wall</span> <span class="at">-Wextra</span> <span class="at">-Wpedantic</span> <span class="at">-Wshadow</span> <span class="at">-Wconversion</span> <span class="at">-Wstrict-prototypes</span> <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>   <span class="at">-Wmissing-prototypes</span> <span class="at">-Wformat</span><span class="op">=</span>2 <span class="at">-Wundef</span> <span class="at">-Wcast-qual</span> <span class="at">-Wwrite-strings</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">-O2</span> <span class="at">-g</span> main.c <span class="at">-o</span> app</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Catches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">-Wall</code></td>
+<td>Common mistakes (despite the name, not everything)</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Wextra</code></td>
+<td>More: unused parameters, signed/unsigned comparison</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Wpedantic</code></td>
+<td>Non-standard constructs under <code
+class="verbatim">-std</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">-Wshadow</code></td>
+<td>A local hiding another variable</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Wconversion</code></td>
+<td>Implicit conversions that may change a value (noisy)</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Wformat=2</code></td>
+<td><code class="verbatim">printf</code> format problems</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Wundef</code></td>
+<td>Undefined macro used in <code class="verbatim">#if</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">-Wstrict-prototypes</code></td>
+<td><code class="verbatim">int f()</code> declarations</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Werror</code></td>
+<td>Turn warnings into errors (good in CI, risky for distributed
+source)</td>
+</tr>
+</tbody>
+</table>
+<p>Read warnings; do not silence them with casts unless you understand
+them.</p>
+<h3 id="optimization-and-debug-information">3. Optimization and debug
+information</h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">-O0</code></td>
+<td>No optimization (default); best for stepping in a debugger</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Og</code></td>
+<td>Optimize while keeping debugging reasonable</td>
+</tr>
+<tr>
+<td><code class="verbatim">-O2</code></td>
+<td>Standard release level</td>
+</tr>
+<tr>
+<td><code class="verbatim">-O3</code></td>
+<td>More aggressive; larger code</td>
+</tr>
+<tr>
+<td><code class="verbatim">-Os</code></td>
+<td>Optimize for size</td>
+</tr>
+<tr>
+<td><code class="verbatim">-g</code></td>
+<td>Emit debug information (independent of optimization)</td>
+</tr>
+<tr>
+<td><code class="verbatim">-DNDEBUG</code></td>
+<td>Compile out <code class="verbatim">assert</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">-flto</code></td>
+<td>Link-time optimization across files</td>
+</tr>
+<tr>
+<td><code class="verbatim">-march=native</code></td>
+<td>Use the build machine's CPU features (binary may not run
+elsewhere)</td>
+</tr>
+</tbody>
+</table>
+<p>Optimizers exploit undefined behavior: a program with UB may work at
+<code class="verbatim">-O0</code> and fail at <code
+class="verbatim">-O2</code>. When that happens, suspect the program
+first. Some warnings (such as uninitialized variables) are only produced
+with optimization on.</p>
+<h3 id="sanitizers-and-hardening">4. Sanitizers and hardening</h3>
+<div class="sourceCode" id="cb3" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-g</span> <span class="at">-O1</span> <span class="at">-fsanitize</span><span class="op">=</span>address,undefined <span class="at">-fno-omit-frame-pointer</span> main.c <span class="at">-o</span> app</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-g</span> <span class="at">-O1</span> <span class="at">-fsanitize</span><span class="op">=</span>thread main.c <span class="at">-o</span> app          <span class="co"># data races; cannot combine with address</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-g</span> <span class="at">-O1</span> <span class="at">-fsanitize</span><span class="op">=</span>memory main.c <span class="at">-o</span> app          <span class="co"># Clang only: uninitialized reads</span></span></code></pre></div>
+<p>Run tests under sanitizers regularly. Hardening flags for release
+builds:</p>
+<div class="sourceCode" id="cb4" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-O2</span> <span class="at">-D_FORTIFY_SOURCE</span><span class="op">=</span>2 <span class="at">-fstack-protector-strong</span> <span class="at">-fPIE</span> <span class="at">-pie</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   <span class="at">-Wl,-z,relro,-z,now</span> main.c <span class="at">-o</span> app</span></code></pre></div>
+<p><code class="verbatim">_FORTIFY_SOURCE</code> needs optimization
+enabled; it adds run-time checks to some libc calls. These flags reduce
+the exploitability of memory bugs; they do not remove the bugs.</p>
+<h3 id="multiple-files-libraries-and-linking">5. Multiple files,
+libraries, and linking</h3>
+<div class="sourceCode" id="cb5" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># static library</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-c</span> a.c b.c</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ar</span> rcs libfoo.a a.o b.o</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> main.c <span class="at">-L.</span> <span class="at">-lfoo</span> <span class="at">-o</span> app          <span class="co"># -lfoo means libfoo.a or libfoo.so</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># shared library</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-fPIC</span> <span class="at">-c</span> a.c b.c</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-shared</span> <span class="at">-o</span> libfoo.so a.o b.o</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> main.c <span class="at">-L.</span> <span class="at">-lfoo</span> <span class="at">-Wl,-rpath,</span><span class="st">&#39;$ORIGIN&#39;</span> <span class="at">-o</span> app</span></code></pre></div>
+<ul>
+<li>Put libraries <em>after</em> the objects that need them: <code
+class="verbatim">cc main.o -lm</code>, not <code
+class="verbatim">cc -lm main.o</code> (with a static linker, order
+matters).</li>
+<li><code class="verbatim">-I dir</code> adds a header search path,
+<code class="verbatim">-L dir</code> a library search path, <code
+class="verbatim">-l name</code> links a library.</li>
+<li><code class="verbatim">-pthread</code> enables threads at compile
+and link time; <code class="verbatim">-lm</code> links the math library
+on Linux.</li>
+<li>On Linux, a shared library is found at run time through the rpath,
+<code class="verbatim">LD_LIBRARY_PATH</code>, or the system cache.</li>
+</ul>
+<p>Inspect results:</p>
+<div class="sourceCode" id="cb6" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nm</span> <span class="at">-C</span> app <span class="kw">|</span> <span class="fu">less</span>               <span class="co"># symbols (T = text, U = undefined, D = data)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">objdump</span> <span class="at">-d</span> <span class="at">-M</span> intel app        <span class="co"># disassembly</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">readelf</span> <span class="at">-h</span> <span class="at">-d</span> app              <span class="co"># ELF headers and dynamic dependencies</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ldd</span> app                        <span class="co"># shared libraries needed at run time</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">size</span> app                       <span class="co"># text/data/bss sizes</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">strip</span> app                      <span class="co"># remove symbols</span></span></code></pre></div>
+<h3 id="make">6. Make</h3>
+<p>A small Makefile with automatic header dependencies:</p>
+<pre class="make"><code>CC       ?= cc
+CFLAGS   ?= -std=c17 -O2 -g -Wall -Wextra -Wpedantic
+CPPFLAGS += -MMD -MP
+LDLIBS   += -lm
+
+SRC := $(wildcard src/*.c)
+OBJ := $(SRC:src/%.c=build/%.o)
+DEP := $(OBJ:.o=.d)
+
+app: $(OBJ)
+    $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+build/%.o: src/%.c | build
+    $(CC) $(CPPFLAGS) $(CFLAGS) -c $&lt; -o $@
+
+build:
+    mkdir -p $@
+
+clean:
+    rm -rf build app
+
+-include $(DEP)
+.PHONY: clean
+</code></pre>
+<p>(Recipe lines must start with a tab character, not spaces.) <code
+class="verbatim">-MMD -MP</code> makes the compiler write a <code
+class="verbatim">.d</code> file listing each object's header
+dependencies; <code class="verbatim">-include</code> pulls them in, so
+editing a header rebuilds only what depends on it. <code
+class="verbatim">$@</code> is the target, <code
+class="verbatim">$&lt;</code> the first prerequisite, <code
+class="verbatim">$^</code> all prerequisites. <code
+class="verbatim">make -j$(nproc)</code> builds in parallel.</p>
+<h3 id="cmake-and-compilecommands.json">7. CMake and
+compile<sub>commands</sub>.json</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode cmake"><code class="sourceCode cmake"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">cmake_minimum_required</span>(<span class="ot">VERSION</span> <span class="dt">3.20</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">project</span>(app <span class="ot">C</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span>(<span class="dv">CMAKE_C_STANDARD</span> 17)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span>(<span class="dv">CMAKE_C_STANDARD_REQUIRED</span> <span class="ot">ON</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span>(<span class="dv">CMAKE_C_EXTENSIONS</span> <span class="ot">OFF</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span>(<span class="dv">CMAKE_EXPORT_COMPILE_COMMANDS</span> <span class="ot">ON</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="kw">add_executable</span>(<span class="bn">app</span> src/main.c src/util.c)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="kw">target_compile_options</span>(<span class="bn">app</span> <span class="ot">PRIVATE</span> -Wall -Wextra -Wpedantic)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="kw">target_link_libraries</span>(<span class="bn">app</span> <span class="ot">PRIVATE</span> m)</span></code></pre></div>
+<div class="sourceCode" id="cb9" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-S</span> . <span class="at">-B</span> build <span class="at">-DCMAKE_BUILD_TYPE</span><span class="op">=</span>Debug</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">-j</span></span></code></pre></div>
+<p>Language servers (<code class="verbatim">clangd</code>) and many
+tools read <code class="verbatim">compile_commands.json</code> to learn
+each file's flags. CMake writes it with the option above; for a Makefile
+project use <code class="verbatim">bear -- make</code> or <code
+class="verbatim">compiledb make</code>. Symlink or copy it to the
+project root.</p>
+<h3 id="debugging-with-gdb">8. Debugging with gdb</h3>
+<p>Build with <code class="verbatim">-g -O0</code> (or <code
+class="verbatim">-Og</code>), then:</p>
+<div class="sourceCode" id="cb10" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gdb</span> ./app</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gdb</span> <span class="at">--args</span> ./app arg1 arg2</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">gdb</span> ./app core                     <span class="co"># post-mortem, after: ulimit -c unlimited</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">break main</code>, <code
+class="verbatim">b file.c:42</code></td>
+<td>Set a breakpoint</td>
+</tr>
+<tr>
+<td><code class="verbatim">run</code>, <code
+class="verbatim">r</code></td>
+<td>Start the program</td>
+</tr>
+<tr>
+<td><code class="verbatim">next</code>, <code class="verbatim">n</code>
+/ <code class="verbatim">step</code>, <code
+class="verbatim">s</code></td>
+<td>Step over / into</td>
+</tr>
+<tr>
+<td><code class="verbatim">continue</code>, <code
+class="verbatim">c</code></td>
+<td>Resume</td>
+</tr>
+<tr>
+<td><code class="verbatim">bt</code>, <code
+class="verbatim">bt full</code></td>
+<td>Backtrace (with locals)</td>
+</tr>
+<tr>
+<td><code class="verbatim">print x</code>, <code
+class="verbatim">p *ptr</code>, <code
+class="verbatim">p arr[0]@5</code></td>
+<td>Evaluate; <code class="verbatim">@5</code> prints 5 elements</td>
+</tr>
+<tr>
+<td><code class="verbatim">x/8xb ptr</code></td>
+<td>Examine 8 bytes in hex</td>
+</tr>
+<tr>
+<td><code class="verbatim">watch var</code></td>
+<td>Break when a value changes</td>
+</tr>
+<tr>
+<td><code class="verbatim">info locals</code>, <code
+class="verbatim">info threads</code></td>
+<td>Locals; list threads</td>
+</tr>
+<tr>
+<td><code class="verbatim">frame 2</code>, <code
+class="verbatim">up</code>, <code class="verbatim">down</code></td>
+<td>Move in the call stack</td>
+</tr>
+<tr>
+<td><code class="verbatim">finish</code></td>
+<td>Run until the current function returns</td>
+</tr>
+</tbody>
+</table>
+<p>LLDB offers the same with different spelling (<code
+class="verbatim">breakpoint set</code>, <code
+class="verbatim">thread backtrace</code>, <code
+class="verbatim">frame variable</code>). A crash with <code
+class="verbatim">Segmentation fault</code> under AddressSanitizer
+usually points to the exact access faster than gdb; use both.</p>
+<h3 id="static-analysis-and-formatting">9. Static analysis and
+formatting</h3>
+<div class="sourceCode" id="cb11" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-fanalyzer</span> <span class="at">-O2</span> main.c            <span class="co"># GCC&#39;s built-in static analyzer</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">clang-tidy</span> main.c <span class="at">--</span> <span class="at">-std</span><span class="op">=</span>c17       <span class="co"># linter with many checks</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cppcheck</span> <span class="at">--enable</span><span class="op">=</span>all main.c</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">scan-build</span> make                     <span class="co"># Clang static analyzer</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">clang-format</span> <span class="at">-i</span> src/<span class="pp">*</span>.c src/<span class="pp">*</span>.h     <span class="co"># format according to .clang-format</span></span></code></pre></div>
+<p>Static analyzers have false positives and false negatives; use them
+as an extra pair of eyes, together with sanitizers and tests.</p>
+<h3 id="performance">10. Performance</h3>
+<ul>
+<li>Measure first. Compile with <code class="verbatim">-O2</code> (and
+<code class="verbatim">-g</code>), then profile:</li>
+</ul>
+<div class="sourceCode" id="cb12" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> record ./app <span class="kw">&amp;&amp;</span> <span class="ex">perf</span> report         <span class="co"># Linux sampling profiler</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--tool</span><span class="op">=</span>callgrind ./app          <span class="co"># call graph, instruction counts (slow)</span></span></code></pre></div>
+<ul>
+<li>Look at generated code: <code
+class="verbatim">cc -S -O2 -fverbose-asm file.c</code>, <code
+class="verbatim">objdump -d</code>, or Compiler Explorer
+(godbolt.org).</li>
+<li>Typical wins come from data layout (contiguous arrays, fewer
+allocations, fewer cache misses) and algorithm choice, before
+micro-optimizations.</li>
+<li>Benchmark on realistic data, repeat runs, and watch for the compiler
+optimizing away work whose result is never used.</li>
+</ul>
+<h3 id="cross-compiling-and-webassembly">11. Cross-compiling and
+WebAssembly</h3>
+<div class="sourceCode" id="cb13" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">clang</span> <span class="at">--target</span><span class="op">=</span>aarch64-linux-gnu <span class="at">--sysroot</span><span class="op">=</span>/path/to/sysroot main.c <span class="at">-o</span> app-arm</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">zig</span> cc <span class="at">-target</span> x86_64-linux-musl main.c <span class="at">-o</span> app       <span class="co"># Zig&#39;s bundled cross toolchain</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># freestanding WebAssembly module (no libc)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">clang</span> <span class="at">--target</span><span class="op">=</span>wasm32 <span class="at">-O2</span> <span class="at">-nostdlib</span> <span class="at">-Wl,--no-entry</span> <span class="at">-Wl,--export-all</span> main.c <span class="at">-o</span> main.wasm</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># with a libc and runtime support</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ex">emcc</span> main.c <span class="at">-O2</span> <span class="at">-o</span> main.js               <span class="co"># Emscripten</span></span></code></pre></div>
+<p>A cross build needs a compiler for the target, a matching C library
+and headers (a <em>sysroot</em>), and a way to run the result. For <code
+class="verbatim">-nostdlib</code> wasm output, provide your own memory
+management and I/O, since there is no libc.</p>
+<h3 id="practical-advice">12. Practical advice</h3>
+<ul>
+<li>Compile with <code class="verbatim">-Wall -Wextra</code> from day
+one; fixing warnings in a new project is cheap.</li>
+<li>Keep debug (sanitizer) and release (optimized) build configurations;
+test in both.</li>
+<li>Record the compiler version and flags; different versions diagnose
+and optimize differently.</li>
+<li>Treat the build as code: a small, readable Makefile or CMake file is
+better than a script you cannot explain.</li>
+<li>When a bug disappears with <code class="verbatim">-O0</code> or with
+a debugger attached, suspect undefined behavior or a data race, not the
+optimizer.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Compile, assemble, and link are separate steps; linker errors are
+about missing definitions.</li>
+<li>Warnings, sanitizers, and a debugger form the standard bug-finding
+set.</li>
+<li>Library order matters on the link line; <code
+class="verbatim">-pthread</code> and <code class="verbatim">-lm</code>
+are common.</li>
+<li>Generate header dependencies (<code
+class="verbatim">-MMD -MP</code>) so incremental builds are
+correct.</li>
+<li>Export <code class="verbatim">compile_commands.json</code> for
+editor tooling.</li>
+<li>Optimization levels change behavior only for programs with undefined
+behavior or races.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

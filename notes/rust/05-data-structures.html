@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Data Structures</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/05-data-structures.html">
+  <meta property="og:title" content="Rust Data Structures">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/05-data-structures.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Data Structures</h1>
+<h2 id="rust-data-structures-1">Rust Data Structures</h2>
+<h3 id="arrays-slices-and-vec">1. Arrays, slices, and Vec</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a<span class="op">:</span> [<span class="dt">i32</span><span class="op">;</span> <span class="dv">3</span>] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span>       <span class="co">// fixed length, stored inline</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> zeros <span class="op">=</span> [<span class="dv">0u8</span><span class="op">;</span> <span class="dv">4</span>]<span class="op">;</span>              <span class="co">// [0, 0, 0, 0]</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span>         <span class="co">// Vec&lt;i32&gt;: growable, heap-allocated</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>push(<span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>pop()<span class="op">;</span>                           <span class="co">// Some(4)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">i32</span>] <span class="op">=</span> <span class="op">&amp;</span>v[<span class="dv">1</span><span class="op">..</span>]<span class="op">;</span>           <span class="co">// slice: a borrowed view (pointer + length)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>len()<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>get(<span class="dv">10</span>)<span class="op">;</span>                         <span class="co">// None: checked access</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">// v[10]                           // panics: out of bounds</span></span></code></pre></div>
+<p>Indexing is bounds-checked and panics on failure; use <code
+class="verbatim">get</code> when the index may be invalid. Take <code
+class="verbatim">&amp;[T]</code> in function parameters so callers can
+pass an array, a <code class="verbatim">Vec</code>, or a sub-slice.</p>
+<h3 id="tuples">2. Tuples</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> t <span class="op">=</span> (<span class="dv">1</span><span class="op">,</span> <span class="st">&quot;a&quot;</span><span class="op">,</span> <span class="dv">2.5</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>t<span class="op">.</span><span class="dv">0</span><span class="op">;</span>                               <span class="co">// 1</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (x<span class="op">,</span> y<span class="op">,</span> z) <span class="op">=</span> t<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Meters(<span class="dt">f64</span>)<span class="op">;</span>                <span class="co">// tuple struct</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> m <span class="op">=</span> Meters(<span class="dv">3.0</span>)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>m<span class="op">.</span><span class="dv">0</span><span class="op">;</span></span></code></pre></div>
+<p>A one-field tuple struct is the <em>newtype pattern</em>: a distinct
+type with the same representation, used to prevent mixing up units or
+IDs.</p>
+<h3 id="structs">3. Structs</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="at">)]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    y<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> p <span class="op">=</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dv">1.0</span><span class="op">,</span> y<span class="op">:</span> <span class="dv">2.0</span> <span class="op">};</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> q <span class="op">=</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dv">5.0</span><span class="op">,</span> <span class="op">..</span>p <span class="op">};</span>     <span class="co">// struct update: remaining fields from p</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> q)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Marker<span class="op">;</span>                     <span class="co">// unit struct: no data</span></span></code></pre></div>
+<p>Fields are private to the module by default; mark them <code
+class="verbatim">pub</code> to expose them. A struct does not implement
+<code class="verbatim">Debug</code>, <code
+class="verbatim">Clone</code>, <code class="verbatim">PartialEq</code>,
+or <code class="verbatim">Default</code> unless you derive or implement
+them. <code class="verbatim">Copy</code> requires every field to be
+<code class="verbatim">Copy</code>.</p>
+<h3 id="enums">4. Enums</h3>
+<p>Each variant may carry its own data, so an enum is a sum type.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Shape <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    Circle <span class="op">{</span> r<span class="op">:</span> <span class="dt">f64</span> <span class="op">},</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    Rect <span class="op">{</span> w<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> h<span class="op">:</span> <span class="dt">f64</span> <span class="op">},</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    Point<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> area(s<span class="op">:</span> <span class="op">&amp;</span>Shape) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> s <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Shape::</span>Circle <span class="op">{</span> r <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">std::f64::consts::</span>PI <span class="op">*</span> r <span class="op">*</span> r<span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Shape::</span>Rect <span class="op">{</span> w<span class="op">,</span> h <span class="op">}</span> <span class="op">=&gt;</span> w <span class="op">*</span> h<span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Shape::</span>Point <span class="op">=&gt;</span> <span class="dv">0.0</span><span class="op">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code class="verbatim">match</code> must cover every variant, so
+adding a variant makes every incomplete <code
+class="verbatim">match</code> a compile error. The standard library's
+<code class="verbatim">Option&lt;T&gt;</code> and <code
+class="verbatim">Result&lt;T, E&gt;</code> are ordinary enums.</p>
+<h3 id="strings">5. Strings</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Owns data</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">String</code></td>
+<td>yes</td>
+<td>growable UTF-8</td>
+</tr>
+<tr>
+<td><code class="verbatim">&amp;str</code></td>
+<td>no</td>
+<td>borrowed UTF-8 slice; string literals are <code
+class="verbatim">&amp;'static str</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">Vec&lt;u8&gt;</code></td>
+<td>yes</td>
+<td>raw bytes</td>
+</tr>
+<tr>
+<td><code class="verbatim">&amp;[u8]</code></td>
+<td>no</td>
+<td>borrowed bytes</td>
+</tr>
+<tr>
+<td><code class="verbatim">PathBuf</code>, <code
+class="verbatim">&amp;Path</code></td>
+<td>yes / no</td>
+<td>file paths (not always valid UTF-8)</td>
+</tr>
+<tr>
+<td><code class="verbatim">char</code></td>
+<td>n/a</td>
+<td>one Unicode scalar value, 4 bytes</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;héllo&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>push_str(<span class="st">&quot; world&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>len()<span class="op">;</span>                    <span class="co">// bytes</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>chars()<span class="op">.</span>count()<span class="op">;</span>          <span class="co">// characters</span></span></code></pre></div>
+<p>Strings cannot be indexed by integer; slice by byte range (<code
+class="verbatim">&amp;s[0..2]</code>, which panics off a character
+boundary) or iterate with <code class="verbatim">chars()</code>.</p>
+<h3 id="hashmap-hashset-btreemap">6. HashMap, HashSet, BTreeMap</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::collections::</span><span class="op">{</span>HashMap<span class="op">,</span> HashSet<span class="op">,</span> BTreeMap<span class="op">};</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> counts<span class="op">:</span> HashMap<span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">,</span> <span class="dt">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">HashMap::</span>new()<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> w <span class="kw">in</span> [<span class="st">&quot;a&quot;</span><span class="op">,</span> <span class="st">&quot;b&quot;</span><span class="op">,</span> <span class="st">&quot;a&quot;</span>] <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>counts<span class="op">.</span>entry(w)<span class="op">.</span>or_insert(<span class="dv">0</span>) <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>counts<span class="op">.</span>get(<span class="st">&quot;a&quot;</span>)<span class="op">;</span>                       <span class="co">// Some(&amp;2)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>counts<span class="op">.</span>contains_key(<span class="st">&quot;z&quot;</span>)<span class="op">;</span>              <span class="co">// false</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> seen <span class="op">=</span> <span class="pp">HashSet::</span>new()<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>seen<span class="op">.</span>insert(<span class="dv">3</span>)<span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> sorted <span class="op">=</span> <span class="pp">BTreeMap::</span>new()<span class="op">;</span>      <span class="co">// sorted by key</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>sorted<span class="op">.</span>insert(<span class="dv">2</span><span class="op">,</span> <span class="st">&quot;b&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>sorted<span class="op">.</span>insert(<span class="dv">1</span><span class="op">,</span> <span class="st">&quot;a&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>A key type needs <code class="verbatim">Eq</code> and <code
+class="verbatim">Hash</code> for <code class="verbatim">HashMap</code>,
+and <code class="verbatim">Ord</code> for <code
+class="verbatim">BTreeMap</code>. Iteration order of a <code
+class="verbatim">HashMap</code> is not specified and can differ between
+runs. Floats are not <code class="verbatim">Eq</code> or <code
+class="verbatim">Ord</code> because of NaN.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="at">)]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Id(<span class="dt">u32</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="other-collections">7. Other collections</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">VecDeque&lt;T&gt;</code></td>
+<td>Double-ended queue (ring buffer)</td>
+</tr>
+<tr>
+<td><code class="verbatim">BinaryHeap&lt;T&gt;</code></td>
+<td>Priority queue; largest element first</td>
+</tr>
+<tr>
+<td><code class="verbatim">BTreeSet&lt;T&gt;</code></td>
+<td>Sorted set</td>
+</tr>
+<tr>
+<td><code class="verbatim">LinkedList&lt;T&gt;</code></td>
+<td>Doubly linked list; rarely the right choice</td>
+</tr>
+</tbody>
+</table>
+<h3 id="recursive-types-need-indirection">8. Recursive types need
+indirection</h3>
+<p>A type cannot contain itself directly because its size would be
+infinite. Put the recursive part behind a pointer such as <code
+class="verbatim">Box</code>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> List <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Cons</span>(<span class="dt">i32</span><span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span>List<span class="op">&gt;</span>)<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Nil</span><span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> l <span class="op">=</span> <span class="pp">List::</span><span class="cn">Cons</span>(<span class="dv">1</span><span class="op">,</span> <span class="pp">Box::</span>new(<span class="pp">List::</span><span class="cn">Cons</span>(<span class="dv">2</span><span class="op">,</span> <span class="pp">Box::</span>new(<span class="pp">List::</span><span class="cn">Nil</span>))))<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Tree <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    Leaf<span class="op">,</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    Node(<span class="dt">Box</span><span class="op">&lt;</span>Tree<span class="op">&gt;,</span> <span class="dt">i32</span><span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span>Tree<span class="op">&gt;</span>)<span class="op">,</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> sum(t<span class="op">:</span> <span class="op">&amp;</span>Tree) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> t <span class="op">{</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Tree::</span>Leaf <span class="op">=&gt;</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Tree::</span>Node(l<span class="op">,</span> v<span class="op">,</span> r) <span class="op">=&gt;</span> sum(l) <span class="op">+</span> v <span class="op">+</span> sum(r)<span class="op">,</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Node <span class="op">{</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    value<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    next<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span>Node<span class="op">&gt;&gt;,</span>       <span class="co">// singly linked list</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="shared-ownership-and-graphs">9. Shared ownership and graphs</h3>
+<p>Ownership forms a tree. Data that must have several owners or cycles
+needs reference counting, or indices:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::rc::</span>Rc<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::cell::</span>RefCell<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> shared <span class="op">=</span> <span class="pp">Rc::</span>new(<span class="pp">RefCell::</span>new(<span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span>]))<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> other <span class="op">=</span> <span class="pp">Rc::</span>clone(<span class="op">&amp;</span>shared)<span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>other<span class="op">.</span>borrow_mut()<span class="op">.</span>push(<span class="dv">3</span>)<span class="op">;</span>               <span class="co">// checked at run time</span></span></code></pre></div>
+<p>For graphs, a simpler and faster approach is usually to store nodes
+in a <code class="verbatim">Vec</code> and refer to them by index:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Graph <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    nodes<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>NodeData<span class="op">&gt;,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    edges<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;&gt;,</span>                <span class="co">// edges[i] lists neighbours of node i</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Cycles of <code class="verbatim">Rc</code> leak; break them with
+<code class="verbatim">Weak</code>.</p>
+<h3 id="deriving-and-standard-traits">10. Deriving and standard
+traits</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="op">,</span> <span class="bu">PartialOrd</span><span class="op">,</span> <span class="bu">Ord</span><span class="op">,</span> <span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Version <span class="op">{</span> major<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> minor<span class="op">:</span> <span class="dt">u32</span> <span class="op">}</span></span></code></pre></div>
+<p><code class="verbatim">Debug</code> enables <code
+class="verbatim">{:?}</code>; <code class="verbatim">Clone</code>
+enables <code class="verbatim">.clone()</code>; <code
+class="verbatim">PartialEq</code> / <code class="verbatim">Eq</code>
+enable <code>==</code>; <code class="verbatim">Hash</code> and <code
+class="verbatim">Ord</code> allow use as map keys; <code
+class="verbatim">Default</code> gives <code
+class="verbatim">Version::default()</code>. Derived <code
+class="verbatim">Ord</code> compares fields in declaration order.</p>
+<h3 id="choose-the-structure-for-the-job">11. Choose the structure for
+the job</h3>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Common choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fixed-size sequence</td>
+<td><code class="verbatim">[T; N]</code></td>
+</tr>
+<tr>
+<td>Growable sequence (default)</td>
+<td><code class="verbatim">Vec&lt;T&gt;</code></td>
+</tr>
+<tr>
+<td>Borrowed view of a sequence</td>
+<td><code class="verbatim">&amp;[T]</code></td>
+</tr>
+<tr>
+<td>Key-value lookup</td>
+<td><code class="verbatim">HashMap&lt;K, V&gt;</code></td>
+</tr>
+<tr>
+<td>Sorted keys</td>
+<td><code class="verbatim">BTreeMap&lt;K, V&gt;</code></td>
+</tr>
+<tr>
+<td>Fixed named fields</td>
+<td><code class="verbatim">struct</code></td>
+</tr>
+<tr>
+<td>One of several shapes</td>
+<td><code class="verbatim">enum</code></td>
+</tr>
+<tr>
+<td>Maybe absent / maybe failed</td>
+<td><code class="verbatim">Option&lt;T&gt;</code> / <code
+class="verbatim">Result&lt;T, E&gt;</code></td>
+</tr>
+<tr>
+<td>Distinct type around a primitive</td>
+<td>Newtype <code class="verbatim">struct Meters(f64)</code></td>
+</tr>
+<tr>
+<td>Recursive structure</td>
+<td><code class="verbatim">Box&lt;T&gt;</code> in an enum or struct</td>
+</tr>
+<tr>
+<td>Shared ownership</td>
+<td><code class="verbatim">Rc&lt;T&gt;</code> / <code
+class="verbatim">Arc&lt;T&gt;</code></td>
+</tr>
+<tr>
+<td>Graph</td>
+<td><code class="verbatim">Vec</code> of nodes plus indices</td>
+</tr>
+</tbody>
+</table>
+<p>Start with <code class="verbatim">struct</code>, <code
+class="verbatim">enum</code>, <code class="verbatim">Vec</code>, and
+<code class="verbatim">HashMap</code>. Add the rest when the problem
+calls for it.</p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

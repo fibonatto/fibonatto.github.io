@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Standard Library: Traits and Utilities</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/09-standard-library.html">
+  <meta property="og:title" content="Rust Standard Library: Traits and Utilities">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/09-standard-library.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Standard Library: Traits and Utilities</h1>
+<h2 id="rust-standard-library-traits-and-utilities-1">Rust Standard
+Library: Traits and Utilities</h2>
+<p>Collections are covered in <code
+class="verbatim">05_data-structures.org</code>, iterators in <code
+class="verbatim">07_iterators.org</code>, and I/O in <code
+class="verbatim">08_io-and-errors.org</code>. This file covers the
+traits and utility modules you meet in every program.</p>
+<h3 id="std-core-alloc-and-the-prelude">1. std, core, alloc, and the
+prelude</h3>
+<ul>
+<li><code class="verbatim">core</code>: the language-level library with
+no OS and no heap (<code class="verbatim">Option</code>, <code
+class="verbatim">Result</code>, iterators, <code
+class="verbatim">fmt</code>, atomics). Usable in <code
+class="verbatim">#![no_std]</code> code.</li>
+<li><code class="verbatim">alloc</code>: heap types (<code
+class="verbatim">Box</code>, <code class="verbatim">Vec</code>, <code
+class="verbatim">String</code>, <code class="verbatim">Rc</code>, <code
+class="verbatim">Arc</code>). Needs an allocator.</li>
+<li><code class="verbatim">std</code>: everything above plus I/O,
+threads, files, networking, time, and the process environment.
+Re-exports <code class="verbatim">core</code> and <code
+class="verbatim">alloc</code>.</li>
+</ul>
+<p>The <em>prelude</em> is a set of names imported into every file:
+<code class="verbatim">Option</code>, <code
+class="verbatim">Some</code>, <code class="verbatim">None</code>, <code
+class="verbatim">Result</code>, <code class="verbatim">Ok</code>, <code
+class="verbatim">Err</code>, <code class="verbatim">Vec</code>, <code
+class="verbatim">String</code>, <code class="verbatim">Box</code>, <code
+class="verbatim">ToString</code>, <code class="verbatim">Clone</code>,
+<code class="verbatim">Copy</code>, <code
+class="verbatim">Iterator</code>, <code
+class="verbatim">IntoIterator</code>, <code
+class="verbatim">From</code>, <code class="verbatim">Into</code>, <code
+class="verbatim">Default</code>, <code class="verbatim">Drop</code>,
+<code class="verbatim">Fn</code>, and others. Anything else needs <code
+class="verbatim">use</code>.</p>
+<h3 id="the-derivable-traits">2. The derivable traits</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="op">,</span> <span class="bu">PartialOrd</span><span class="op">,</span> <span class="bu">Ord</span><span class="op">,</span> <span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">i32</span> <span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>Provides</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">Debug</code></td>
+<td><code class="verbatim">{:?}</code> formatting for programmers</td>
+<td>Derive almost always</td>
+</tr>
+<tr>
+<td><code class="verbatim">Clone</code></td>
+<td><code class="verbatim">.clone()</code></td>
+<td>Explicit duplicate</td>
+</tr>
+<tr>
+<td><code class="verbatim">Copy</code></td>
+<td>Implicit bitwise copy</td>
+<td>Requires <code class="verbatim">Clone</code>; all fields <code
+class="verbatim">Copy</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">PartialEq</code></td>
+<td><code>==</code> and <code>!=</code></td>
+<td>Float fields allow only <code class="verbatim">PartialEq</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">Eq</code></td>
+<td>Marker: equality is reflexive</td>
+<td>Needed for <code class="verbatim">HashMap</code> keys</td>
+</tr>
+<tr>
+<td><code class="verbatim">PartialOrd</code></td>
+<td><code class="verbatim">&lt;</code>, <code
+class="verbatim">&gt;</code>, <code
+class="verbatim">partial_cmp</code></td>
+<td>Derived order: field by field, in declaration order</td>
+</tr>
+<tr>
+<td><code class="verbatim">Ord</code></td>
+<td><code class="verbatim">cmp</code>, <code
+class="verbatim">sort</code>, <code class="verbatim">BTreeMap</code>
+keys</td>
+<td>Total order</td>
+</tr>
+<tr>
+<td><code class="verbatim">Hash</code></td>
+<td>Hashing for <code class="verbatim">HashMap</code> / <code
+class="verbatim">HashSet</code></td>
+<td>Must agree with <code class="verbatim">Eq</code>: equal values hash
+equally</td>
+</tr>
+<tr>
+<td><code class="verbatim">Default</code></td>
+<td><code class="verbatim">T::default()</code></td>
+<td>Zero values; for enums mark a <code
+class="verbatim">#[default]</code> variant</td>
+</tr>
+</tbody>
+</table>
+<p>When you implement <code class="verbatim">PartialEq</code>, <code
+class="verbatim">Hash</code>, and <code class="verbatim">Ord</code> by
+hand, keep them consistent with each other. Enums derive ordering by
+variant order, then by payload.</p>
+<h3 id="display-debug-and-formatting">3. Display, Debug, and
+formatting</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>fmt<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">fmt::</span><span class="bu">Display</span> <span class="cf">for</span> Point <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> fmt(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> f<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="pp">fmt::</span>Formatter<span class="op">&lt;</span><span class="ot">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="pp">fmt::</span><span class="dt">Result</span> <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="pp">write!</span>(f<span class="op">,</span> <span class="st">&quot;({:.1}, {:.1})&quot;</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span>x<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>y)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> p <span class="op">=</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dv">1.0</span><span class="op">,</span> y<span class="op">:</span> <span class="dv">2.5</span> <span class="op">};</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{p}&quot;</span>)<span class="op">;</span>          <span class="co">// Display: for users</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> p)<span class="op">;</span>      <span class="co">// Debug: needs #[derive(Debug)]</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{:#?}&quot;</span><span class="op">,</span> p)<span class="op">;</span>     <span class="co">// pretty-printed Debug</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s <span class="op">=</span> p<span class="op">.</span>to_string()<span class="op">;</span>    <span class="co">// ToString comes free with Display</span></span></code></pre></div>
+<p>Format specifiers:</p>
+<table>
+<thead>
+<tr>
+<th>Spec</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">{}</code>, <code
+class="verbatim">{:?}</code>, <code class="verbatim">{:#?}</code></td>
+<td>Display, Debug, pretty Debug</td>
+</tr>
+<tr>
+<td><code class="verbatim">{0}</code> <code class="verbatim">{1}</code>,
+<code class="verbatim">{name}</code></td>
+<td>Positional and named arguments</td>
+</tr>
+<tr>
+<td><code class="verbatim">{x}</code></td>
+<td>Inline capture of a variable in scope</td>
+</tr>
+<tr>
+<td><code class="verbatim">{:5}</code>, <code
+class="verbatim">{:&lt;5}</code>, <code
+class="verbatim">{:&gt;5}</code>, <code
+class="verbatim">{:^5}</code></td>
+<td>Width, with alignment</td>
+</tr>
+<tr>
+<td><code class="verbatim">{:05}</code>, <code
+class="verbatim">{:+}</code></td>
+<td>Zero padding, always show the sign</td>
+</tr>
+<tr>
+<td><code class="verbatim">{:.2}</code></td>
+<td>Precision: decimals for floats, truncation for strings</td>
+</tr>
+<tr>
+<td><code class="verbatim">{:8.3}</code></td>
+<td>Width 8, 3 decimals</td>
+</tr>
+<tr>
+<td><code class="verbatim">{:x}</code>, <code
+class="verbatim">{:X}</code>, <code class="verbatim">{:b}</code>, <code
+class="verbatim">{:o}</code>, <code class="verbatim">{:#x}</code></td>
+<td>Hex, binary, octal; <code class="verbatim">#</code> adds the
+prefix</td>
+</tr>
+<tr>
+<td><code class="verbatim">{:e}</code></td>
+<td>Scientific notation</td>
+</tr>
+<tr>
+<td><code class="verbatim">{:&gt;width$}</code>, <code
+class="verbatim">{:.prec$}</code></td>
+<td>Width or precision taken from a variable</td>
+</tr>
+</tbody>
+</table>
+<p>The format string is checked at compile time: a wrong number or type
+of arguments is a compile error, unlike C's <code
+class="verbatim">printf</code>. <code class="verbatim">format!</code>
+returns a <code class="verbatim">String</code>, <code
+class="verbatim">write!</code> / <code class="verbatim">writeln!</code>
+write into any <code class="verbatim">fmt::Write</code> or <code
+class="verbatim">io::Write</code>, and <code class="verbatim">{{</code>
+/ <code class="verbatim">}}</code> print literal braces.</p>
+<h3 id="conversion-traits">4. Conversion traits</h3>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>Purpose</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">From&lt;T&gt;</code> / <code
+class="verbatim">Into&lt;U&gt;</code></td>
+<td>Infallible conversion; implement <code class="verbatim">From</code>,
+get <code class="verbatim">Into</code> free</td>
+<td><code class="verbatim">String::from("a")</code>, <code
+class="verbatim">let s: String = "a".into()</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">TryFrom&lt;T&gt;</code> / <code
+class="verbatim">TryInto&lt;U&gt;</code></td>
+<td>Fallible conversion</td>
+<td><code class="verbatim">u8::try_from(300_i32)</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">FromStr</code></td>
+<td>Parse from text; powers <code
+class="verbatim">str::parse</code></td>
+<td><code class="verbatim">"5".parse::&lt;u32&gt;()</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">ToString</code></td>
+<td>Blanket-implemented for <code class="verbatim">Display</code>
+types</td>
+<td><code class="verbatim">42.to_string()</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">AsRef&lt;T&gt;</code> / <code
+class="verbatim">AsMut&lt;T&gt;</code></td>
+<td>Cheap reference-to-reference conversion</td>
+<td><code
+class="verbatim">fn open&lt;P: AsRef&lt;Path&gt;&gt;(p: P)</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">Borrow&lt;T&gt;</code></td>
+<td>Like <code class="verbatim">AsRef</code> with <code
+class="verbatim">Eq=/=Hash</code> consistency</td>
+<td><code
+class="verbatim">HashMap&lt;String, V&gt;::get("key")</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">Deref</code></td>
+<td>Smart pointer to its target; deref coercion</td>
+<td><code class="verbatim">Box&lt;T&gt;</code>, <code
+class="verbatim">String</code> to <code class="verbatim">str</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Celsius(<span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Fahrenheit(<span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">From</span><span class="op">&lt;</span>Celsius<span class="op">&gt;</span> <span class="cf">for</span> Fahrenheit <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> from(c<span class="op">:</span> Celsius) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> Fahrenheit(c<span class="op">.</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">9.0</span> <span class="op">/</span> <span class="dv">5.0</span> <span class="op">+</span> <span class="dv">32.0</span>) <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f<span class="op">:</span> Fahrenheit <span class="op">=</span> Celsius(<span class="dv">100.0</span>)<span class="op">.</span>into()<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::str::</span><span class="bu">FromStr</span><span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">FromStr</span> <span class="cf">for</span> Point <span class="op">{</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Err <span class="op">=</span> <span class="dt">String</span><span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> from_str(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Self</span><span class="op">,</span> <span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (a<span class="op">,</span> b) <span class="op">=</span> s<span class="op">.</span>split_once(<span class="ch">&#39;,&#39;</span>)<span class="op">.</span>ok_or(<span class="st">&quot;expected x,y&quot;</span>)<span class="op">?;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(Point <span class="op">{</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            x<span class="op">:</span> a<span class="op">.</span>trim()<span class="op">.</span>parse()<span class="op">.</span>map_err(<span class="op">|</span>_<span class="op">|</span> <span class="st">&quot;bad x&quot;</span>)<span class="op">?,</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            y<span class="op">:</span> b<span class="op">.</span>trim()<span class="op">.</span>parse()<span class="op">.</span>map_err(<span class="op">|</span>_<span class="op">|</span> <span class="st">&quot;bad y&quot;</span>)<span class="op">?,</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> p<span class="op">:</span> Point <span class="op">=</span> <span class="st">&quot;1.5, 2&quot;</span><span class="op">.</span>parse()<span class="op">.</span>unwrap()<span class="op">;</span></span></code></pre></div>
+<p>Accept <code class="verbatim">impl Into&lt;String&gt;</code> or <code
+class="verbatim">impl AsRef&lt;str&gt;</code> in APIs that should take
+either owned or borrowed text without forcing a clone.</p>
+<h3 id="strings-the-everyday-methods">5. Strings: the everyday
+methods</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s <span class="op">=</span> <span class="st">&quot;  Hello, World  &quot;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>trim()<span class="op">;</span>  s<span class="op">.</span>trim_start()<span class="op">;</span>  s<span class="op">.</span>trim_end()<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>to_lowercase()<span class="op">;</span>  s<span class="op">.</span>to_uppercase()<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>contains(<span class="st">&quot;World&quot;</span>)<span class="op">;</span>  s<span class="op">.</span>starts_with(<span class="st">&quot;  He&quot;</span>)<span class="op">;</span>  s<span class="op">.</span>ends_with(<span class="ch">&#39;d&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>replace(<span class="st">&quot;World&quot;</span><span class="op">,</span> <span class="st">&quot;Rust&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>split(<span class="ch">&#39;,&#39;</span>)<span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;&gt;</span>()<span class="op">;</span>           <span class="co">// [&quot; Hello&quot;, &quot; World &quot;]</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>split_whitespace()<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>split_once(<span class="ch">&#39;,&#39;</span>)<span class="op">;</span>                           <span class="co">// Option&lt;(&amp;str, &amp;str)&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>lines()<span class="op">;</span>  s<span class="op">.</span>chars()<span class="op">;</span>  s<span class="op">.</span>bytes()<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>find(<span class="st">&quot;o&quot;</span>)<span class="op">;</span>                                 <span class="co">// Option&lt;usize&gt;: byte offset</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> owned <span class="op">=</span> <span class="pp">String::</span>with_capacity(<span class="dv">32</span>)<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>owned<span class="op">.</span>push(<span class="ch">&#39;a&#39;</span>)<span class="op">;</span>  owned<span class="op">.</span>push_str(<span class="st">&quot;bc&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>owned <span class="op">+=</span> <span class="st">&quot;def&quot;</span><span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>owned<span class="op">.</span>insert(<span class="dv">0</span><span class="op">,</span> <span class="ch">&#39;&gt;&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>owned<span class="op">.</span>pop()<span class="op">;</span>  owned<span class="op">.</span>clear()<span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> joined <span class="op">=</span> [<span class="st">&quot;a&quot;</span><span class="op">,</span> <span class="st">&quot;b&quot;</span><span class="op">,</span> <span class="st">&quot;c&quot;</span>]<span class="op">.</span>join(<span class="st">&quot;-&quot;</span>)<span class="op">;</span>      <span class="co">// &quot;a-b-c&quot;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> t <span class="op">=</span> <span class="pp">format!</span>(<span class="st">&quot;{}-{}&quot;</span><span class="op">,</span> <span class="st">&quot;a&quot;</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<p><code class="verbatim">Cow&lt;'a, str&gt;</code> (clone on write)
+lets a function return a borrowed string when nothing changed and an
+owned one when it did, avoiding an allocation in the common case:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::borrow::</span>Cow<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> normalize(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> Cow<span class="op">&lt;</span><span class="ot">&#39;_</span><span class="op">,</span> <span class="dt">str</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> s<span class="op">.</span>contains(<span class="ch">&#39;</span><span class="sc">\t</span><span class="ch">&#39;</span>) <span class="op">{</span> <span class="pp">Cow::</span>Owned(s<span class="op">.</span>replace(<span class="ch">&#39;</span><span class="sc">\t</span><span class="ch">&#39;</span><span class="op">,</span> <span class="st">&quot;    &quot;</span>)) <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="pp">Cow::</span>Borrowed(s) <span class="op">}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="stdmem-and-stdcmp">6. std::mem and std::cmp</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>mem<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::cmp::</span><span class="op">{</span><span class="kw">self</span><span class="op">,</span> Ordering<span class="op">,</span> Reverse<span class="op">};</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="pp">mem::</span>swap(<span class="op">&amp;</span><span class="kw">mut</span> a<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> b)<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> old <span class="op">=</span> <span class="pp">mem::</span>replace(<span class="op">&amp;</span><span class="kw">mut</span> x<span class="op">,</span> new)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> taken <span class="op">=</span> <span class="pp">mem::</span>take(<span class="op">&amp;</span><span class="kw">mut</span> v)<span class="op">;</span>               <span class="co">// leaves Default::default()</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">mem::size_of::</span><span class="op">&lt;</span><span class="dt">u64</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="pp">cmp::</span>min(<span class="dv">3</span><span class="op">,</span> <span class="dv">5</span>)<span class="op">;</span>  <span class="pp">cmp::</span>max(<span class="dv">3</span><span class="op">,</span> <span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span><span class="op">.</span>clamp(<span class="dv">0</span><span class="op">,</span> <span class="dv">2</span>)<span class="op">;</span>                               <span class="co">// 2</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> a<span class="op">.</span>cmp(<span class="op">&amp;</span>b) <span class="op">{</span> <span class="pp">Ordering::</span>Less <span class="op">=&gt;</span> <span class="op">{},</span> <span class="pp">Ordering::</span>Equal <span class="op">=&gt;</span> <span class="op">{},</span> <span class="pp">Ordering::</span>Greater <span class="op">=&gt;</span> <span class="op">{}</span> <span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>people<span class="op">.</span>sort_by(<span class="op">|</span>a<span class="op">,</span> b<span class="op">|</span> a<span class="op">.</span>age<span class="op">.</span>cmp(<span class="op">&amp;</span>b<span class="op">.</span>age)<span class="op">.</span>then_with(<span class="op">||</span> a<span class="op">.</span>name<span class="op">.</span>cmp(<span class="op">&amp;</span>b<span class="op">.</span>name)))<span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>people<span class="op">.</span>sort_by_key(<span class="op">|</span>p<span class="op">|</span> Reverse(p<span class="op">.</span>age))<span class="op">;</span>      <span class="co">// descending</span></span></code></pre></div>
+<h3 id="time-processes-and-the-environment">7. Time, processes, and the
+environment</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::time::</span><span class="op">{</span>Duration<span class="op">,</span> Instant<span class="op">,</span> SystemTime<span class="op">,</span> <span class="cn">UNIX_EPOCH</span><span class="op">};</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>thread<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> start <span class="op">=</span> <span class="pp">Instant::</span>now()<span class="op">;</span>                  <span class="co">// monotonic clock: for measuring intervals</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>work()<span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> elapsed<span class="op">:</span> Duration <span class="op">=</span> start<span class="op">.</span>elapsed()<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{:?} / {} ms&quot;</span><span class="op">,</span> elapsed<span class="op">,</span> elapsed<span class="op">.</span>as_millis())<span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> secs <span class="op">=</span> <span class="pp">SystemTime::</span>now()<span class="op">.</span>duration_since(<span class="cn">UNIX_EPOCH</span>)<span class="op">?.</span>as_secs()<span class="op">;</span>   <span class="co">// wall clock; can fail</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="pp">thread::</span>sleep(<span class="pp">Duration::</span>from_millis(<span class="dv">100</span>))<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::process::</span>Command<span class="op">;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> out <span class="op">=</span> <span class="pp">Command::</span>new(<span class="st">&quot;ls&quot;</span>)<span class="op">.</span>arg(<span class="st">&quot;-l&quot;</span>)<span class="op">.</span>output()<span class="op">?;</span>      <span class="co">// run a program and capture output</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> <span class="pp">String::</span>from_utf8_lossy(<span class="op">&amp;</span>out<span class="op">.</span>stdout))<span class="op">;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> status <span class="op">=</span> <span class="pp">Command::</span>new(<span class="st">&quot;make&quot;</span>)<span class="op">.</span>status()<span class="op">?;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>status<span class="op">.</span>success()<span class="op">;</span></span></code></pre></div>
+<p>Use <code class="verbatim">Instant</code> for elapsed time and <code
+class="verbatim">SystemTime</code> for timestamps (the clock can jump).
+Dates, time zones, and calendars are not in <code
+class="verbatim">std</code>; use the <code
+class="verbatim">chrono</code> or <code class="verbatim">time</code>
+crates. <code class="verbatim">Command</code> does not go through a
+shell, so there is no shell injection unless you invoke <code
+class="verbatim">sh -c</code> yourself.</p>
+<h3 id="numbers">8. Numbers</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2_i32</span><span class="op">.</span>pow(<span class="dv">10</span>)<span class="op">;</span>  <span class="dv">2.0_f64</span><span class="op">.</span>powi(<span class="dv">3</span>)<span class="op">;</span>  <span class="dv">2.0_f64</span><span class="op">.</span>powf(<span class="dv">0.5</span>)<span class="op">;</span>  <span class="dv">16.0_f64</span><span class="op">.</span>sqrt()<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dv">10_u32</span><span class="op">.</span>leading_zeros()<span class="op">;</span>  <span class="dv">0b1011_u8</span><span class="op">.</span>count_ones()<span class="op">;</span>  <span class="dv">1_u8</span><span class="op">.</span>rotate_left(<span class="dv">3</span>)<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="pp">i64::</span>from_str_radix(<span class="st">&quot;ff&quot;</span><span class="op">,</span> <span class="dv">16</span>)<span class="op">;</span>                    <span class="co">// Ok(255)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dv">255_u8</span><span class="op">.</span>to_string()<span class="op">;</span>  <span class="pp">format!</span>(<span class="st">&quot;{:08b}&quot;</span><span class="op">,</span> <span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> bytes <span class="op">=</span> <span class="dv">0x12345678_u32</span><span class="op">.</span>to_be_bytes()<span class="op">;</span>          <span class="co">// [0x12, 0x34, 0x56, 0x78]</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">u32::</span>from_le_bytes([<span class="dv">0x78</span><span class="op">,</span> <span class="dv">0x56</span><span class="op">,</span> <span class="dv">0x34</span><span class="op">,</span> <span class="dv">0x12</span>])<span class="op">;</span>      <span class="co">// 0x12345678</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">i32::</span><span class="cn">MAX</span><span class="op">;</span>  <span class="pp">u8::</span><span class="cn">MIN</span><span class="op">;</span>  <span class="pp">f64::</span><span class="cn">EPSILON</span><span class="op">;</span>  <span class="pp">std::f64::consts::</span>PI<span class="op">;</span></span></code></pre></div>
+<p>Use <code class="verbatim">to_be_bytes</code> / <code
+class="verbatim">from_le_bytes</code> and friends to serialize integers
+with explicit byte order; no struct dumping and no <code
+class="verbatim">htonl</code>.</p>
+<h3 id="lazy-and-one-time-initialization">9. Lazy and one-time
+initialization</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span><span class="op">{</span>LazyLock<span class="op">,</span> OnceLock<span class="op">};</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> TABLE<span class="op">:</span> LazyLock<span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">LazyLock::</span>new(<span class="op">||</span> (<span class="dv">0</span><span class="op">..</span><span class="dv">256</span>)<span class="op">.</span>map(<span class="op">|</span>i<span class="op">|</span> i <span class="op">*</span> i)<span class="op">.</span>collect())<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> CONFIG<span class="op">:</span> OnceLock<span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">OnceLock::</span>new()<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> cfg <span class="op">=</span> CONFIG<span class="op">.</span>get_or_init(<span class="op">||</span> <span class="pp">String::</span>from(<span class="st">&quot;default&quot;</span>))<span class="op">;</span></span></code></pre></div>
+<p><code class="verbatim">OnceLock</code> (stable since Rust 1.70) and
+<code class="verbatim">LazyLock</code> (1.80) replace the <code
+class="verbatim">lazy_static</code> and <code
+class="verbatim">once_cell</code> crates for most uses.</p>
+<h3 id="beyond-std-crates-you-will-meet">10. Beyond std: crates you will
+meet</h3>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Crate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Serialization (JSON, TOML, …)</td>
+<td><code class="verbatim">serde</code>, <code
+class="verbatim">serde_json</code></td>
+</tr>
+<tr>
+<td>Command-line parsing</td>
+<td><code class="verbatim">clap</code></td>
+</tr>
+<tr>
+<td>Error handling</td>
+<td><code class="verbatim">thiserror</code>, <code
+class="verbatim">anyhow</code></td>
+</tr>
+<tr>
+<td>Async runtime</td>
+<td><code class="verbatim">tokio</code> (also <code
+class="verbatim">async-std</code>, <code
+class="verbatim">smol</code>)</td>
+</tr>
+<tr>
+<td>Data parallelism</td>
+<td><code class="verbatim">rayon</code></td>
+</tr>
+<tr>
+<td>Regular expressions</td>
+<td><code class="verbatim">regex</code></td>
+</tr>
+<tr>
+<td>Random numbers</td>
+<td><code class="verbatim">rand</code></td>
+</tr>
+<tr>
+<td>Dates and times</td>
+<td><code class="verbatim">chrono</code>, <code
+class="verbatim">time</code></td>
+</tr>
+<tr>
+<td>HTTP</td>
+<td><code class="verbatim">reqwest</code> (client), <code
+class="verbatim">axum</code> (server)</td>
+</tr>
+<tr>
+<td>Logging and tracing</td>
+<td><code class="verbatim">tracing</code>, <code
+class="verbatim">log</code></td>
+</tr>
+<tr>
+<td>More iterator tools</td>
+<td><code class="verbatim">itertools</code></td>
+</tr>
+<tr>
+<td>Testing: properties, benches</td>
+<td><code class="verbatim">proptest</code>, <code
+class="verbatim">criterion</code></td>
+</tr>
+</tbody>
+</table>
+<p>Browse crates.io and docs.rs. Prefer widely used crates with recent
+releases, and audit dependencies (see <code
+class="verbatim">14_toolchain.org</code>).</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li><code class="verbatim">derive</code> the standard traits; keep <code
+class="verbatim">PartialEq</code>, <code class="verbatim">Hash</code>,
+and <code class="verbatim">Ord</code> consistent when hand-written.</li>
+<li><code class="verbatim">Display</code> is for users, <code
+class="verbatim">Debug</code> for programmers; format strings are
+checked at compile time.</li>
+<li>Implement <code class="verbatim">From</code>, get <code
+class="verbatim">Into</code>; use <code class="verbatim">TryFrom</code>
+when it can fail; accept <code
+class="verbatim">impl AsRef&lt;str&gt;</code> / <code
+class="verbatim">impl AsRef&lt;Path&gt;</code> in APIs.</li>
+<li><code class="verbatim">Instant</code> measures intervals, <code
+class="verbatim">SystemTime</code> tells the date; calendars need a
+crate.</li>
+<li><code class="verbatim">OnceLock</code> / <code
+class="verbatim">LazyLock</code> handle global initialization.</li>
+<li>Explicit-endian conversion methods replace C's byte-order
+macros.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

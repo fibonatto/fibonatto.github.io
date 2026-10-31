@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architectural Patterns</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/software-architecture/05-architectural-patterns.html">
+  <meta property="og:title" content="Architectural Patterns">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/software-architecture/05-architectural-patterns.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Architectural Patterns</h1>
+<h2 id="architectural-patterns-1">Architectural Patterns</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>A pattern is a packaged trade-off: a solution to a recurring problem
+together with the forces it balances and the consequences it brings. The
+common failure is adopting the solution without the problem. At Staff
+and Principal scope you are expected to:</p>
+<ul>
+<li>recognize the force that justifies a pattern, and say what evidence
+shows that force is present (measured pain, not anticipated pain);</li>
+<li>state, for every pattern, when to use it and, as importantly, when
+to avoid it;</li>
+<li>price the pattern: new concepts for the team, operational
+complexity, consistency model, testing and debugging cost;</li>
+<li>notice when a pattern is being used as a status symbol, and propose
+the boring alternative.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">01_architectural-styles.org</code>, <code
+class="verbatim">02_modularity-and-boundaries.org</code>, <code
+class="verbatim">04_abstraction-and-interfaces.org</code>, <code
+class="verbatim">06_quality-attributes-and-tradeoffs.org</code>, and the
+concurrency and consistency material in the Foundations notes.</p>
+<h3 id="layered-onion-clean-and-hexagonal-architectures">1. Layered,
+onion, clean, and hexagonal architectures</h3>
+<p>These share one idea: <strong>the domain logic sits at the center and
+does not depend on delivery mechanisms or infrastructure; infrastructure
+depends on the domain.</strong></p>
+<p><strong>Ports and adapters (hexagonal architecture)</strong>,
+introduced by Cockburn: the application core exposes <em>ports</em>
+(interfaces expressed in domain terms) and <em>adapters</em> connect the
+outside world to them.</p>
+<ul>
+<li><strong>Driving (primary) side</strong>: adapters that call into the
+core (HTTP controllers, message consumers, CLI, scheduled jobs, tests).
+The core exposes use cases as ports.</li>
+<li><strong>Driven (secondary) side</strong>: the core defines
+interfaces it needs (repositories, payment gateways, clocks, publishers)
+and adapters implement them (database, third-party API, broker).</li>
+<li><strong>Dependency rule</strong>: source-code dependencies point
+inward, toward the domain. Clean architecture (Martin) and onion
+architecture (Palermo) describe the same direction with concentric
+rings: entities, use cases, interface adapters, frameworks and
+drivers.</li>
+</ul>
+<pre class="text"><code>  driving adapters                 core                   driven adapters
++----------------+      +------------------------+     +-------------------+
+| HTTP / gRPC    | ---&gt; |  use cases (ports in)  |     | SQL repository    |
+| message consumer| --&gt; |  domain model          | --&gt; | payment API client|
+| CLI / tests    | ---&gt; |  ports out (interfaces)| &lt;-- | event publisher   |
++----------------+      +------------------------+     +-------------------+
+       dependencies point toward the core; the core owns the interfaces
+</code></pre>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Port owned by the application core, written in domain terms.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> OrderRepository {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">save</span>(order<span class="op">:</span> Order)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">byId</span>(id<span class="op">:</span> OrderId)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>Order <span class="op">|</span> <span class="dt">null</span><span class="op">&gt;;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Use case (driving port implemented by the core).</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PlaceOrder {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">private</span> <span class="kw">readonly</span> orders<span class="op">:</span> OrderRepository<span class="op">,</span> <span class="kw">private</span> <span class="kw">readonly</span> clock<span class="op">:</span> Clock) {}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> <span class="fu">run</span>(cmd<span class="op">:</span> PlaceOrderCommand)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>OrderId<span class="op">&gt;</span> {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> order <span class="op">=</span> Order<span class="op">.</span><span class="fu">place</span>(cmd<span class="op">.</span><span class="at">customerId</span><span class="op">,</span> cmd<span class="op">.</span><span class="at">lines</span><span class="op">,</span> <span class="kw">this</span><span class="op">.</span><span class="at">clock</span><span class="op">.</span><span class="fu">now</span>())<span class="op">;</span> <span class="co">// domain rules live here</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> <span class="kw">this</span><span class="op">.</span><span class="at">orders</span><span class="op">.</span><span class="fu">save</span>(order)<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> order<span class="op">.</span><span class="at">id</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Driven adapter: infrastructure detail, depends on the core, never the reverse.</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PostgresOrderRepository <span class="kw">implements</span> OrderRepository {</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> <span class="fu">save</span>(order<span class="op">:</span> Order)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;</span> { <span class="co">/* map aggregate to rows */</span> }</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> <span class="fu">byId</span>(id<span class="op">:</span> OrderId)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>Order <span class="op">|</span> <span class="dt">null</span><span class="op">&gt;</span> { <span class="co">/* map rows to aggregate */</span> <span class="cf">return</span> <span class="dt">null</span><span class="op">;</span> }</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Benefits</strong>: domain logic testable without
+infrastructure; infrastructure decisions (database, broker, framework)
+can be deferred and replaced; multiple delivery mechanisms share one
+core; clear places for each kind of code. <strong>Costs</strong>: more
+types and mapping between layers, indirection that must be justified, a
+steeper learning curve, and ceremony that is wasted when there is little
+domain logic. <strong>Use when</strong>: the domain logic is substantial
+and long-lived, there are several entry points or integrations, you
+expect to change infrastructure, or you want fast, deterministic tests
+of the rules. <strong>Avoid when</strong>: the system is mostly CRUD
+with little logic (a framework-native approach is cheaper), the code is
+short-lived, or the team would spend more effort on structure than on
+behavior. <strong>Common mistakes</strong>: ORM entities leaking into
+the core; ports shaped like the database or the vendor API; one
+interface per class "just in case"; adapters that contain business
+rules; a dependency-injection container that hides the wiring from
+readers; anemic domain objects with all logic in service classes (the
+layers exist but the model does not).</p>
+<h3 id="cqrs-command-query-responsibility-segregation">2. CQRS: command
+query responsibility segregation</h3>
+<p><strong>Idea</strong> (Young, building on Meyer's command-query
+separation): use separate models for changing state (commands) and for
+reading state (queries), instead of one model serving both. Levels of
+adoption:</p>
+<ol>
+<li><strong>Separate code paths over one database</strong>: command
+handlers with domain logic, query handlers that read directly with
+tailored queries or views. Low cost, often enough.</li>
+<li><strong>Separate read store</strong>: a denormalized read model
+(search index, document store, cache, materialized view) updated from
+the write side, synchronously or asynchronously. Reads scale and shape
+independently.</li>
+<li><strong>With event sourcing</strong>: the write side stores events
+and projections build read models (see the next section).</li>
+</ol>
+<p><strong>Benefits</strong>: read and write workloads are optimized and
+scaled independently; read models match screens and APIs without
+distorting the domain model; complex domain rules on the write side stay
+uncluttered by reporting concerns; different consistency and security
+rules per side. <strong>Costs</strong>: with a separate store, reads are
+eventually consistent (read-your-writes surprises); two models to keep
+aligned; synchronization machinery (projection rebuilds, replays, lag
+monitoring); more moving parts to operate; duplicated concepts.
+<strong>Handling lag</strong>: return the written resource from the
+command; route a user's reads to the primary briefly; carry a version or
+token the client can wait on; optimistic UI updates; show "processing"
+states. <strong>Use when</strong>: read and write needs are very
+different (shape, scale, latency), the domain is complicated enough that
+one model for both is strained, you need several specialized views of
+the same data, or collaboration domains produce frequent write conflicts
+that benefit from task-based commands. <strong>Avoid when</strong>: the
+application is plain CRUD, the team is small or new to the pattern,
+strong read-after-write consistency is required everywhere, or the
+problem is merely a slow query (add an index or a read replica first).
+Fowler cautions that for most systems CQRS adds risky complexity.</p>
+<h3 id="event-sourcing">3. Event sourcing</h3>
+<p><strong>Idea</strong>: persist the state of an entity as an
+append-only sequence of events (what happened), not as the latest
+values. Current state is derived by replaying events, usually
+accelerated with snapshots. Projections consume the event stream to
+build read models. <strong>Benefits</strong>: a complete audit trail by
+construction; the ability to answer temporal questions ("what did we
+believe at 14:00?"); rebuilding or adding projections from history;
+natural fit with event-driven integration and CQRS; debugging by replay;
+the write path is append-only and fast. <strong>Costs and
+hazards</strong>:</p>
+<ul>
+<li><strong>Event design is hard and permanent</strong>: events are
+facts stored forever; poor granularity or naming is a long-term
+burden.</li>
+<li><strong>Schema evolution</strong>: old events must remain readable;
+use versioning, upcasters that translate old events on read, and rules
+for compatible change.</li>
+<li><strong>Projection complexity</strong>: eventual consistency,
+rebuild time at scale, idempotent and ordered handlers, and lag
+monitoring.</li>
+<li><strong>Querying</strong>: you cannot ask the event store arbitrary
+questions; you need projections for every query shape.</li>
+<li><strong>Privacy and deletion</strong>: immutable logs conflict with
+the right to erasure; mitigations include storing personal data outside
+events with references, crypto-shredding (destroying keys), or
+deliberate compaction policies decided up front.</li>
+<li><strong>Operational learning curve</strong>: storage growth,
+snapshotting, replay duration, tooling.</li>
+<li><strong>Do not expose the internal event stream as a public
+API</strong>: separate <em>domain events</em> (internal, can change)
+from <em>integration events</em> (published, versioned contracts).</li>
+</ul>
+<p><strong>Use when</strong>: the audit trail or temporal history is
+itself a requirement (finance, ledgers, compliance, medical), the domain
+is naturally event-shaped (state transitions of long workflows), or you
+need to derive many views from the same history. <strong>Avoid
+when</strong>: CRUD data with no need for history, teams without
+experience in eventual consistency, domains where simple tables and an
+audit log would suffice, or as a means of integration only (publish
+events from a conventional store instead, using the outbox).
+<strong>Relationship</strong>: event sourcing usually comes with CQRS,
+but CQRS is common without event sourcing. Adopt them separately and
+only for the parts of the system that justify them.</p>
+<h3 id="messaging-and-consistency-patterns">4. Messaging and consistency
+patterns</h3>
+<ul>
+<li><strong>Transactional outbox</strong>: write the state change and
+the outgoing message in one local database transaction (the message goes
+to an outbox table); a relay publishes outbox rows and marks them sent.
+This avoids the dual-write problem (updating the database and the broker
+separately, where either can fail). Consumers must be idempotent because
+relays deliver at least once.</li>
+</ul>
+<pre class="text"><code>BEGIN;
+  UPDATE orders SET status = &#39;PLACED&#39; WHERE id = :id;
+  INSERT INTO outbox (id, aggregate_id, type, payload, created_at)
+       VALUES (:event_id, :id, &#39;OrderPlaced&#39;, :payload, now());
+COMMIT;
+-- relay: read unsent outbox rows in order, publish, mark as sent (retry on failure)
+</code></pre>
+<ul>
+<li><strong>Inbox and idempotent consumer</strong>: record processed
+message ids (or make the operation naturally idempotent) so redelivery
+does nothing.</li>
+<li><strong>Change data capture (CDC)</strong>: stream database changes
+from the transaction log as events; an alternative relay for the outbox
+and a way to integrate legacy systems without code changes. It exposes
+table structure, so shield consumers with a translation step.</li>
+<li><strong>Saga</strong>: a sequence of local transactions coordinated
+across services, with compensating actions for failure, replacing a
+distributed ACID transaction. <strong>Orchestration</strong> uses a
+coordinator; <strong>choreography</strong> uses events. Sagas lack
+isolation: intermediate states are visible, so design semantic locks,
+pending states, and compensations that make business sense (cancel an
+order, refund a payment).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Step (order saga)</th>
+<th>Success event</th>
+<th>Compensation if a later step fails</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Create order</td>
+<td>OrderCreated</td>
+<td>Cancel order</td>
+</tr>
+<tr>
+<td>Reserve inventory</td>
+<td>InventoryReserved</td>
+<td>Release reservation</td>
+</tr>
+<tr>
+<td>Charge payment</td>
+<td>PaymentCaptured</td>
+<td>Refund payment</td>
+</tr>
+<tr>
+<td>Confirm shipment</td>
+<td>ShipmentScheduled</td>
+<td>Cancel shipment</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Process manager</strong>: a stateful component that
+coordinates a long-running workflow reacting to events.</li>
+<li><strong>Competing consumers</strong> and <strong>work
+queues</strong>: distribute load across workers. <strong>Dead-letter
+queues</strong>: park messages that repeatedly fail, with alerting and a
+replay path.</li>
+<li><strong>Claim check</strong>: send a reference to a large payload
+stored elsewhere.</li>
+<li><strong>Event-carried state transfer</strong>: include enough state
+in events that consumers keep local copies instead of calling back.</li>
+<li><strong>Two-phase commit</strong> is available in some stacks but
+couples availability across participants and blocks on coordinator
+failure; prefer sagas or keep the data in one place.</li>
+</ul>
+<p>Before adopting a saga, check whether the data belongs in one
+service: a business transaction that always spans two services may mean
+the boundary is wrong (see <code
+class="verbatim">02_modularity-and-boundaries.org</code>).</p>
+<h3 id="integration-and-edge-patterns">5. Integration and edge
+patterns</h3>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Purpose</th>
+<th>Watch for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API gateway</td>
+<td>Single entry point: routing, authentication, rate limits</td>
+<td>Becoming a place for business logic; single point of failure</td>
+</tr>
+<tr>
+<td>Backend for frontend</td>
+<td>One tailored backend per client type</td>
+<td>Duplication across BFFs; ownership by the client team</td>
+</tr>
+<tr>
+<td>Anti-corruption layer</td>
+<td>Translate a foreign model at the boundary</td>
+<td>Mapping cost; keep it thin and tested</td>
+</tr>
+<tr>
+<td>Strangler fig</td>
+<td>Replace a legacy system incrementally behind a routing facade</td>
+<td>Dual systems for a long time; decommission plan</td>
+</tr>
+<tr>
+<td>Service mesh / sidecar</td>
+<td>Cross-cutting network concerns (mTLS, retries, telemetry) outside
+code</td>
+<td>Operational complexity; debugging proxies</td>
+</tr>
+<tr>
+<td>Ambassador / adapter</td>
+<td>Proxy outbound calls or adapt protocols</td>
+<td>Extra hop</td>
+</tr>
+<tr>
+<td>Aggregator / composition</td>
+<td>Combine results of several services into one response</td>
+<td>Latency and partial-failure handling</td>
+</tr>
+<tr>
+<td>Publish-subscribe</td>
+<td>Broadcast events to many independent consumers</td>
+<td>Hidden consumers; schema governance</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-patterns">6. Data patterns</h3>
+<ul>
+<li><strong>Database per service / module</strong>: private data behind
+an API. <strong>Shared database</strong>: a coupling anti-pattern unless
+it is a deliberate, owned integration database.</li>
+<li><strong>Read replicas and materialized views</strong> for read
+scaling; <strong>CQRS read stores</strong> for specialized queries.</li>
+<li><strong>Caching patterns</strong>: cache-aside (application loads on
+miss), read-through, write-through (write to cache and store together),
+write-behind (write to cache, flush later; risk of loss). Questions to
+settle: invalidation, stampede protection, TTL policy, what happens when
+the cache is down.</li>
+<li><strong>Sharding / partitioning</strong>: split data by key; choose
+keys to avoid hot partitions; plan resharding.</li>
+<li><strong>Polyglot persistence</strong>: the right store per workload;
+the operational cost of each additional database is real.</li>
+<li><strong>Data products and data mesh</strong> (organizational):
+domain teams publish analytical datasets with contracts, instead of a
+central team owning all pipelines.</li>
+</ul>
+<h3 id="resilience-patterns">7. Resilience patterns</h3>
+<p>The distributed-systems patterns that keep partial failure from
+becoming total failure (see the Foundations notes on queueing, overload,
+and consistency):</p>
+<ul>
+<li><strong>Timeouts</strong> on every remote call, with budgets that
+shrink along a call chain.</li>
+<li><strong>Retries</strong> only for idempotent operations, with
+exponential backoff, jitter, and a retry budget (otherwise retry storms
+amplify outages).</li>
+<li><strong>Circuit breaker</strong>: stop calling a failing dependency
+for a period; fail fast or degrade.</li>
+<li><strong>Bulkhead</strong>: isolate resources (pools, queues) per
+dependency or tenant so one cannot exhaust all.</li>
+<li><strong>Rate limiting and load shedding</strong>: protect capacity
+by rejecting excess work early; <strong>backpressure</strong> propagates
+"slow down" upstream.</li>
+<li><strong>Graceful degradation and fallbacks</strong>: serve stale or
+partial results when a dependency is down; decide per feature what
+degraded means.</li>
+<li><strong>Hedged requests</strong> for tail latency (duplicate a slow
+request to another replica, with care).</li>
+<li><strong>Health checks, readiness, and graceful shutdown</strong>;
+<strong>idempotency keys</strong>; <strong>cell-based isolation</strong>
+to limit blast radius.</li>
+</ul>
+<p>Resilience patterns need testing under failure (fault injection, game
+days); an untested circuit breaker is a hypothesis.</p>
+<h3 id="choosing-patterns">8. Choosing patterns</h3>
+<p>Work from forces to patterns, not the reverse:</p>
+<ol>
+<li>Name the problem in measurable terms (read latency at p99, write
+conflicts, audit requirements, release coupling).</li>
+<li>List the simplest options first (an index, a cache, a read replica,
+a module boundary).</li>
+<li>Introduce a pattern only when a simpler option fails the measured
+need; write the trade-off in an ADR with a trigger to revisit (see <code
+class="verbatim">07_architecture-decision-records.org</code>).</li>
+<li>Introduce it where needed, not everywhere: a pattern per boundary,
+not per system.</li>
+<li>Plan for the cost: training, tooling, observability, on-call, test
+strategy.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Use when</th>
+<th>Avoid when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hexagonal / clean</td>
+<td>Rich domain logic, several entry points, long-lived</td>
+<td>CRUD, tiny or short-lived services</td>
+</tr>
+<tr>
+<td>CQRS</td>
+<td>Very different read and write needs, complex domain</td>
+<td>Plain CRUD, strong read-after-write everywhere, small teams</td>
+</tr>
+<tr>
+<td>Event sourcing</td>
+<td>History and audit are requirements; event-shaped domain</td>
+<td>No need for history; teams new to eventual consistency</td>
+</tr>
+<tr>
+<td>Saga</td>
+<td>Business process spans several services</td>
+<td>The data should live in one service; ACID is simple and
+available</td>
+</tr>
+<tr>
+<td>Transactional outbox</td>
+<td>Reliable event publication with a database</td>
+<td>No messaging; you can tolerate occasional loss (rare)</td>
+</tr>
+<tr>
+<td>API gateway</td>
+<td>Many clients and services need a common edge</td>
+<td>A single service with a single client</td>
+</tr>
+<tr>
+<td>BFF</td>
+<td>Clients with materially different needs</td>
+<td>One client type; a general API suffices</td>
+</tr>
+<tr>
+<td>Circuit breaker, bulkhead</td>
+<td>Dependencies fail or slow down independently</td>
+<td>In-process calls with no failure modes</td>
+</tr>
+<tr>
+<td>Strangler fig</td>
+<td>Replacing a legacy system incrementally</td>
+<td>The legacy part has no seam or no routing point</td>
+</tr>
+</tbody>
+</table>
+<h3 id="misuse-stories-generic">9. Misuse stories (generic)</h3>
+<ul>
+<li><strong>CQRS plus event sourcing for an admin CRUD tool</strong>:
+months spent on projections and replay tooling for data nobody needed
+history of; a table with an audit column would have worked.</li>
+<li><strong>Microservices with sagas for a transaction that belongs in
+one database</strong>: every order ends in partially complete states and
+compensations; merging the two services removed the problem.</li>
+<li><strong>Hexagonal architecture with an interface for every
+class</strong>: three files per feature, no second implementation, and
+tests that mock the mapping instead of testing behavior.</li>
+<li><strong>Events as integration by default</strong>: dozens of event
+types, no schema governance, and a consumer nobody knew about that broke
+when a field changed.</li>
+<li><strong>API gateway as orchestration layer</strong>: business rules
+accumulated in the gateway until it was the real monolith owned by no
+domain team.</li>
+</ul>
+<p>The common thread is a pattern adopted for its reputation; the remedy
+is to tie each pattern to a measured force and a revisit trigger.</p>
+<h3 id="self-check">10. Self-check</h3>
+<ol>
+<li>For your current system, which patterns are in use, what force
+justified each, and what evidence would show the force is gone?</li>
+<li>Explain the dual-write problem and two ways to avoid it. Which would
+you choose for a service with a relational database and a log-based
+broker?</li>
+<li>A team wants event sourcing "for flexibility". What questions do you
+ask before agreeing?</li>
+<li>A user saves a profile and the next page shows the old value (CQRS
+read lag). List four mitigations and their costs.</li>
+<li>Design the compensations for a booking saga (flight, hotel, car,
+payment). What happens if a compensation fails?</li>
+<li>When is an API gateway the right place for logic, and when is it a
+trap?</li>
+</ol>
+<h3 id="exercises">11. Exercises</h3>
+<ul>
+<li>Warm-up: take a use case in a codebase you know and sketch it with
+ports and adapters; list the ports and which ones would have two
+implementations (production and test).</li>
+<li>Core: implement the transactional outbox with a relational database
+and a simple relay; test crash scenarios (crash after commit before
+publish, duplicate delivery).</li>
+<li>Core: build a small CQRS example with a projection rebuilt from an
+event table; add a lag indicator and a read-your-writes strategy.</li>
+<li>Core: write a decision record for adopting or rejecting event
+sourcing for a real domain, including the revisit trigger.</li>
+<li>Stretch: implement a saga with orchestration and one with
+choreography for the same workflow; compare observability and failure
+handling.</li>
+<li>Stretch: inject faults (timeouts, duplicates, reordering) into the
+saga and verify the invariants hold.</li>
+</ul>
+<h3 id="resources">12. Resources</h3>
+<ul>
+<li>Cockburn, <em>Hexagonal Architecture</em> (ports and adapters): <a
+href="https://alistair.cockburn.us/hexagonal-architecture/">https://alistair.cockburn.us/hexagonal-architecture/</a></li>
+<li>Fowler on CQRS: <a
+href="https://martinfowler.com/bliki/CQRS.html">https://martinfowler.com/bliki/CQRS.html</a>
+; on event sourcing: <a
+href="https://martinfowler.com/eaaDev/EventSourcing.html">https://martinfowler.com/eaaDev/EventSourcing.html</a>
+; on the strangler fig: <a
+href="https://martinfowler.com/bliki/StranglerFigApplication.html">https://martinfowler.com/bliki/StranglerFigApplication.html</a></li>
+<li>Richardson, <em>Microservices Patterns</em> and the pattern catalog:
+<a
+href="https://microservices.io/patterns/index.html">https://microservices.io/patterns/index.html</a></li>
+<li>Hohpe and Woolf, <em>Enterprise Integration Patterns</em>: <a
+href="https://www.enterpriseintegrationpatterns.com">https://www.enterpriseintegrationpatterns.com</a></li>
+<li>Microsoft, Azure Architecture Center: cloud design patterns catalog:
+<a
+href="https://learn.microsoft.com/en-us/azure/architecture/patterns/">https://learn.microsoft.com/en-us/azure/architecture/patterns/</a></li>
+<li>Martin, <em>Clean Architecture</em>; Vernon, <em>Implementing
+Domain-Driven Design</em>; Young's talks on CQRS and event sourcing;
+Kleppmann, <em>Designing Data-Intensive Applications</em> (logs,
+streams, consistency).</li>
+<li>Nygard, <em>Release It!</em> (stability patterns: timeouts, circuit
+breakers, bulkheads).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>A pattern is a trade-off package: adopt it for a measured force, not
+for its reputation.</li>
+<li>Hexagonal architecture protects the domain at the cost of
+indirection; skip it for plain CRUD.</li>
+<li>CQRS and event sourcing are independent, costly, and justified by
+specific needs.</li>
+<li>Use the outbox, idempotent consumers, and sagas to live with the
+absence of distributed transactions; check first that the data should be
+split at all.</li>
+<li>Resilience patterns need failure testing to be believed.</li>
+<li>Always write down when not to use a pattern and when to revisit the
+decision.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Structures</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/05-data-structures.html">
+  <meta property="og:title" content="Data Structures">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/05-data-structures.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Data Structures</h1>
+<h2 id="data-structures-1">Data Structures</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>A data structure is a promise about the cost of operations under a
+particular access pattern, on a particular machine. At Staff scope you
+are expected to:</p>
+<ul>
+<li>choose structures from the <em>workload</em> (read/write ratio, key
+distribution, range queries, concurrency, durability), not from
+habit;</li>
+<li>know the memory-hierarchy consequences (locality, cache lines,
+pointer chasing) well enough to predict which design wins before
+benchmarking;</li>
+<li>see storage engines, indexes, caches, and queues as the same few
+structures at different scales;</li>
+<li>know the failure modes: resize pauses, hash collisions under attack,
+unbounded growth, contention on a hot key.</li>
+</ul>
+<p>Companion files: <code class="verbatim">04_complexity.org</code>
+(cost models), <code class="verbatim">06_algorithms.org</code>
+(algorithms that use these structures), <code
+class="verbatim">11_memory-management.org</code> and <code
+class="verbatim">03_data-representation.org</code> (layout), <code
+class="verbatim">12_concurrency.org</code> (concurrent variants).</p>
+<h3 id="interfaces-first">1. Interfaces first</h3>
+<p>Think in terms of <em>interfaces</em> (what operations exist) and
+then implementations (how they are paid for). The Open Data Structures
+text organizes the field this way:</p>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Operations</th>
+<th>Typical implementations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stack / Queue / Deque</td>
+<td>push, pop, enqueue, dequeue at the ends</td>
+<td>dynamic array, ring buffer, linked list</td>
+</tr>
+<tr>
+<td>List (sequence)</td>
+<td>get, set, insert, remove by index</td>
+<td>array list, linked list, rope, skip list</td>
+</tr>
+<tr>
+<td>USet (unordered set / map)</td>
+<td>add, remove, find by key</td>
+<td>hash table (chaining, open addressing)</td>
+</tr>
+<tr>
+<td>SSet (sorted set / map)</td>
+<td>add, remove, find, predecessor, successor, range</td>
+<td>balanced BST, B-tree, skip list, sorted array</td>
+</tr>
+<tr>
+<td>Priority queue</td>
+<td>insert, find-min, delete-min (decrease-key)</td>
+<td>binary heap, d-ary heap, pairing heap</td>
+</tr>
+<tr>
+<td>Graph</td>
+<td>adjacency queries, neighbors</td>
+<td>adjacency list, matrix, compressed sparse row</td>
+</tr>
+</tbody>
+</table>
+<h3 id="arrays-dynamic-arrays-and-ring-buffers">2. Arrays, dynamic
+arrays, and ring buffers</h3>
+<ul>
+<li>An <strong>array</strong> is contiguous: O(1) index, cache-friendly
+sequential scans, hardware prefetching works. Insertion in the middle is
+O(n).</li>
+<li>A <strong>dynamic array</strong> (vector, ArrayList, slice) grows
+geometrically; appends are amortized O(1) (see <code
+class="verbatim">04_complexity.org</code>), but an individual append may
+copy everything, and references into the old buffer become invalid.</li>
+<li>A <strong>ring buffer</strong> (circular queue) gives O(1)
+enqueue/dequeue with a fixed capacity and no allocation; it underlies
+network queues, audio buffers, and lock-free single-producer
+single-consumer queues.</li>
+<li>A <strong>bitset</strong> packs booleans into words; set operations
+run 64 elements at a time.</li>
+<li><strong>Default to the array.</strong> Linked lists, trees, and hash
+tables must beat it on measured workloads.</li>
+</ul>
+<h3 id="linked-lists">3. Linked lists</h3>
+<p>O(1) insertion and deletion given a node, O(n) search, and no random
+access. Every node is a separate allocation, and following pointers
+causes cache misses, so scans are often 10x or more slower than over an
+array of the same length. Legitimate uses: intrusive lists inside
+kernels and allocators (a node embeds its link, so removal needs no
+search), LRU lists combined with a hash map, persistent (immutable)
+lists in functional code, and queues where nodes are handed off between
+threads.</p>
+<h3 id="hash-tables">4. Hash tables</h3>
+<p>Hash tables implement unordered sets and maps with expected O(1)
+operations.</p>
+<ul>
+<li><strong>Hash function</strong>: maps keys to integers; should spread
+keys uniformly. Use a <em>keyed</em> or randomized hash (SipHash,
+per-process random seed) for untrusted keys to prevent hash-flooding
+denial of service. Never use a non-cryptographic hash for security;
+never rely on a language's iteration order across versions.</li>
+<li><strong>Collision resolution</strong>:
+<ul>
+<li><strong>Chaining</strong>: each bucket holds a list or tree; simple;
+load factors above 1 work; pointer overhead.</li>
+<li><strong>Open addressing</strong>: store entries in the table and
+probe for a free slot: linear probing (best locality, clustering),
+quadratic probing, double hashing, Robin Hood hashing (steals slots to
+equalize probe length), cuckoo hashing (worst-case O(1) lookup with two
+or more tables). Deletions need tombstones or backward shifting.</li>
+</ul></li>
+<li><strong>Load factor and resizing</strong>: keep the table at most
+50% to 90% full depending on the scheme. Resizing rehashes everything;
+it causes latency spikes, which can be avoided with incremental
+rehashing (Redis-style) or pre-sizing.</li>
+<li><strong>Modern designs</strong> (SwissTable family, used by Abseil
+and by Rust's standard <code class="verbatim">HashMap</code>) use SIMD
+to compare a group of control bytes at once and keep metadata separate
+from keys.</li>
+<li><strong>Pitfalls</strong>: mutable keys, keys whose equality and
+hash disagree, floating-point keys (NaN), pathological hash values,
+iteration while mutating, hot keys in sharded tables.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LinearProbingMap:</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Open addressing with linear probing and backward-shift deletion.&quot;&quot;&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    EMPTY <span class="op">=</span> <span class="bu">object</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, capacity<span class="op">=</span><span class="dv">8</span>):</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.cap <span class="op">=</span> capacity</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.keys <span class="op">=</span> [<span class="va">self</span>.EMPTY] <span class="op">*</span> capacity</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.vals <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> capacity</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.n <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _slot(<span class="va">self</span>, key):</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> <span class="bu">hash</span>(key) <span class="op">%</span> <span class="va">self</span>.cap</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="va">self</span>.keys[i] <span class="kw">is</span> <span class="kw">not</span> <span class="va">self</span>.EMPTY <span class="kw">and</span> <span class="va">self</span>.keys[i] <span class="op">!=</span> key:</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            i <span class="op">=</span> (i <span class="op">+</span> <span class="dv">1</span>) <span class="op">%</span> <span class="va">self</span>.cap</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> i</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _grow(<span class="va">self</span>):</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        old <span class="op">=</span> [(k, v) <span class="cf">for</span> k, v <span class="kw">in</span> <span class="bu">zip</span>(<span class="va">self</span>.keys, <span class="va">self</span>.vals) <span class="cf">if</span> k <span class="kw">is</span> <span class="kw">not</span> <span class="va">self</span>.EMPTY]</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.cap <span class="op">*=</span> <span class="dv">2</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.keys, <span class="va">self</span>.vals, <span class="va">self</span>.n <span class="op">=</span> [<span class="va">self</span>.EMPTY] <span class="op">*</span> <span class="va">self</span>.cap, [<span class="va">None</span>] <span class="op">*</span> <span class="va">self</span>.cap, <span class="dv">0</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> k, v <span class="kw">in</span> old:</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>[k] <span class="op">=</span> v</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__setitem__</span>(<span class="va">self</span>, key, val):</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="va">self</span>.n <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> <span class="dv">4</span> <span class="op">&gt;</span> <span class="va">self</span>.cap <span class="op">*</span> <span class="dv">3</span>:        <span class="co"># keep load factor &lt;= 0.75</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>._grow()</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> <span class="va">self</span>._slot(key)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.keys[i] <span class="kw">is</span> <span class="va">self</span>.EMPTY:</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.n <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.keys[i], <span class="va">self</span>.vals[i] <span class="op">=</span> key, val</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get(<span class="va">self</span>, key, default<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> <span class="va">self</span>._slot(key)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> default <span class="cf">if</span> <span class="va">self</span>.keys[i] <span class="kw">is</span> <span class="va">self</span>.EMPTY <span class="cf">else</span> <span class="va">self</span>.vals[i]</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__delitem__</span>(<span class="va">self</span>, key):</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> <span class="va">self</span>._slot(key)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.keys[i] <span class="kw">is</span> <span class="va">self</span>.EMPTY:</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">KeyError</span>(key)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.keys[i] <span class="op">=</span> <span class="va">self</span>.EMPTY</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.n <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>        j <span class="op">=</span> (i <span class="op">+</span> <span class="dv">1</span>) <span class="op">%</span> <span class="va">self</span>.cap</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="va">self</span>.keys[j] <span class="kw">is</span> <span class="kw">not</span> <span class="va">self</span>.EMPTY:      <span class="co"># re-insert the rest of the cluster</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>            k, v <span class="op">=</span> <span class="va">self</span>.keys[j], <span class="va">self</span>.vals[j]</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.keys[j] <span class="op">=</span> <span class="va">self</span>.EMPTY</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.n <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>[k] <span class="op">=</span> v</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>            j <span class="op">=</span> (j <span class="op">+</span> <span class="dv">1</span>) <span class="op">%</span> <span class="va">self</span>.cap</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">9</span>)</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>m, ref <span class="op">=</span> LinearProbingMap(), {}</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">3000</span>):</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    k <span class="op">=</span> random.randint(<span class="dv">0</span>, <span class="dv">200</span>)</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> random.random() <span class="op">&lt;</span> <span class="fl">0.6</span>:</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>        m[k] <span class="op">=</span> ref[k] <span class="op">=</span> random.random()</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> k <span class="kw">in</span> ref:</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>        <span class="kw">del</span> m[k]</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>        <span class="kw">del</span> ref[k]</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> m.get(k) <span class="op">==</span> ref.get(k)</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> m.n <span class="op">==</span> <span class="bu">len</span>(ref)</span></code></pre></div>
+<h3 id="trees-and-ordered-structures">5. Trees and ordered
+structures</h3>
+<ul>
+<li><strong>Binary search tree</strong>: ordered set with O(height)
+operations; degenerates to a list on sorted input.
+<strong>Balanced</strong> variants guarantee O(log n): AVL (strictly
+balanced, faster lookups), red-black (fewer rotations; used in many
+standard libraries), treap (randomized priorities), skip list
+(probabilistic layers; easy to make concurrent).</li>
+<li><strong>B-tree / B+ tree</strong>: high fan-out (hundreds of keys
+per node) so each node fills a disk page or cache lines; height is 3 or
+4 for billions of keys. B+ trees keep data in linked leaves for fast
+range scans. Used by nearly every relational database index and file
+system.</li>
+<li><strong>Heap</strong>: complete binary tree in an array; O(log n)
+insert and delete-min, O(1) peek, O(n) build. d-ary heaps (d of 4 or 8)
+are more cache-friendly. Priority queues drive Dijkstra, schedulers,
+event simulation, and top-k.</li>
+<li><strong>Trie / radix tree</strong>: keys decomposed by prefix;
+operations in O(key length), independent of n; supports prefix queries,
+longest-prefix match (IP routing), autocomplete.</li>
+<li><strong>Segment tree and Fenwick (binary indexed) tree</strong>:
+range queries and point updates in O(log n) (sums, minimums); essential
+for counters, rate limiting windows, and analytics.</li>
+<li><strong>Interval tree, k-d tree, R-tree, quadtree</strong>: spatial
+and interval queries (calendar overlaps, geographic search).</li>
+<li><strong>Union-find (disjoint sets)</strong>: near-constant-time
+connectivity; used in Kruskal's algorithm, image labeling, and network
+connectivity.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> heapq, random</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Fenwick:</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.t <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> (n <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> add(<span class="va">self</span>, i, delta):                 <span class="co"># point update, 0-based index</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        i <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> i <span class="op">&lt;</span> <span class="bu">len</span>(<span class="va">self</span>.t):</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.t[i] <span class="op">+=</span> delta</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            i <span class="op">+=</span> i <span class="op">&amp;</span> <span class="op">-</span>i</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> prefix(<span class="va">self</span>, i):                     <span class="co"># sum of elements [0, i)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> i <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            s <span class="op">+=</span> <span class="va">self</span>.t[i]</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            i <span class="op">-=</span> i <span class="op">&amp;</span> <span class="op">-</span>i</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> s</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">4</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>f, arr <span class="op">=</span> Fenwick(n), [<span class="dv">0</span>] <span class="op">*</span> n</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">500</span>):</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    i, d <span class="op">=</span> random.randrange(n), random.randint(<span class="op">-</span><span class="dv">5</span>, <span class="dv">5</span>)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    f.add(i, d)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    arr[i] <span class="op">+=</span> d</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    j <span class="op">=</span> random.randrange(n <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> f.prefix(j) <span class="op">==</span> <span class="bu">sum</span>(arr[:j])</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MinHeap:</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.a <span class="op">=</span> []</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> push(<span class="va">self</span>, x):</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        a <span class="op">=</span> <span class="va">self</span>.a</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        a.append(x)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> <span class="bu">len</span>(a) <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> i <span class="kw">and</span> a[(i <span class="op">-</span> <span class="dv">1</span>) <span class="op">//</span> <span class="dv">2</span>] <span class="op">&gt;</span> a[i]:</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>            a[(i <span class="op">-</span> <span class="dv">1</span>) <span class="op">//</span> <span class="dv">2</span>], a[i] <span class="op">=</span> a[i], a[(i <span class="op">-</span> <span class="dv">1</span>) <span class="op">//</span> <span class="dv">2</span>]</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            i <span class="op">=</span> (i <span class="op">-</span> <span class="dv">1</span>) <span class="op">//</span> <span class="dv">2</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> pop(<span class="va">self</span>):</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>        a <span class="op">=</span> <span class="va">self</span>.a</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        top, last <span class="op">=</span> a[<span class="dv">0</span>], a.pop()</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> a:</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>            a[<span class="dv">0</span>] <span class="op">=</span> last</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>            i <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>            <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>                l, r, s <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> i <span class="op">+</span> <span class="dv">1</span>, <span class="dv">2</span> <span class="op">*</span> i <span class="op">+</span> <span class="dv">2</span>, i</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> l <span class="op">&lt;</span> <span class="bu">len</span>(a) <span class="kw">and</span> a[l] <span class="op">&lt;</span> a[s]: s <span class="op">=</span> l</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> r <span class="op">&lt;</span> <span class="bu">len</span>(a) <span class="kw">and</span> a[r] <span class="op">&lt;</span> a[s]: s <span class="op">=</span> r</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> s <span class="op">==</span> i: <span class="cf">break</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>                a[i], a[s] <span class="op">=</span> a[s], a[i]</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>                i <span class="op">=</span> s</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> top</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>h, ref <span class="op">=</span> MinHeap(), []</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>):</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> random.randint(<span class="dv">0</span>, <span class="dv">99</span>)</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    h.push(x)<span class="op">;</span> heapq.heappush(ref, x)</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> random.random() <span class="op">&lt;</span> <span class="fl">0.4</span>:</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>        <span class="cf">assert</span> h.pop() <span class="op">==</span> heapq.heappop(ref)</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Trie:</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.children, <span class="va">self</span>.end <span class="op">=</span> {}, <span class="va">False</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert(<span class="va">self</span>, word):</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>        node <span class="op">=</span> <span class="va">self</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> ch <span class="kw">in</span> word:</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>            node <span class="op">=</span> node.children.setdefault(ch, Trie())</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>        node.end <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> with_prefix(<span class="va">self</span>, prefix):</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>        node <span class="op">=</span> <span class="va">self</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> ch <span class="kw">in</span> prefix:</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> ch <span class="kw">not</span> <span class="kw">in</span> node.children:</span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> []</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>            node <span class="op">=</span> node.children[ch]</span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>        out <span class="op">=</span> []</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> walk(n, acc):</span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> n.end:</span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>                out.append(prefix <span class="op">+</span> acc)</span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> c <span class="kw">in</span> <span class="bu">sorted</span>(n.children):</span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>                walk(n.children[c], acc <span class="op">+</span> c)</span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>        walk(node, <span class="st">&quot;&quot;</span>)</span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> out</span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> Trie()</span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> w <span class="kw">in</span> [<span class="st">&quot;car&quot;</span>, <span class="st">&quot;card&quot;</span>, <span class="st">&quot;care&quot;</span>, <span class="st">&quot;cat&quot;</span>, <span class="st">&quot;dog&quot;</span>]:</span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>    t.insert(w)</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> t.with_prefix(<span class="st">&quot;car&quot;</span>) <span class="op">==</span> [<span class="st">&quot;car&quot;</span>, <span class="st">&quot;card&quot;</span>, <span class="st">&quot;care&quot;</span>] <span class="kw">and</span> t.with_prefix(<span class="st">&quot;x&quot;</span>) <span class="op">==</span> []</span></code></pre></div>
+<h3 id="graph-representations">6. Graph representations</h3>
+<table>
+<thead>
+<tr>
+<th>Representation</th>
+<th>Space</th>
+<th>Edge test</th>
+<th>Iterate neighbors</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adjacency matrix</td>
+<td>O(V<sup>2</sup>)</td>
+<td>O(1)</td>
+<td>O(V)</td>
+<td>Dense graphs, small V, matrix methods</td>
+</tr>
+<tr>
+<td>Adjacency list</td>
+<td>O(V + E)</td>
+<td>O(deg)</td>
+<td>O(deg)</td>
+<td>Default for sparse graphs</td>
+</tr>
+<tr>
+<td>Edge list</td>
+<td>O(E)</td>
+<td>O(E)</td>
+<td>O(E)</td>
+<td>Sorting edges (Kruskal), streaming</td>
+</tr>
+<tr>
+<td>Compressed sparse row (CSR)</td>
+<td>O(V + E)</td>
+<td>O(log deg)</td>
+<td>O(deg), contiguous</td>
+<td>Large static graphs; best locality</td>
+</tr>
+</tbody>
+</table>
+<p>Implicit graphs (generate neighbors on demand, such as puzzle states,
+grid cells, or dependency resolution) avoid building the graph at
+all.</p>
+<h3 id="probabilistic-and-approximate-structures">7. Probabilistic and
+approximate structures</h3>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Answers</th>
+<th>Error</th>
+<th>Space</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bloom filter</td>
+<td>Is x possibly in the set?</td>
+<td>False positives, no false negatives</td>
+<td>about 1.44 log2(1/p) bits per element</td>
+</tr>
+<tr>
+<td>Counting Bloom / cuckoo filter</td>
+<td>Same, with deletions</td>
+<td>False positives</td>
+<td>slightly more</td>
+</tr>
+<tr>
+<td>Count-Min sketch</td>
+<td>Approximate frequency of x</td>
+<td>Overestimates, bounded</td>
+<td>sublinear</td>
+</tr>
+<tr>
+<td>HyperLogLog</td>
+<td>Number of distinct elements</td>
+<td>Relative error about 1.04 / sqrt(m)</td>
+<td>kilobytes for billions</td>
+</tr>
+<tr>
+<td>MinHash / SimHash</td>
+<td>Set or document similarity</td>
+<td>Estimation error</td>
+<td>small signatures</td>
+</tr>
+<tr>
+<td>Skip list</td>
+<td>Ordered set (probabilistic balance)</td>
+<td>none (expected costs)</td>
+<td>O(n) expected</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bloom filter math</strong>: for m bits, k hash functions, and
+n inserted items, the false-positive probability is about (1 -
+e<sup>(-kn/m)</sup>)^k; the best k is (m/n) ln 2; to reach
+false-positive rate p you need m of about -n ln p / (ln 2)^2 bits. They
+guard expensive lookups (LSM-tree reads, cache admission, spam
+checks).</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math, hashlib</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Bloom:</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n, p):</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.m <span class="op">=</span> <span class="bu">max</span>(<span class="dv">8</span>, <span class="bu">int</span>(<span class="op">-</span>n <span class="op">*</span> math.log(p) <span class="op">/</span> (math.log(<span class="dv">2</span>) <span class="op">**</span> <span class="dv">2</span>)))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.k <span class="op">=</span> <span class="bu">max</span>(<span class="dv">1</span>, <span class="bu">round</span>(<span class="va">self</span>.m <span class="op">/</span> n <span class="op">*</span> math.log(<span class="dv">2</span>)))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.bits <span class="op">=</span> <span class="bu">bytearray</span>((<span class="va">self</span>.m <span class="op">+</span> <span class="dv">7</span>) <span class="op">//</span> <span class="dv">8</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _idx(<span class="va">self</span>, item):</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        d <span class="op">=</span> hashlib.sha256(<span class="bu">str</span>(item).encode()).digest()</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        h1 <span class="op">=</span> <span class="bu">int</span>.from_bytes(d[:<span class="dv">8</span>], <span class="st">&quot;big&quot;</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        h2 <span class="op">=</span> <span class="bu">int</span>.from_bytes(d[<span class="dv">8</span>:<span class="dv">16</span>], <span class="st">&quot;big&quot;</span>) <span class="op">|</span> <span class="dv">1</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [(h1 <span class="op">+</span> i <span class="op">*</span> h2) <span class="op">%</span> <span class="va">self</span>.m <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.k)]    <span class="co"># double hashing</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> add(<span class="va">self</span>, item):</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="va">self</span>._idx(item):</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.bits[i <span class="op">//</span> <span class="dv">8</span>] <span class="op">|=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> (i <span class="op">%</span> <span class="dv">8</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__contains__</span>(<span class="va">self</span>, item):</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">all</span>(<span class="va">self</span>.bits[i <span class="op">//</span> <span class="dv">8</span>] <span class="op">&gt;&gt;</span> (i <span class="op">%</span> <span class="dv">8</span>) <span class="op">&amp;</span> <span class="dv">1</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="va">self</span>._idx(item))</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> Bloom(<span class="dv">10000</span>, <span class="fl">0.01</span>)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10000</span>):</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    b.add(i)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">all</span>(i <span class="kw">in</span> b <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10000</span>))                      <span class="co"># no false negatives</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>fp <span class="op">=</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10000</span>, <span class="dv">30000</span>) <span class="cf">if</span> i <span class="kw">in</span> b) <span class="op">/</span> <span class="dv">20000</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> fp <span class="op">&lt;</span> <span class="fl">0.02</span>                                               <span class="co"># near the 1% target</span></span></code></pre></div>
+<h3 id="persistent-and-immutable-structures">8. Persistent and immutable
+structures</h3>
+<p>Immutable structures never change in place; "updating" returns a new
+version that shares most structure with the old one. Techniques: path
+copying in trees, hash array mapped tries (HAMT: Clojure and Scala maps,
+Haskell <code class="verbatim">Data.HashMap</code>),
+relaxed-radix-balanced vectors, finger trees, and functional queues (two
+stacks, amortized O(1)). Benefits: cheap snapshots, safe sharing between
+threads without locks, undo/history, time-travel debugging, structural
+sharing in UI state diffs (React-style) and in version-control object
+stores. Costs: more allocation, pointer chasing, and a GC or reference
+counting. Many databases use persistent B-trees (copy-on-write) for
+snapshot isolation.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PQueue:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Persistent FIFO queue: two immutable lists, amortized O(1) per operation.&quot;&quot;&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, front<span class="op">=</span>(), back<span class="op">=</span>()):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.front, <span class="va">self</span>.back <span class="op">=</span> front, back          <span class="co"># tuples treated as immutable</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> push(<span class="va">self</span>, x):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> PQueue(<span class="va">self</span>.front, (x,) <span class="op">+</span> <span class="va">self</span>.back)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> pop(<span class="va">self</span>):</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        front, back <span class="op">=</span> <span class="va">self</span>.front, <span class="va">self</span>.back</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> front:</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            front, back <span class="op">=</span> <span class="bu">tuple</span>(<span class="bu">reversed</span>(back)), ()</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> front:</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">&quot;empty&quot;</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> front[<span class="dv">0</span>], PQueue(front[<span class="dv">1</span>:], back)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>q0 <span class="op">=</span> PQueue()</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>q1 <span class="op">=</span> q0.push(<span class="dv">1</span>).push(<span class="dv">2</span>)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>x, q2 <span class="op">=</span> q1.pop()</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> x <span class="op">==</span> <span class="dv">1</span> <span class="kw">and</span> q1.pop()[<span class="dv">0</span>] <span class="op">==</span> <span class="dv">1</span>                  <span class="co"># q1 is unchanged by popping</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>y, q3 <span class="op">=</span> q2.pop()</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> y <span class="op">==</span> <span class="dv">2</span></span></code></pre></div>
+<h3 id="memory-hierarchy-and-layout">9. Memory hierarchy and layout</h3>
+<ul>
+<li>Reading a cache line (typically 64 bytes) costs about the same as
+reading one byte. Structures that pack related data together win: arrays
+over linked lists, B-trees over binary trees, open addressing over
+chaining.</li>
+<li><strong>Array of structs versus struct of arrays</strong>: if a hot
+loop touches one field of many records, store fields in separate arrays
+(columnar layout); if it touches all fields of one record, keep records
+together. Columnar storage underlies analytical databases and Apache
+Arrow.</li>
+<li><strong>False sharing</strong>: independent variables on the same
+cache line, written by different cores, slow each other; pad hot
+per-thread counters to a cache line.</li>
+<li><strong>Pointer compression and indices</strong>: use 32-bit indices
+into arrays instead of 64-bit pointers (smaller, relocatable,
+serializable).</li>
+<li><strong>Cache-oblivious layouts</strong> (van Emde Boas layout) and
+<strong>B-trees</strong> both reduce block transfers.</li>
+<li>See <code class="verbatim">11_memory-management.org</code> and
+Drepper's paper for the hardware details.</li>
+</ul>
+<h3 id="storage-engines-and-indexes">10. Storage engines and
+indexes</h3>
+<p>Databases make the data-structure trade-offs explicit:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>B-tree (update in place)</th>
+<th>LSM-tree (log-structured merge)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Writes</td>
+<td>Random page updates; write-ahead log</td>
+<td>Sequential appends to a memtable and sorted runs</td>
+</tr>
+<tr>
+<td>Reads</td>
+<td>One path root to leaf</td>
+<td>May check several runs (Bloom filters help)</td>
+</tr>
+<tr>
+<td>Write amplification</td>
+<td>Moderate</td>
+<td>Higher due to compaction</td>
+</tr>
+<tr>
+<td>Space amplification</td>
+<td>Lower; fragmentation within pages</td>
+<td>Higher until compaction</td>
+</tr>
+<tr>
+<td>Range scans</td>
+<td>Excellent (linked leaves)</td>
+<td>Good after compaction</td>
+</tr>
+<tr>
+<td>Typical use</td>
+<td>Relational databases, file systems</td>
+<td>Write-heavy key-value stores</td>
+</tr>
+</tbody>
+</table>
+<p>Related ideas: write-ahead logs for durability, copy-on-write B-trees
+for snapshots, columnar formats with compression for analytics, inverted
+indexes for text search, and secondary indexes that trade write cost for
+read speed.</p>
+<h3 id="choosing-a-structure">11. Choosing a structure</h3>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>Start with</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mostly sequential access, append-only</td>
+<td>Dynamic array or ring buffer</td>
+</tr>
+<tr>
+<td>Lookup by key, no ordering needed</td>
+<td>Hash table</td>
+</tr>
+<tr>
+<td>Ordered iteration, range queries, predecessor</td>
+<td>B-tree or balanced BST; sorted array if read-mostly</td>
+</tr>
+<tr>
+<td>Repeated min/max extraction</td>
+<td>Binary or d-ary heap</td>
+</tr>
+<tr>
+<td>Prefix queries, longest-prefix match</td>
+<td>Trie or radix tree</td>
+</tr>
+<tr>
+<td>Range sums with updates</td>
+<td>Fenwick or segment tree</td>
+</tr>
+<tr>
+<td>Membership test, memory-limited, tolerates false positives</td>
+<td>Bloom or cuckoo filter</td>
+</tr>
+<tr>
+<td>Distinct count or frequency at huge scale</td>
+<td>HyperLogLog, Count-Min</td>
+</tr>
+<tr>
+<td>Snapshots, undo, lock-free sharing</td>
+<td>Persistent structure</td>
+</tr>
+<tr>
+<td>Cache with eviction</td>
+<td>Hash map plus linked list (LRU), or CLOCK</td>
+</tr>
+<tr>
+<td>Huge persistent data</td>
+<td>B-tree or LSM-tree engine</td>
+</tr>
+</tbody>
+</table>
+<p>Check each choice against: operation mix, data size relative to cache
+and memory, key distribution (skew and hot keys), concurrency,
+durability, and the worst case you can tolerate (spikes versus
+averages).</p>
+<h3 id="self-check">12. Self-check</h3>
+<ol>
+<li>Why can a sorted vector beat a balanced tree for 1,000 elements, and
+where is the crossover as writes increase?</li>
+<li>Design an LRU cache with O(1) get and put; then explain how you
+would make it concurrent without one global lock.</li>
+<li>A hash table of 10 million entries causes 200 ms pauses on resize.
+Give two fixes with their trade-offs.</li>
+<li>How many bits per element does a Bloom filter need for a 0.1%
+false-positive rate?</li>
+<li>Why does a B-tree use a high fan-out, and how would you pick the
+node size for a given storage device?</li>
+<li>Explain how structural sharing makes a persistent map's update O(log
+n) in time and memory.</li>
+<li>A rate limiter needs "number of requests in the last 60 seconds per
+user". Compare ring buffer, sorted set, and counter-bucket designs.</li>
+</ol>
+<h3 id="exercises">13. Exercises</h3>
+<ul>
+<li>Warm-up: implement a dynamic array with a configurable growth factor
+and instrument copies; confirm the amortized cost.</li>
+<li>Core: implement a hash table with linear probing and Robin Hood
+hashing; compare probe lengths at load factors 0.5, 0.8, 0.95.</li>
+<li>Core: implement a binary heap, a trie, a Fenwick tree, and an LRU
+cache; test each against a simple oracle with randomized
+operations.</li>
+<li>Core: implement a skip list; measure search depth against log
+n.</li>
+<li>Stretch: implement a B-tree with insertion and deletion and verify
+the invariants after every operation.</li>
+<li>Stretch: build a tiny LSM store (memtable, sorted runs, Bloom
+filters, compaction) and measure read and write amplification.</li>
+<li>Stretch: implement a persistent hash trie and benchmark it against a
+mutable hash map.</li>
+</ul>
+<h3 id="resources">14. Resources</h3>
+<ul>
+<li>Morin, <em>Open Data Structures</em> (free; interfaces,
+implementations, and analysis in pseudocode, Java, and C++): <a
+href="https://opendatastructures.org/ods-cpp.pdf">https://opendatastructures.org/ods-cpp.pdf</a></li>
+<li>MIT 6.006 lecture notes (data structures, hashing, binary trees,
+AVL, heaps): <a
+href="https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/pages/lecture-notes">https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/pages/lecture-notes</a></li>
+<li>Drepper, <em>What Every Programmer Should Know About Memory</em>
+(caches, memory layout): <a
+href="http://people.redhat.com/drepper/cpumemory.pdf">http://people.redhat.com/drepper/cpumemory.pdf</a></li>
+<li>Kleppmann, <em>Designing Data-Intensive Applications</em> (storage
+engines, indexes, replication) and Petrov, <em>Database Internals</em>
+(B-trees, LSM-trees); Okasaki, <em>Purely Functional Data
+Structures</em>.</li>
+<li>Pierce et al., <em>Software Foundations</em> volume 3, <em>Verified
+Functional Algorithms</em>, for specifying and proving data structures:
+<a
+href="https://softwarefoundations.cis.upenn.edu/">https://softwarefoundations.cis.upenn.edu/</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Choose by workload and memory behavior; arrays first, measure before
+replacing.</li>
+<li>Hash tables are expected O(1): use keyed hashes for untrusted input
+and plan for resize pauses.</li>
+<li>B-trees fit the memory hierarchy; LSM-trees trade read cost for
+write throughput.</li>
+<li>Probabilistic sketches buy huge savings with controlled error.</li>
+<li>Persistent structures trade allocation for safe sharing and
+snapshots.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

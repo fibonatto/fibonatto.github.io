@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Macros and the Preprocessor</title>
+  <meta name="description" content="A practical guide to the C preprocessor and macro programming. Covers object-like and function-like macros, token substitution, operator precedence, multiple evaluation, inline functions, statement-safe macros, stringification, token pasting, variadic macros, include guards, conditional compilation, X-macros, name capture, and C11 _Generic selection. Distinguishes standard C features from compiler extensions and explains when macros are preferable to functions.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/08-macros.html">
+  <meta property="og:title" content="C Macros and the Preprocessor">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/08-macros.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C Macros and the Preprocessor</h1>
+<h2 id="c-macros-and-the-preprocessor-1">C Macros and the
+Preprocessor</h2>
+<h3 id="what-the-preprocessor-does">1. What the preprocessor does</h3>
+<p>Before compilation, the preprocessor rewrites the source text: it
+includes headers, expands macros, and drops code excluded by
+conditionals. It works on tokens, with no knowledge of types or
+scopes.</p>
+<div class="sourceCode" id="cb1" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-E</span> file.c        <span class="co"># print the source after preprocessing</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-E</span> <span class="at">-P</span> file.c     <span class="co"># same, without line markers</span></span></code></pre></div>
+<p>A macro does not run at run time; it only changes the text that the
+compiler sees.</p>
+<h3 id="object-like-macros">2. Object-like macros</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BUFFER_SIZE </span><span class="dv">256</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define VERSION </span><span class="st">&quot;1.2&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> buf<span class="op">[</span>BUFFER_SIZE<span class="op">];</span></span></code></pre></div>
+<p>For integer constants, an <code class="verbatim">enum</code> or <code
+class="verbatim">static const</code> (or <code
+class="verbatim">constexpr</code> in C23) is scoped and visible to the
+debugger. Use <code class="verbatim">#define</code> for values needed by
+the preprocessor itself or in contexts that require a constant
+expression.</p>
+<h3 id="function-like-macros">3. Function-like macros</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SQUARE</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="op">((</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="op">*</span><span class="pp"> </span><span class="op">(</span><span class="pp">x</span><span class="op">))</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MAX</span><span class="op">(</span><span class="pp">a</span><span class="op">,</span><span class="pp"> b</span><span class="op">)</span><span class="pp"> </span><span class="op">((</span><span class="pp">a</span><span class="op">)</span><span class="pp"> </span><span class="op">&gt;</span><span class="pp"> </span><span class="op">(</span><span class="pp">b</span><span class="op">)</span><span class="pp"> </span><span class="op">?</span><span class="pp"> </span><span class="op">(</span><span class="pp">a</span><span class="op">)</span><span class="pp"> </span><span class="op">:</span><span class="pp"> </span><span class="op">(</span><span class="pp">b</span><span class="op">))</span></span></code></pre></div>
+<p>Parenthesize every parameter and the whole body, because substitution
+is textual:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BAD_SQUARE</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> x </span><span class="op">*</span><span class="pp"> x</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>BAD_SQUARE<span class="op">(</span><span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span><span class="op">)</span>       <span class="co">/* 1 + 2 * 1 + 2 == 5, not 9 */</span></span></code></pre></div>
+<p>The macro name must be directly followed by <code
+class="verbatim">(</code> in the definition. There is no recursion: a
+macro does not expand inside its own expansion.</p>
+<h3 id="avoid-evaluating-an-argument-more-than-once">4. Avoid evaluating
+an argument more than once</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> i <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> r <span class="op">=</span> SQUARE<span class="op">(</span>i<span class="op">++);</span>    <span class="co">/* expands to ((i++) * (i++)): undefined behavior */</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> m <span class="op">=</span> MAX<span class="op">(</span>f<span class="op">(),</span> g<span class="op">());</span>  <span class="co">/* the larger of the two is called twice */</span></span></code></pre></div>
+<p>A function does not have this problem:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="kw">inline</span> <span class="dt">int</span> square<span class="op">(</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> x <span class="op">*</span> x<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<p>When you need type genericity and single evaluation, GCC and Clang
+provide <code class="verbatim">__typeof__</code> and statement
+expressions (a GNU extension, not standard C); C23 standardizes <code
+class="verbatim">typeof</code>.</p>
+<h3 id="multi-statement-macros-do-while-0">5. Multi-statement macros:
+<code class="verbatim">do { } while (0)</code></h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LOG_AND_COUNT</span><span class="op">(</span><span class="pp">msg</span><span class="op">)</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="cf">do</span><span class="pp"> </span><span class="op">{</span><span class="pp">                   </span><span class="op">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="pp">        puts</span><span class="op">(</span><span class="pp">msg</span><span class="op">);</span><span class="pp">         </span><span class="op">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="pp">        count</span><span class="op">++;</span><span class="pp">           </span><span class="op">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="op">}</span><span class="pp"> </span><span class="cf">while</span><span class="pp"> </span><span class="op">(</span><span class="dv">0</span><span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>ok<span class="op">)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    LOG_AND_COUNT<span class="op">(</span><span class="st">&quot;hit&quot;</span><span class="op">);</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    other<span class="op">();</span></span></code></pre></div>
+<p>Without the <code class="verbatim">do { } while (0)</code> wrapper,
+the macro would expand to two statements and break an unbraced <code
+class="verbatim">if</code> / <code class="verbatim">else</code>. The
+wrapper makes the macro behave as one statement that requires a trailing
+semicolon.</p>
+<h3 id="stringification-and-token-pasting">6. Stringification and token
+pasting</h3>
+<p><code class="verbatim">#</code> turns a macro argument into a string
+literal. <code class="verbatim">##</code> joins two tokens.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define STR</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="op">#</span><span class="pp">x</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>STR<span class="op">(</span>a <span class="op">+</span> b<span class="op">)</span>              <span class="co">/* &quot;a + b&quot; */</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CHECK</span><span class="op">(</span><span class="pp">expr</span><span class="op">)</span><span class="pp">                                              </span><span class="op">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="cf">do</span><span class="pp"> </span><span class="op">{</span><span class="pp">                                                         </span><span class="op">\</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">        </span><span class="cf">if</span><span class="pp"> </span><span class="op">(!(</span><span class="pp">expr</span><span class="op">))</span><span class="pp"> </span><span class="op">{</span><span class="pp">                                           </span><span class="op">\</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">            fprintf</span><span class="op">(</span><span class="pp">stderr</span><span class="op">,</span><span class="pp"> </span><span class="st">&quot;</span><span class="sc">%s</span><span class="st">:</span><span class="sc">%d</span><span class="st">: check failed: </span><span class="sc">%s\n</span><span class="st">&quot;</span><span class="op">,</span><span class="pp">         </span><span class="op">\</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="pp">                    __FILE__</span><span class="op">,</span><span class="pp"> __LINE__</span><span class="op">,</span><span class="pp"> </span><span class="op">#</span><span class="pp">expr</span><span class="op">);</span><span class="pp">                  </span><span class="op">\</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">            abort</span><span class="op">();</span><span class="pp">                                             </span><span class="op">\</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="pp">        </span><span class="op">}</span><span class="pp">                                                        </span><span class="op">\</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="op">}</span><span class="pp"> </span><span class="cf">while</span><span class="pp"> </span><span class="op">(</span><span class="dv">0</span><span class="op">)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MAKE_GETTER</span><span class="op">(</span><span class="pp">name</span><span class="op">,</span><span class="pp"> type</span><span class="op">)</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="pp">    type get_</span><span class="op">##</span><span class="pp">name</span><span class="op">(</span><span class="dt">const</span><span class="pp"> </span><span class="kw">struct</span><span class="pp"> obj </span><span class="op">*</span><span class="pp">o</span><span class="op">)</span><span class="pp"> </span><span class="op">{</span><span class="pp"> </span><span class="cf">return</span><span class="pp"> o</span><span class="op">-&gt;</span><span class="pp">name</span><span class="op">;</span><span class="pp"> </span><span class="op">}</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>MAKE_GETTER<span class="op">(</span>width<span class="op">,</span> <span class="dt">int</span><span class="op">)</span>         <span class="co">/* defines int get_width(const struct obj *o) */</span></span></code></pre></div>
+<p>To stringify the value of another macro, expand it first through an
+extra level:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define XSTR</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> STR</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define N </span><span class="dv">10</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>STR<span class="op">(</span>N<span class="op">)</span>      <span class="co">/* &quot;N&quot; */</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>XSTR<span class="op">(</span>N<span class="op">)</span>     <span class="co">/* &quot;10&quot; */</span></span></code></pre></div>
+<h3 id="why-a-function-is-not-always-enough">7. Why a function is not
+always enough</h3>
+<p>A function cannot do these, because it sees values rather than source
+text:</p>
+<ul>
+<li>Capture the expression text (<code class="verbatim">#expr</code>) or
+the call site (<code class="verbatim">__FILE__</code>, <code
+class="verbatim">__LINE__</code>).</li>
+<li>Generate declarations, such as the getter above.</li>
+<li>Work over unrelated types without a common signature.</li>
+<li>Control whether an argument is evaluated at all (<code
+class="verbatim">assert</code>, <code class="verbatim">CHECK</code> with
+<code class="verbatim">NDEBUG</code>).</li>
+</ul>
+<p>Predefined names: <code class="verbatim">__FILE__</code>, <code
+class="verbatim">__LINE__</code>, <code
+class="verbatim">__DATE__</code>, <code
+class="verbatim">__TIME__</code>, <code
+class="verbatim">__STDC_VERSION__</code>. Note that <code
+class="verbatim">__func__</code> is a predefined identifier of the
+function, not a preprocessor macro.</p>
+<h3 id="conditional-compilation-and-include-guards">8. Conditional
+compilation and include guards</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef MYLIB_H</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MYLIB_H</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">/* header contents */</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#if defined(__linux__)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* Linux-only code */</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#elif defined(_WIN32)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* Windows-only code */</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#   error &quot;unsupported platform&quot;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<p>Include guards prevent a header from being processed twice. <code
+class="verbatim">#pragma once</code> is widely supported but not
+standard.</p>
+<h3 id="variadic-macros">9. Variadic macros</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LOG</span><span class="op">(...)</span><span class="pp"> fprintf</span><span class="op">(</span><span class="pp">stderr</span><span class="op">,</span><span class="pp"> __VA_ARGS__</span><span class="op">)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>LOG<span class="op">(</span><span class="st">&quot;x = </span><span class="sc">%d\n</span><span class="st">&quot;</span><span class="op">,</span> x<span class="op">);</span></span></code></pre></div>
+<p>A pattern such as <code
+class="verbatim">#define LOG(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)</code>
+fails when no extra arguments are given, because of the trailing comma.
+C23 adds <code class="verbatim">__VA_OPT__</code> to handle this; GCC
+and Clang also accept <code class="verbatim">, ##__VA_ARGS__</code> as
+an extension.</p>
+<h3 id="x-macros">10. X-macros</h3>
+<p>Define a list once and generate several things from it.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define COLORS</span><span class="op">(</span><span class="pp">X</span><span class="op">)</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="pp">    X</span><span class="op">(</span>RED<span class="op">)</span><span class="pp">        </span><span class="op">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="pp">    X</span><span class="op">(</span><span class="pp">GREEN</span><span class="op">)</span><span class="pp">      </span><span class="op">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="pp">    X</span><span class="op">(</span><span class="pp">BLUE</span><span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> color <span class="op">{</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define X</span><span class="op">(</span><span class="pp">name</span><span class="op">)</span><span class="pp"> COLOR_</span><span class="op">##</span><span class="pp">name</span><span class="op">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    COLORS<span class="op">(</span>X<span class="op">)</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#undef X</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>color_names<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define X</span><span class="op">(</span><span class="pp">name</span><span class="op">)</span><span class="pp"> </span><span class="op">#</span><span class="pp">name</span><span class="op">,</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    COLORS<span class="op">(</span>X<span class="op">)</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#undef X</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>The enum and the name table cannot get out of sync.</p>
+<h3 id="hygiene">11. Hygiene</h3>
+<p>C macros are not hygienic: names introduced by a macro can collide
+with names at the call site.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SWAP</span><span class="op">(</span><span class="pp">a</span><span class="op">,</span><span class="pp"> b</span><span class="op">)</span><span class="pp"> </span><span class="cf">do</span><span class="pp"> </span><span class="op">{</span><span class="pp"> </span><span class="dt">int</span><span class="pp"> tmp </span><span class="op">=</span><span class="pp"> </span><span class="op">(</span><span class="pp">a</span><span class="op">);</span><span class="pp"> </span><span class="op">(</span><span class="pp">a</span><span class="op">)</span><span class="pp"> </span><span class="op">=</span><span class="pp"> </span><span class="op">(</span><span class="pp">b</span><span class="op">);</span><span class="pp"> </span><span class="op">(</span><span class="pp">b</span><span class="op">)</span><span class="pp"> </span><span class="op">=</span><span class="pp"> tmp</span><span class="op">;</span><span class="pp"> </span><span class="op">}</span><span class="pp"> </span><span class="cf">while</span><span class="pp"> </span><span class="op">(</span><span class="dv">0</span><span class="op">)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> tmp <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> y <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>SWAP<span class="op">(</span>tmp<span class="op">,</span> y<span class="op">);</span>           <span class="co">/* expands to: int tmp = (tmp); ... the inner tmp shadows the outer */</span></span></code></pre></div>
+<p>Mitigations: use unlikely names for temporaries (<code
+class="verbatim">_swap_tmp</code>), or avoid the macro and write a
+function. Macro arguments are also expanded in the caller's scope, so a
+macro that mentions a global name depends on what that name means where
+the macro is used.</p>
+<h3 id="type-generic-selection-with-_generic">12. Type-generic selection
+with <code class="verbatim">_Generic</code></h3>
+<p>C11's <code class="verbatim">_Generic</code> chooses an expression by
+the type of its controlling operand, at compile time:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;math.h&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ABS</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="dt">_Generic</span><span class="op">((</span><span class="pp">x</span><span class="op">),</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="dt">int</span><span class="op">:</span><span class="pp">    abs</span><span class="op">,</span><span class="pp">             </span><span class="op">\</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="dt">long</span><span class="op">:</span><span class="pp">   labs</span><span class="op">,</span><span class="pp">            </span><span class="op">\</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="dt">double</span><span class="op">:</span><span class="pp"> fabs</span><span class="op">)(</span><span class="pp">x</span><span class="op">)</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>ABS<span class="op">(-</span><span class="dv">3</span><span class="op">);</span>        <span class="co">/* abs(-3) */</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>ABS<span class="op">(-</span><span class="fl">2.5</span><span class="op">);</span>      <span class="co">/* fabs(-2.5) */</span></span></code></pre></div>
+<h3 id="when-to-write-a-macro">13. When to write a macro</h3>
+<p>Prefer a function when you need to compute a result from values.</p>
+<p>Consider a macro when you need to:</p>
+<ul>
+<li>capture source text, file, or line (assertions, logging);</li>
+<li>generate repetitive declarations or tables (X-macros);</li>
+<li>select code at compile time by platform or configuration;</li>
+<li>write something no function can express, such as a type-generic
+wrapper.</li>
+</ul>
+<p>Do not write a macro just to avoid the cost of a call: <code
+class="verbatim">static inline</code> functions already give the
+compiler that freedom.</p>
+<h3 id="recommended-learning-sequence">14. Recommended learning
+sequence</h3>
+<ol>
+<li>Read the output of <code class="verbatim">cc -E</code> for a small
+file.</li>
+<li>Write <code class="verbatim">SQUARE</code> wrongly, then correctly,
+and observe the expansion.</li>
+<li>Learn why <code class="verbatim">do { } while (0)</code>
+exists.</li>
+<li>Learn <code class="verbatim">#</code> and <code
+class="verbatim">##</code>; write <code class="verbatim">CHECK</code>
+and a getter generator.</li>
+<li>Learn the X-macro pattern.</li>
+<li>Treat variable capture and double evaluation as the standing
+hazards.</li>
+</ol>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oracles and MEV</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/10-oracles-and-mev.html">
+  <meta property="og:title" content="Oracles and MEV">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/10-oracles-and-mev.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Oracles and MEV</h1>
+<h2 id="oracles-and-mev-1">Oracles and MEV</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Contracts cannot see the outside world, and public mempools let
+others see and reorder your transactions. Oracles and MEV are the two
+ways the environment attacks protocol assumptions: wrong or manipulated
+inputs, and adversarial ordering. At Staff and Principal scope you are
+expected to:</p>
+<ul>
+<li>choose and configure oracle designs with a clear model of
+manipulation cost, staleness, failure modes, and governance;</li>
+<li>design protocol mechanics (liquidations, auctions, swaps, oracle
+updates) that are robust to extractive ordering;</li>
+<li>reason about the MEV supply chain (searchers, builders, relays,
+proposers) and its centralization and censorship risks;</li>
+<li>decide when to use private order flow, batch auctions, or intents,
+and what they trust.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">03_smart-contract-security.org</code>, <code
+class="verbatim">06_transactions-and-gas.org</code>, <code
+class="verbatim">14_protocol-design.org</code>, <code
+class="verbatim">11_layer-2-and-cross-chain.org</code>.</p>
+<h3 id="the-oracle-problem">1. The oracle problem</h3>
+<ul>
+<li><strong>Problem</strong>: a blockchain is a closed deterministic
+system; prices, events, randomness, and off-chain facts must be brought
+in by parties whose honesty cannot be verified by the chain itself. Any
+oracle is a trust assumption.</li>
+<li><strong>Oracle types</strong>:
+<ul>
+<li><strong>Decentralized oracle networks</strong> (for example
+Chainlink data feeds): independent node operators fetch from data
+providers, aggregate off-chain, and post updates when a deviation
+threshold or a heartbeat interval is reached.</li>
+<li><strong>Pull-based oracles</strong> (for example Pyth): publishers
+sign price updates; consumers submit a fresh update in the same
+transaction that uses it (paying a fee), which gives low latency and
+puts update responsibility on the caller or the protocol.</li>
+<li><strong>AMM-derived oracles</strong>: time-weighted average prices
+(TWAP) from automated market makers (for example Uniswap v3 oracle
+observations); cost of manipulation depends on liquidity and window
+length.</li>
+<li><strong>First-party oracles</strong>: data providers run their own
+nodes (API3-style).</li>
+<li><strong>Optimistic oracles</strong> (for example UMA): assertions
+accepted unless disputed within a window; suited to non-price facts and
+event resolution.</li>
+<li><strong>Governance or committee oracles</strong>: a multisig or
+signer set reports values; simple, with explicit trust.</li>
+<li><strong>On-chain computed values</strong>: internal accounting rates
+(share price, exchange rates) used as prices for tokens like staking
+derivatives, with their own manipulation vectors.</li>
+</ul></li>
+<li><strong>What to ask of any oracle</strong>: who can update or censor
+it, how it aggregates, how quickly it reflects the market, what its
+failure modes are (stale, wrong, paused, delisted), and what its update
+incentives and costs are.</li>
+</ul>
+<h3 id="oracle-risks-and-defenses">2. Oracle risks and defenses</h3>
+<ul>
+<li><strong>Staleness</strong>: a feed that has not updated within its
+heartbeat during a quiet market is fine; one that has not updated for
+hours during volatility is dangerous. Check the last update timestamp
+and revert or degrade beyond a maximum age appropriate to the
+asset.</li>
+<li><strong>Invalid values</strong>: zero or negative answers, round id
+inconsistencies, and decimals that differ per feed (normalize
+explicitly).</li>
+<li><strong>Manipulation</strong>: spot prices from thin pools can be
+moved within one transaction (flash loans); TWAPs raise the cost but can
+be manipulated over a window if liquidity is low; consider the cost to
+move the price versus the profit extractable from the dependent
+protocol.</li>
+<li><strong>Deviation and circuit breakers</strong>: bound the allowed
+change between updates or versus a secondary source; pause sensitive
+actions (borrowing, liquidations) when sources disagree beyond a
+threshold, with a clear recovery process.</li>
+<li><strong>Multiple sources</strong>: use a primary with a fallback
+(for example an oracle plus a TWAP) or a median of several,
+understanding the correlation between them; fallback logic is code that
+attackers will probe.</li>
+<li><strong>Depegs and exotic assets</strong>: stablecoins and liquid
+staking tokens can trade away from their reference; price them through
+the actual market, with caps and risk parameters.</li>
+<li><strong>L2 sequencer risk</strong>: on rollups, if the sequencer is
+down, feeds may be stale while users cannot transact; sequencer uptime
+feeds and grace periods after restart prevent unfair liquidations.</li>
+<li><strong>Oracle extractable value (OEV)</strong>: the update
+transaction itself is a valuable ordering event (liquidations depend on
+it); some designs auction the right to update.</li>
+<li><strong>Governance and configuration</strong>: feed addresses,
+heartbeats, and decimals are configuration; changing or mis-setting them
+is a common failure. Treat feed changes as privileged, timelocked
+actions.</li>
+<li><strong>Cost</strong>: push oracles are paid by the oracle network
+or sponsors; pull oracles charge per update; model costs at your
+volume.</li>
+</ul>
+<pre class="solidity"><code>// Reading a Chainlink-style price feed defensively.
+import {AggregatorV3Interface} from &quot;@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol&quot;;
+
+contract PriceReader {
+    AggregatorV3Interface public immutable feed;
+    uint256 public immutable maxStaleness;       // seconds, chosen per asset and feed heartbeat
+
+    error InvalidPrice();
+    error StalePrice();
+
+    constructor(address feed_, uint256 maxStaleness_) {
+        feed = AggregatorV3Interface(feed_);
+        maxStaleness = maxStaleness_;
+    }
+
+    function price() public view returns (uint256) {
+        (, int256 answer, , uint256 updatedAt, ) = feed.latestRoundData();
+        if (answer &lt;= 0) revert InvalidPrice();
+        if (block.timestamp - updatedAt &gt; maxStaleness) revert StalePrice();
+        return uint256(answer);                  // normalize using feed.decimals() before use
+    }
+}
+</code></pre>
+<p>(Illustrative; not compiled here. Add a sequencer-uptime check on L2s
+and bounds checks against a secondary source where warranted.)</p>
+<h3 id="what-mev-is">3. What MEV is</h3>
+<ul>
+<li><strong>Maximal (originally miner, now maximal) extractable
+value</strong>: the profit available to whoever controls transaction
+ordering, inclusion, or censorship in a block, beyond fees. It exists
+because transactions are public before inclusion and because many
+protocols create profitable ordering opportunities.</li>
+<li><strong>Common strategies</strong>:
+<ul>
+<li><strong>Arbitrage</strong>: equalize prices across venues; mostly
+benign and price-correcting.</li>
+<li><strong>Liquidations</strong>: repay unhealthy loans for a bonus;
+necessary for solvency, competitive, and sometimes harmful if the bonus
+is excessive or oracle updates are exploited.</li>
+<li><strong>Sandwich attacks</strong>: buy before a victim's swap and
+sell after, extracting slippage from the victim.</li>
+<li><strong>Front-running and back-running</strong>: copying or
+following a profitable transaction (token launches, NFT mints,
+governance, oracle updates).</li>
+<li><strong>Just-in-time liquidity</strong>: provide liquidity for a
+single block to capture fees.</li>
+<li><strong>Time-bandit and reorg attacks</strong>: reorganizing recent
+blocks to capture past MEV (a risk where finality is weak).</li>
+</ul></li>
+<li><strong>Who pays</strong>: users via worse execution; protocols via
+arbitrage leakage; the network via priority gas auctions and congestion;
+and the system via centralization of block building.</li>
+<li><strong>Not all MEV is bad</strong>: arbitrage and liquidation keep
+markets and lending protocols healthy; the engineering aim is to make
+extraction less harmful and its proceeds more fairly distributed.</li>
+</ul>
+<h3 id="the-mev-supply-chain">4. The MEV supply chain</h3>
+<ul>
+<li><strong>Searchers</strong> find opportunities and submit bundles
+with bids. <strong>Builders</strong> assemble full blocks, maximizing
+value, and bid to proposers. <strong>Relays</strong> escrow blocks
+between builders and proposers (trust-minimizing intermediaries in the
+current market). <strong>Proposers</strong> (validators) choose the
+highest-paying block header without seeing contents.</li>
+<li><strong>MEV-Boost</strong> implements this proposer-builder
+separation outside the protocol; most Ethereum blocks have been produced
+through it. Consequences: block building is concentrated in a few
+builders; relays are trusted for fair play and censorship policies;
+builders can censor (for example sanctioned addresses).</li>
+<li><strong>Enshrined PBS (ePBS)</strong>: planned for the Glamsterdam
+upgrade (EIP-7732) to move this separation into the protocol and reduce
+reliance on relays. Inclusion lists and other censorship-resistance
+proposals aim to let proposers force inclusion of some transactions.
+Check the current status of these changes.</li>
+<li><strong>On L2s</strong>: ordering is controlled by the sequencer
+(often one operator), with first-come-first-served or priority-fee
+policies; shared and decentralized sequencers are in development. MEV on
+L2s depends on the sequencer's rules and may be extracted by the
+operator.</li>
+<li><strong>Economics</strong>: MEV revenue reaches validators and thus
+stakers, adding to rewards; it also pressures decentralization because
+sophisticated operators earn more.</li>
+</ul>
+<h3 id="protecting-users-and-protocols">5. Protecting users and
+protocols</h3>
+<ul>
+<li><strong>Application-level defenses</strong>:
+<ul>
+<li><strong>Slippage limits and deadlines</strong> on swaps bound the
+loss from a sandwich; they do not remove it. Set limits tightly by
+default and warn on high-slippage settings.</li>
+<li><strong>Private transaction submission</strong> (Flashbots Protect,
+MEV Blocker, builders' private endpoints) hides transactions from the
+public mempool and reduces sandwiching; it introduces trust in the relay
+or builder and may slow inclusion.</li>
+<li><strong>Batch auctions and intents</strong>: execute many orders at
+a uniform clearing price within a batch (for example CoW Protocol), or
+let users sign intents that solvers fulfil competitively (UniswapX,
+Across-style intents); ordering within the batch no longer matters and
+solvers compete to improve prices.</li>
+<li><strong>Commit-reveal</strong> for actions where hidden information
+matters (auctions, mints, votes).</li>
+<li><strong>Design out profitable ordering</strong>: avoid mechanisms
+where the first caller wins a fixed bonus (use auctions for liquidations
+with decaying discounts), avoid predictable on-chain randomness, and
+avoid state that can be profitably moved and restored within a
+block.</li>
+<li><strong>Oracle design</strong>: update oracles in ways that do not
+create a guaranteed profit for the updater, or auction the update right
+(OEV capture).</li>
+<li><strong>Fee design</strong>: priority fee auctions create congestion
+externalities; consider base-fee-only designs for time-insensitive
+actions.</li>
+</ul></li>
+<li><strong>Protocol-level research</strong>: encrypted mempools,
+threshold-decryption ordering, fair-ordering protocols, MEV burn and
+smoothing, and application-specific sequencing; none is a complete
+solution today.</li>
+<li><strong>User-side practices</strong>: use private RPC endpoints for
+swaps and large trades, set slippage and deadlines, split trades, and
+prefer venues with MEV protection; wallets and frontends should default
+to protective routes.</li>
+</ul>
+<h3 id="integrating-oracles-and-mev-into-protocol-design">6. Integrating
+oracles and MEV into protocol design</h3>
+<ul>
+<li><strong>Lending</strong>: oracle choice determines liquidation
+fairness; use TWAP or robust feeds with deviation checks; design the
+liquidation bonus and close factor to attract liquidators without
+enabling profitable manipulation; plan for oracle failure (pause or
+conservative mode).</li>
+<li><strong>AMMs</strong>: exposure to sandwiches depends on pool depth
+and price impact; offer slippage controls and protective routing; fee
+tiers, concentrated liquidity, and hooks change the MEV surface.</li>
+<li><strong>Vaults and strategies</strong>: harvest and rebalance
+transactions are MEV targets; use private submission, randomization, and
+bounded slippage; avoid revealing predictable schedules.</li>
+<li><strong>Governance</strong>: proposals executed after timelocks can
+be front-run by informed actors; consider this in treasury
+operations.</li>
+<li><strong>Cross-chain</strong>: message relays and settlements can be
+reordered or delayed; design for out-of-order delivery and slippage
+across chains (see <code
+class="verbatim">11_layer-2-and-cross-chain.org</code>).</li>
+<li><strong>Simulation</strong>: replay historical blocks on a fork with
+adversarial searchers; compute the maximum extractable value of your
+design under stress using agent-based or scripted attacks.</li>
+</ul>
+<h3 id="self-check">7. Self-check</h3>
+<ol>
+<li>A protocol uses a Uniswap v3 TWAP over 30 minutes as a price for
+collateral on a pool with modest liquidity. Estimate how an attacker
+might manipulate it and what parameters change the cost.</li>
+<li>List the checks a consumer of a push-based price feed should
+perform, and which extra ones apply on an L2.</li>
+<li>Describe how a sandwich attack works with a constant-product pool
+and how slippage limits bound it.</li>
+<li>Compare private order flow, batch auctions, and intents: what does
+each trust and what does each cost?</li>
+<li>Why does the MEV supply chain tend to concentrate, and what are the
+censorship consequences?</li>
+<li>Design a liquidation mechanism that minimizes harmful MEV while
+ensuring timely liquidations.</li>
+</ol>
+<h3 id="exercises">8. Exercises</h3>
+<ul>
+<li>Warm-up: write the defensive price-reader above with tests for
+stale, zero, negative, and normal values using a mock feed.</li>
+<li>Core: implement a TWAP oracle against an AMM pool in a local test
+and demonstrate (in a test environment) how liquidity and window length
+affect manipulation cost.</li>
+<li>Core: simulate a sandwich attack on a constant-product pool in a
+script; compute the victim's loss as a function of slippage tolerance
+and pool depth.</li>
+<li>Core: build a liquidation module with a decaying-discount auction
+and compare it with a fixed-bonus design in a simulation with several
+searchers.</li>
+<li>Stretch: build a pull-oracle consumer that updates and uses a price
+in one transaction with a maximum age and a fallback.</li>
+<li>Stretch: write a report on the MEV exposure of a real protocol's key
+operations (swap, liquidation, harvest, oracle update) and propose
+mitigations.</li>
+</ul>
+<h3 id="resources">9. Resources</h3>
+<ul>
+<li>Chainlink documentation (data feeds, heartbeats and deviation
+thresholds, sequencer uptime feeds): <a
+href="https://docs.chain.link/data-feeds">https://docs.chain.link/data-feeds</a>
+; Pyth and API3 and UMA documentation.</li>
+<li>Flashbots documentation (MEV-Boost, Protect, builders and relays):
+<a href="https://docs.flashbots.net">https://docs.flashbots.net</a> ;
+the MEV-Boost and ePBS (EIP-7732) specifications and discussions: <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a></li>
+<li>Daian et al., <em>Flash Boys 2.0</em> (2019); research and
+dashboards on MEV from the Flashbots and independent teams; CoW Protocol
+and UniswapX documentation for batch auctions and intents.</li>
+<li>Ethereum Foundation protocol updates on Glamsterdam and censorship
+resistance: <a
+href="https://blog.ethereum.org/">https://blog.ethereum.org/</a></li>
+<li>Uniswap v3 oracle documentation and audits of oracle-dependent
+lending protocols (for manipulation case studies).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Every oracle is a trust and manipulation assumption; check
+freshness, validity, deviation, and sequencer status.</li>
+<li>TWAPs raise manipulation cost but depend on liquidity and window;
+combine sources with circuit breakers.</li>
+<li>MEV is a property of public ordering; design mechanisms that do not
+reward first-come ordering games.</li>
+<li>Private flow, batch auctions, and intents shift trust; choose
+knowingly.</li>
+<li>Simulate adversarial ordering against your design before
+launch.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

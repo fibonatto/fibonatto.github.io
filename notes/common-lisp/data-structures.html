@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Common Lisp Data Structures</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/common-lisp/data-structures.html">
+  <meta property="og:title" content="Common Lisp Data Structures">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/common-lisp/data-structures.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Common Lisp Data Structures</h1>
+<h2 id="common-lisp-data-structures">Common Lisp Data Structures</h2>
+<h3 id="lists">1. Lists</h3>
+<p>A list is built from cons cells and ends in <code
+class="verbatim">nil</code>.</p>
+<div class="sourceCode" id="cb1" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>&#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)              <span class="co">; literal list</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">list</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)          <span class="co">; construct a list</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">cons</span> <span class="dv">1</span> &#39;(<span class="dv">2</span> <span class="dv">3</span>))       <span class="co">; =&gt; (1 2 3)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>(<span class="kw">car</span> &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>))        <span class="co">; =&gt; 1</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>(<span class="kw">cdr</span> &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>))        <span class="co">; =&gt; (2 3)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>(<span class="kw">cadr</span> &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>))       <span class="co">; =&gt; 2</span></span></code></pre></div>
+<p><code class="verbatim">car</code> returns the first element; <code
+class="verbatim">cdr</code> returns the remainder. Names such as <code
+class="verbatim">cadr</code> combine these operations: <code
+class="verbatim">cadr</code> means <code
+class="verbatim">(car (cdr x))</code>.</p>
+<p>An empty list is <code class="verbatim">nil</code>:</p>
+<div class="sourceCode" id="cb2" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">null</span> <span class="kw">nil</span>) <span class="co">; =&gt; T</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">null</span> &#39;(<span class="dv">1</span>)) <span class="co">; =&gt; NIL</span></span></code></pre></div>
+<p>Use <code class="verbatim">cons</code> to build recursive data:</p>
+<div class="sourceCode" id="cb3" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> length-of-list </span>(xs)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">null</span> xs)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>      <span class="dv">0</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      (<span class="op">1+</span> (length-of-list (<span class="kw">cdr</span> xs)))))</span></code></pre></div>
+<h3 id="equality">2. Equality</h3>
+<p>Different equality predicates serve different purposes:</p>
+<div class="sourceCode" id="cb4" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">eq</span> x y)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">eql</span> x y)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">equal</span> x y)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>(<span class="kw">equalp</span> x y)</span></code></pre></div>
+<ul>
+<li><code class="verbatim">eq</code> is primarily for identity and
+symbols; do not use it for arbitrary numeric equality.</li>
+<li><code class="verbatim">eql</code> compares objects such as numbers
+of the same type and symbols.</li>
+<li><code class="verbatim">equal</code> compares structures such as
+lists and strings recursively.</li>
+<li><code class="verbatim">equalp</code> is more permissive, including
+case-insensitive string comparison and numeric comparisons across some
+types.</li>
+</ul>
+<p>For numeric comparisons, use <code class="verbatim">=</code>, <code
+class="verbatim">&lt;</code>, <code class="verbatim">&gt;</code>, <code
+class="verbatim">&lt;=</code>, and <code
+class="verbatim">&gt;=</code>.</p>
+<div class="sourceCode" id="cb5" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">=</span> <span class="dv">3</span> <span class="fl">3.0</span>)       <span class="co">; =&gt; T</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">equal</span> &#39;(a b) &#39;(a b)) <span class="co">; =&gt; T</span></span></code></pre></div>
+<h3 id="vectors-and-arrays">3. Vectors and arrays</h3>
+<p>Vectors provide indexed sequences:</p>
+<div class="sourceCode" id="cb6" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defparameter</span><span class="fu"> *numbers* </span>#(<span class="dv">10</span> <span class="dv">20</span> <span class="dv">30</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">aref</span> *numbers* <span class="dv">1</span>) <span class="co">; =&gt; 20</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>(<span class="kw">length</span> *numbers*) <span class="co">; =&gt; 3</span></span></code></pre></div>
+<p>A vector literal written with <code class="verbatim">#(...)</code> is
+a literal object. Do not modify literal constants in place. For mutable
+vectors, construct one explicitly:</p>
+<div class="sourceCode" id="cb7" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((v (<span class="kw">make-array</span> <span class="dv">3</span> <span class="bu">:initial-contents</span> &#39;(<span class="dv">10</span> <span class="dv">20</span> <span class="dv">30</span>))))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">setf</span> (<span class="kw">aref</span> v <span class="dv">1</span>) <span class="dv">99</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  v)</span></code></pre></div>
+<p><code class="verbatim">make-array</code> also creates
+multidimensional arrays.</p>
+<h3 id="hash-tables">4. Hash tables</h3>
+<div class="sourceCode" id="cb8" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span> <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">setf</span> (<span class="kw">gethash</span> <span class="st">&quot;name&quot;</span> table) <span class="st">&quot;Ada&quot;</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">gethash</span> <span class="st">&quot;name&quot;</span> table))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">; =&gt; &quot;Ada&quot;, T</span></span></code></pre></div>
+<p><code class="verbatim">gethash</code> returns two values: the value
+and a presence flag. This distinguishes a missing key from a key mapped
+to <code class="verbatim">nil</code>.</p>
+<p>Common hash-table tests include <code class="verbatim">eq</code>,
+<code class="verbatim">eql</code>, and <code
+class="verbatim">equal</code>.</p>
+<h3 id="structures-with-defstruct">5. Structures with <code
+class="verbatim">defstruct</code></h3>
+<p>Use <code class="verbatim">defstruct</code> for compound data with
+named fields:</p>
+<div class="sourceCode" id="cb9" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defstruct</span><span class="fu"> point</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  x</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  y)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defparameter</span><span class="fu"> p </span>(make-point :x <span class="dv">10</span> :y <span class="dv">20</span>))</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>(point-x p) <span class="co">; =&gt; 10</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>(point-y p) <span class="co">; =&gt; 20</span></span></code></pre></div>
+<p>It defines a structure type, a default constructor, and field
+accessors.</p>
+<p>You can customize the constructor:</p>
+<div class="sourceCode" id="cb10" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defstruct</span><span class="fu"> </span>(pair (<span class="bu">:constructor</span> make-pair (fst snd)))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  fst</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  snd)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>(make-pair <span class="dv">1</span> <span class="dv">2</span>)</span></code></pre></div>
+<p><code class="verbatim">defstruct</code> does not automatically
+enforce domain-specific field types. Type declarations and checks can be
+added when needed.</p>
+<h3 id="representing-variants">6. Representing variants</h3>
+<p>Common Lisp does not have built-in algebraic data types with
+exhaustive pattern matching. One practical representation uses separate
+structures:</p>
+<div class="sourceCode" id="cb11" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defstruct</span><span class="fu"> </span>(maybe-none (<span class="bu">:constructor</span> none ())))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defstruct</span><span class="fu"> </span>(maybe-some (<span class="bu">:constructor</span> <span class="kw">some</span> (value)))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  value)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>(none)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>(<span class="kw">some</span> <span class="dv">42</span>)</span></code></pre></div>
+<p>Dispatch can use predicates:</p>
+<div class="sourceCode" id="cb12" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> maybe-value-or </span>(m fallback)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">typecase</span> m</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    (maybe-none fallback)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    (maybe-some (maybe-some-value m))</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">t</span> (<span class="kw">error</span> <span class="st">&quot;Not a Maybe value: ~S&quot;</span> m))))</span></code></pre></div>
+<p><code class="verbatim">typecase</code> dispatches on the object's
+type. It does not destructure fields automatically.</p>
+<p>Another approach is to use symbols, lists, or Church/Scott encodings
+when experimenting with functional representations.</p>
+<h3 id="typecase-and-case">7. <code class="verbatim">typecase</code> and
+<code class="verbatim">case</code></h3>
+<p><code class="verbatim">case</code> compares a value with literal
+keys:</p>
+<div class="sourceCode" id="cb13" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">case</span> status</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  (:ready <span class="dt">&#39;run</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  (:waiting <span class="dt">&#39;pause</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">otherwise</span> <span class="dt">&#39;unknown</span>))</span></code></pre></div>
+<p><code class="verbatim">typecase</code> selects a branch based on
+type:</p>
+<div class="sourceCode" id="cb14" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">typecase</span> value</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">integer</span> <span class="dt">&#39;integer</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">string</span> <span class="dt">&#39;string</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cons</span> <span class="dt">&#39;cons-cell</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">t</span> <span class="dt">&#39;other</span>))</span></code></pre></div>
+<p>Neither is a full structural pattern matcher.</p>
+<h3 id="strings-and-symbols">8. Strings and symbols</h3>
+<p>Strings are character sequences:</p>
+<div class="sourceCode" id="cb15" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">concatenate</span> <span class="dt">&#39;string</span> <span class="st">&quot;hello&quot;</span> <span class="st">&quot; &quot;</span> <span class="st">&quot;world&quot;</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">subseq</span> <span class="st">&quot;common lisp&quot;</span> <span class="dv">0</span> <span class="dv">6</span>) <span class="co">; =&gt; &quot;common&quot;</span></span></code></pre></div>
+<p>Symbols are identifiers and can be quoted:</p>
+<div class="sourceCode" id="cb16" data-org-language="lisp"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&#39;hello</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>:hello</span></code></pre></div>
+<p>A keyword such as <code class="verbatim">:hello</code> is a symbol in
+the keyword package and evaluates to itself. A quoted ordinary symbol
+such as <code class="verbatim">'hello</code> also evaluates to the
+symbol rather than looking up a variable named <code
+class="verbatim">hello</code>.</p>
+<h3 id="choose-the-structure-for-the-job">9. Choose the structure for
+the job</h3>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Common choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recursive sequence or symbolic expression</td>
+<td>List</td>
+</tr>
+<tr>
+<td>Indexed sequence</td>
+<td>Vector</td>
+</tr>
+<tr>
+<td>Key-value lookup</td>
+<td>Hash table</td>
+</tr>
+<tr>
+<td>Fixed fields</td>
+<td><code class="verbatim">defstruct</code></td>
+</tr>
+<tr>
+<td>Dispatch by type</td>
+<td><code class="verbatim">typecase</code></td>
+</tr>
+<tr>
+<td>Dispatch by literal value</td>
+<td><code class="verbatim">case</code></td>
+</tr>
+<tr>
+<td>Functional data representation experiments</td>
+<td>Functions and lambdas</td>
+</tr>
+</tbody>
+</table>
+<p>Start with lists and <code class="verbatim">defstruct</code>. Add
+vectors and hash tables when the problem calls for them.</p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

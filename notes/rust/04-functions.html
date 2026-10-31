@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Functions</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/04-functions.html">
+  <meta property="og:title" content="Rust Functions">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/04-functions.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Functions</h1>
+<h2 id="rust-functions-1">Rust Functions</h2>
+<h3 id="define-a-function">1. Define a function</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> square(x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">*</span> x</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>square(<span class="dv">5</span>)<span class="op">;</span>   <span class="co">// 25</span></span></code></pre></div>
+<p>Parameter and return types are mandatory in signatures (types are
+inferred only inside bodies). The last expression, without a semicolon,
+is the return value; <code class="verbatim">return</code> is for early
+exits. A function with no <code class="verbatim">-&gt;</code> returns
+<code class="verbatim">()</code>. Functions may be defined in any order
+within a module.</p>
+<h3 id="parameters-move-borrow-mutate">2. Parameters: move, borrow,
+mutate</h3>
+<p>The parameter type says what the function does with the argument.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> consume(s<span class="op">:</span> <span class="dt">String</span>) <span class="op">{</span> <span class="op">}</span>          <span class="co">// takes ownership: caller can no longer use s</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> read(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">String</span>) <span class="op">{</span> <span class="op">}</span>            <span class="co">// shared borrow: read-only</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> change(s<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="dt">String</span>) <span class="op">{</span> <span class="op">}</span>      <span class="co">// exclusive borrow: may modify</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hi&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>read(<span class="op">&amp;</span>s)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>change(<span class="op">&amp;</span><span class="kw">mut</span> s)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>consume(s)<span class="op">;</span>                        <span class="co">// s is moved here</span></span></code></pre></div>
+<p>Prefer the most general borrowed type in parameters: <code
+class="verbatim">&amp;str</code> rather than <code
+class="verbatim">&amp;String</code>, <code
+class="verbatim">&amp;[T]</code> rather than <code
+class="verbatim">&amp;Vec&lt;T&gt;</code>, so callers can pass either
+form.</p>
+<p>There is no overloading, no default arguments, and no named
+arguments. Substitutes: different function names, <code
+class="verbatim">Option&lt;T&gt;</code> parameters, or a config struct
+with <code class="verbatim">Default</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Options <span class="op">{</span> port<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span> tls<span class="op">:</span> <span class="dt">bool</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> connect(host<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span> opts<span class="op">:</span> Options) <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>connect(<span class="st">&quot;example.com&quot;</span><span class="op">,</span> Options <span class="op">{</span> port<span class="op">:</span> <span class="dv">443</span><span class="op">,</span> <span class="op">..</span><span class="pp">Default::</span><span class="kw">default</span>() <span class="op">}</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="return-values">3. Return values</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> divmod(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> (<span class="dt">i32</span><span class="op">,</span> <span class="dt">i32</span>) <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    (a <span class="op">/</span> b<span class="op">,</span> a <span class="op">%</span> b)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (q<span class="op">,</span> r) <span class="op">=</span> divmod(<span class="dv">17</span><span class="op">,</span> <span class="dv">5</span>)<span class="op">;</span>   <span class="co">// q == 3, r == 2</span></span></code></pre></div>
+<p>Several results go in a tuple or a small struct. Failure goes in the
+return type:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> checked(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">{</span> a<span class="op">.</span>checked_div(b) <span class="op">}</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> parse(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">,</span> <span class="pp">std::num::</span>ParseIntError<span class="op">&gt;</span> <span class="op">{</span> s<span class="op">.</span>parse() <span class="op">}</span></span></code></pre></div>
+<p>Integer division by zero panics. A function that never returns has
+type <code class="verbatim">!</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> fail(msg<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">!</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">panic!</span>(<span class="st">&quot;{msg}&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A function cannot return a reference to a local variable; the borrow
+checker rejects it.</p>
+<h3 id="closures">4. Closures</h3>
+<p>A closure is an anonymous function that can capture variables from
+its environment.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> add <span class="op">=</span> <span class="op">|</span>a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span><span class="op">|</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>add(<span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span>                        <span class="co">// 5</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> k <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> scale <span class="op">=</span> <span class="op">|</span>x<span class="op">:</span> <span class="dt">i32</span><span class="op">|</span> x <span class="op">*</span> k<span class="op">;</span>       <span class="co">// borrows k</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> inc <span class="op">=</span> <span class="op">||</span> count <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span>      <span class="co">// mutably borrows count; the binding must be mut</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>inc()<span class="op">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>inc()<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">// count == 2 once inc is no longer used</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hi&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> owns <span class="op">=</span> <span class="kw">move</span> <span class="op">||</span> s<span class="op">.</span>len()<span class="op">;</span>       <span class="co">// move: the closure takes ownership of s</span></span></code></pre></div>
+<p>Parameter and return types are usually inferred. Each closure has its
+own unique, unnameable type.</p>
+<h3 id="fn-fnmut-fnonce">5. Fn, FnMut, FnOnce</h3>
+<p>The compiler assigns each closure the most permissive of three
+traits, based on what its body does with captured values.</p>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>Called how</th>
+<th>Closure body…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">Fn</code></td>
+<td><code class="verbatim">&amp;self</code>, many times</td>
+<td>only reads captured values</td>
+</tr>
+<tr>
+<td><code class="verbatim">FnMut</code></td>
+<td><code class="verbatim">&amp;mut self</code>, many times</td>
+<td>mutates captured values</td>
+</tr>
+<tr>
+<td><code class="verbatim">FnOnce</code></td>
+<td><code class="verbatim">self</code>, at most once</td>
+<td>moves a captured value out</td>
+</tr>
+</tbody>
+</table>
+<p>Every <code class="verbatim">Fn</code> is also <code
+class="verbatim">FnMut</code> and <code class="verbatim">FnOnce</code>;
+every <code class="verbatim">FnMut</code> is also <code
+class="verbatim">FnOnce</code>. Use the loosest bound the function
+needs: <code class="verbatim">FnOnce</code> if it calls the closure
+once, <code class="verbatim">FnMut</code> if it calls it repeatedly and
+allows mutation, <code class="verbatim">Fn</code> if callers must be
+able to share it.</p>
+<h3 id="functions-that-take-functions">6. Functions that take
+functions</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> apply<span class="op">&lt;</span>F<span class="op">:</span> <span class="bu">Fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span><span class="op">&gt;</span>(f<span class="op">:</span> F<span class="op">,</span> x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> f(x) <span class="op">}</span>          <span class="co">// static dispatch</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> apply2(f<span class="op">:</span> <span class="kw">impl</span> <span class="bu">Fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span><span class="op">,</span> x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> f(x) <span class="op">}</span>          <span class="co">// same, shorter</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> apply_dyn(f<span class="op">:</span> <span class="op">&amp;</span><span class="kw">dyn</span> <span class="bu">Fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span><span class="op">,</span> x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> f(x) <span class="op">}</span>       <span class="co">// dynamic dispatch</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> double(x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> x <span class="op">*</span> <span class="dv">2</span> <span class="op">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>apply(double<span class="op">,</span> <span class="dv">4</span>)<span class="op">;</span>                  <span class="co">// named functions work too</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>apply(<span class="op">|</span>x<span class="op">|</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">4</span>)<span class="op">;</span>               <span class="co">// so do closures</span></span></code></pre></div>
+<p>Generic bounds are monomorphized: one specialized copy per closure
+type, no call overhead. <code class="verbatim">&amp;dyn Fn</code> and
+<code class="verbatim">Box&lt;dyn Fn&gt;</code> use one copy and a
+virtual call, and allow storing different closures in one place.</p>
+<p>A plain function pointer has the type <code
+class="verbatim">fn(i32) -&gt; i32</code>; it can hold named functions
+and non-capturing closures.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f<span class="op">:</span> <span class="kw">fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">=</span> double<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">.</span>iter()<span class="op">.</span>copied()<span class="op">.</span>map(double)<span class="op">.</span>collect()<span class="op">;</span>   <span class="co">// [2, 4, 6]</span></span></code></pre></div>
+<h3 id="returning-closures">7. Returning closures</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> make_adder(n<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="kw">impl</span> <span class="bu">Fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">move</span> <span class="op">|</span>x<span class="op">|</span> x <span class="op">+</span> n</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> make_boxed(n<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="bu">Fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Box::</span>new(<span class="kw">move</span> <span class="op">|</span>x<span class="op">|</span> x <span class="op">+</span> n)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> add5 <span class="op">=</span> make_adder(<span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>add5(<span class="dv">10</span>)<span class="op">;</span>                          <span class="co">// 15</span></span></code></pre></div>
+<p><code class="verbatim">move</code> is needed because <code
+class="verbatim">n</code> would otherwise be borrowed from a stack frame
+that is gone. Use <code class="verbatim">impl Fn</code> when one
+concrete closure type is returned; use <code
+class="verbatim">Box&lt;dyn Fn&gt;</code> when different branches return
+different closures.</p>
+<h3 id="methods-and-associated-functions">8. Methods and associated
+functions</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Counter <span class="op">{</span> n<span class="op">:</span> <span class="dt">u32</span> <span class="op">}</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Counter <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> new() <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> Counter <span class="op">{</span> n<span class="op">:</span> <span class="dv">0</span> <span class="op">}</span> <span class="op">}</span>          <span class="co">// associated function: Counter::new()</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> get(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>n <span class="op">}</span>                <span class="co">// reads</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> inc(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>n <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span>             <span class="co">// mutates</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> into_inner(<span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>n <span class="op">}</span>          <span class="co">// consumes the value</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> c <span class="op">=</span> <span class="pp">Counter::</span>new()<span class="op">;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>c<span class="op">.</span>inc()<span class="op">;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>c<span class="op">.</span>get()<span class="op">;</span>           <span class="co">// 1</span></span></code></pre></div>
+<p>The first parameter, <code class="verbatim">self</code>, <code
+class="verbatim">&amp;self</code>, or <code
+class="verbatim">&amp;mut self</code>, makes a function a method
+callable with dot syntax. <code
+class="verbatim">Counter::get(&amp;c)</code> is the same call written
+out.</p>
+<h3 id="generic-functions-and-trait-bounds">9. Generic functions and
+trait bounds</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> largest<span class="op">&lt;</span>T<span class="op">:</span> <span class="bu">PartialOrd</span> <span class="op">+</span> <span class="bu">Copy</span><span class="op">&gt;</span>(xs<span class="op">:</span> <span class="op">&amp;</span>[T]) <span class="op">-&gt;</span> T <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> m <span class="op">=</span> xs[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">&amp;</span>x <span class="kw">in</span> xs <span class="op">{</span> <span class="cf">if</span> x <span class="op">&gt;</span> m <span class="op">{</span> m <span class="op">=</span> x<span class="op">;</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    m</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> describe<span class="op">&lt;</span>T<span class="op">&gt;</span>(x<span class="op">:</span> T) <span class="op">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    T<span class="op">:</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span> <span class="op">+</span> <span class="bu">Clone</span><span class="op">,</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">format!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> x<span class="op">.</span>clone())</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Without a bound, a generic parameter has no operations beyond moving
+it. <code class="verbatim">largest</code> panics on an empty slice; a
+safer signature returns <code
+class="verbatim">Option&lt;T&gt;</code>.</p>
+<h3 id="recursion-and-iteration">10. Recursion and iteration</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> fact(n<span class="op">:</span> <span class="dt">u64</span>) <span class="op">-&gt;</span> <span class="dt">u64</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="op">&lt;=</span> <span class="dv">1</span> <span class="op">{</span> <span class="dv">1</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> n <span class="op">*</span> fact(n <span class="op">-</span> <span class="dv">1</span>) <span class="op">}</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> sum(xs<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">i32</span>]) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    xs<span class="op">.</span>iter()<span class="op">.</span>sum()</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Rust does not guarantee tail-call optimization, and deep recursion
+can overflow the stack. Iterators and loops are idiomatic for linear
+traversals; use recursion for trees and divide-and-conquer. Overflow in
+<code class="verbatim">fact</code> panics in debug builds and wraps in
+release builds.</p>
+<h3 id="functions-versus-macros">11. Functions versus macros</h3>
+<p>Function arguments are evaluated before the call. A macro such as
+<code class="verbatim">println!</code> or <code
+class="verbatim">vec!</code> receives tokens and can accept a variable
+number of arguments or generate code (see <code
+class="verbatim">11_macros.org</code>). To delay evaluation with a
+function, pass a closure:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> choose<span class="op">&lt;</span>T<span class="op">&gt;</span>(c<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span> a<span class="op">:</span> <span class="kw">impl</span> <span class="bu">FnOnce</span>() <span class="op">-&gt;</span> T<span class="op">,</span> b<span class="op">:</span> <span class="kw">impl</span> <span class="bu">FnOnce</span>() <span class="op">-&gt;</span> T) <span class="op">-&gt;</span> T <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> c <span class="op">{</span> a() <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> b() <span class="op">}</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>choose(ok<span class="op">,</span> <span class="op">||</span> expensive()<span class="op">,</span> <span class="op">||</span> cheap())<span class="op">;</span>   <span class="co">// only one closure runs</span></span></code></pre></div>
+<h3 id="quick-reference">Quick reference</h3>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">fn f(x: T) -&gt; U</code></td>
+<td>Define a function</td>
+</tr>
+<tr>
+<td><code class="verbatim">&amp;T</code>, <code
+class="verbatim">&amp;mut T</code>, <code class="verbatim">T</code></td>
+<td>Borrow, mutably borrow, or take ownership</td>
+</tr>
+<tr>
+<td><code class="verbatim">F: Fn(A) -&gt; R</code></td>
+<td>Accept a callable, static dispatch</td>
+</tr>
+<tr>
+<td><code class="verbatim">&amp;dyn Fn(A) -&gt; R</code></td>
+<td>Accept a callable, dynamic dispatch</td>
+</tr>
+<tr>
+<td><code class="verbatim">impl Fn(A) -&gt; R</code></td>
+<td>Return one concrete closure type</td>
+</tr>
+<tr>
+<td><code class="verbatim">Box&lt;dyn Fn(A) -&gt; R&gt;</code></td>
+<td>Return or store different closures</td>
+</tr>
+<tr>
+<td><code class="verbatim">fn(A) -&gt; R</code></td>
+<td>Function pointer type</td>
+</tr>
+<tr>
+<td><code class="verbatim">self</code>, <code
+class="verbatim">&amp;self</code>, <code
+class="verbatim">&amp;mut self</code></td>
+<td>Method receivers</td>
+</tr>
+</tbody>
+</table>
+<p>Closures are written <code class="verbatim">|x| expr</code>;
+prefixing <code class="verbatim">move</code> makes the closure take
+ownership of what it uses.</p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Data Structures</title>
+  <meta name="description" content="Practical data structures in C, from built-in arrays, structs, unions, enums, and bit flags to dynamic arrays, linked lists, and hash tables. Covers memory layout, alignment, padding, tagged unions, allocation and resizing, opaque types, pointer ownership, API design, and choosing structures based on performance and requirements.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/05-data-structures.html">
+  <meta property="og:title" content="C Data Structures">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/05-data-structures.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C Data Structures</h1>
+<h2 id="c-data-structures-1">C Data Structures</h2>
+<p>C provides arrays, structs, unions, and pointers. Everything else is
+built from them. The standard library has no vector, list, or hash
+table.</p>
+<h3 id="arrays">1. Arrays</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a<span class="op">[</span><span class="dv">5</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span>          <span class="co">/* remaining elements are 0 */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> b<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span>           <span class="co">/* length 3, deduced */</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> grid<span class="op">[</span><span class="dv">3</span><span class="op">][</span><span class="dv">4</span><span class="op">];</span>                <span class="co">/* 3 rows of 4 ints, row-major in memory */</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>grid<span class="op">[</span><span class="dv">1</span><span class="op">][</span><span class="dv">2</span><span class="op">]</span> <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> n <span class="op">=</span> <span class="kw">sizeof</span> b <span class="op">/</span> <span class="kw">sizeof</span> b<span class="op">[</span><span class="dv">0</span><span class="op">];</span>   <span class="co">/* 3: valid only where b is a real array */</span></span></code></pre></div>
+<p>Array length is fixed at compile time (variable-length arrays exist
+since C99, are optional since C11, and are risky for large sizes). No
+bounds checking happens: <code class="verbatim">a[5]</code> on a
+5-element array is undefined behavior.</p>
+<h3 id="dynamic-arrays">2. Dynamic arrays</h3>
+<p>A growable array is a struct with a pointer, a length, and a
+capacity.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="op">*</span>data<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> len<span class="op">,</span> cap<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> IntVec<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> intvec_push<span class="op">(</span>IntVec <span class="op">*</span>v<span class="op">,</span> <span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>v<span class="op">-&gt;</span>len <span class="op">==</span> v<span class="op">-&gt;</span>cap<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> ncap <span class="op">=</span> v<span class="op">-&gt;</span>cap <span class="op">?</span> v<span class="op">-&gt;</span>cap <span class="op">*</span> <span class="dv">2</span> <span class="op">:</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="op">*</span>p <span class="op">=</span> realloc<span class="op">(</span>v<span class="op">-&gt;</span>data<span class="op">,</span> ncap <span class="op">*</span> <span class="kw">sizeof</span> <span class="op">*</span>p<span class="op">);</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>p <span class="op">==</span> NULL<span class="op">)</span> <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span>       <span class="co">/* v is unchanged and still valid */</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        v<span class="op">-&gt;</span>data <span class="op">=</span> p<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        v<span class="op">-&gt;</span>cap <span class="op">=</span> ncap<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    v<span class="op">-&gt;</span>data<span class="op">[</span>v<span class="op">-&gt;</span>len<span class="op">++]</span> <span class="op">=</span> x<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>IntVec v <span class="op">=</span> <span class="op">{</span><span class="dv">0</span><span class="op">};</span>                          <span class="co">/* realloc(NULL, n) acts like malloc */</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>intvec_push<span class="op">(&amp;</span>v<span class="op">,</span> <span class="dv">42</span><span class="op">);</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>free<span class="op">(</span>v<span class="op">.</span>data<span class="op">);</span></span></code></pre></div>
+<p>Doubling gives amortized O(1) push. A production version should also
+guard the <code class="verbatim">ncap * sizeof</code> multiplication
+against overflow.</p>
+<h3 id="structs-and-layout">3. Structs and layout</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> point <span class="op">{</span> <span class="dt">double</span> x<span class="op">,</span> y<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> point p <span class="op">=</span> <span class="op">{</span> <span class="op">.</span>x <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>y <span class="op">=</span> <span class="dv">2</span> <span class="op">};</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> point q <span class="op">=</span> p<span class="op">;</span>                      <span class="co">/* copies every member */</span></span></code></pre></div>
+<p>The compiler inserts padding for alignment, so field order affects
+size:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> a <span class="op">{</span> <span class="dt">char</span> c<span class="op">;</span> <span class="dt">int</span> i<span class="op">;</span> <span class="dt">char</span> d<span class="op">;</span> <span class="op">};</span>     <span class="co">/* typically 12 bytes with 4-byte int */</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> b <span class="op">{</span> <span class="dt">int</span> i<span class="op">;</span> <span class="dt">char</span> c<span class="op">;</span> <span class="dt">char</span> d<span class="op">;</span> <span class="op">};</span>     <span class="co">/* typically 8 bytes */</span></span></code></pre></div>
+<p>Do not compare structs with <code class="verbatim">memcmp</code>
+(padding bytes are unspecified) or with <code>==</code> (not defined for
+structs). Compare field by field. <code
+class="verbatim">offsetof(type, member)</code> from <code
+class="verbatim">&lt;stddef.h&gt;</code> gives a member's offset.</p>
+<h3 id="tagged-unions-variants">4. Tagged unions (variants)</h3>
+<p>A <code class="verbatim">union</code> stores one of its members at a
+time. Pair it with a tag to know which.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> shape_kind <span class="op">{</span> SHAPE_CIRCLE<span class="op">,</span> SHAPE_RECT <span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> shape <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">enum</span> shape_kind kind<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">union</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">struct</span> <span class="op">{</span> <span class="dt">double</span> r<span class="op">;</span> <span class="op">}</span> circle<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">struct</span> <span class="op">{</span> <span class="dt">double</span> w<span class="op">,</span> h<span class="op">;</span> <span class="op">}</span> rect<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> as<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> area<span class="op">(</span><span class="dt">const</span> <span class="kw">struct</span> shape <span class="op">*</span>s<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>s<span class="op">-&gt;</span>kind<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SHAPE_CIRCLE<span class="op">:</span> <span class="cf">return</span> <span class="fl">3.14159265358979</span> <span class="op">*</span> s<span class="op">-&gt;</span>as<span class="op">.</span>circle<span class="op">.</span>r <span class="op">*</span> s<span class="op">-&gt;</span>as<span class="op">.</span>circle<span class="op">.</span>r<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SHAPE_RECT<span class="op">:</span>   <span class="cf">return</span> s<span class="op">-&gt;</span>as<span class="op">.</span>rect<span class="op">.</span>w <span class="op">*</span> s<span class="op">-&gt;</span>as<span class="op">.</span>rect<span class="op">.</span>h<span class="op">;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Reading a member other than the one last written is only partly
+defined (type punning through unions is allowed in C, not in C++). With
+<code class="verbatim">-Wall</code>, GCC and Clang warn when a <code
+class="verbatim">switch</code> on an enum misses a case, which gives you
+some of the exhaustiveness checking a language with sum types
+provides.</p>
+<h3 id="enums-and-flags">5. Enums and flags</h3>
+<p>An <code class="verbatim">enum</code> is a set of named integer
+constants.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> color <span class="op">{</span> RED<span class="op">,</span> GREEN<span class="op">,</span> BLUE <span class="op">};</span>         <span class="co">/* 0, 1, 2 */</span></span></code></pre></div>
+<p>Bit flags combine in an unsigned integer:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    PERM_READ  <span class="op">=</span> <span class="dv">1</span><span class="bu">u</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    PERM_WRITE <span class="op">=</span> <span class="dv">1</span><span class="bu">u</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    PERM_EXEC  <span class="op">=</span> <span class="dv">1</span><span class="bu">u</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="dt">unsigned</span> perms <span class="op">=</span> PERM_READ <span class="op">|</span> PERM_WRITE<span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>perms <span class="op">&amp;</span> PERM_WRITE<span class="op">)</span> <span class="op">{</span> <span class="co">/* writable */</span> <span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>perms <span class="op">&amp;=</span> <span class="op">~</span>PERM_WRITE<span class="op">;</span>                    <span class="co">/* clear a flag */</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>perms <span class="op">^=</span> PERM_EXEC<span class="op">;</span>                      <span class="co">/* toggle a flag */</span></span></code></pre></div>
+<h3 id="linked-lists">6. Linked lists</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> node <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> value<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> node <span class="op">*</span>next<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> push_front<span class="op">(</span><span class="kw">struct</span> node <span class="op">**</span>head<span class="op">,</span> <span class="dt">int</span> v<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> node <span class="op">*</span>n <span class="op">=</span> malloc<span class="op">(</span><span class="kw">sizeof</span> <span class="op">*</span>n<span class="op">);</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">==</span> NULL<span class="op">)</span> <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    n<span class="op">-&gt;</span>value <span class="op">=</span> v<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    n<span class="op">-&gt;</span>next <span class="op">=</span> <span class="op">*</span>head<span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>head <span class="op">=</span> n<span class="op">;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> free_list<span class="op">(</span><span class="kw">struct</span> node <span class="op">*</span>h<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>h <span class="op">!=</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">struct</span> node <span class="op">*</span>next <span class="op">=</span> h<span class="op">-&gt;</span>next<span class="op">;</span>     <span class="co">/* read before freeing */</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        free<span class="op">(</span>h<span class="op">);</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        h <span class="op">=</span> next<span class="op">;</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A <code class="verbatim">struct node **</code> lets the function
+update the caller's head pointer. Lists have poor cache locality, so a
+dynamic array is usually faster unless you need cheap insertion in the
+middle with stable pointers.</p>
+<h3 id="hash-tables">7. Hash tables</h3>
+<p>There is none in the standard library. Options: write one, or use a
+library (for example <code class="verbatim">uthash</code>, <code
+class="verbatim">khash</code> from klib, or <code
+class="verbatim">stb_ds</code>). The usual design is an array of buckets
+(chaining) or open addressing, plus a hash function:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="dt">uint64_t</span> fnv1a<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>s<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint64_t</span> h <span class="op">=</span> <span class="dv">14695981039346656037</span><span class="bu">ULL</span><span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(;</span> <span class="op">*</span>s<span class="op">;</span> s<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        h <span class="op">^=</span> <span class="op">(</span><span class="dt">unsigned</span> <span class="dt">char</span><span class="op">)*</span>s<span class="op">;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        h <span class="op">*=</span> <span class="dv">1099511628211</span><span class="bu">ULL</span><span class="op">;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> h<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">/* bucket index: fnv1a(key) % nbuckets  (or &amp; (nbuckets - 1) for a power of two) */</span></span></code></pre></div>
+<p>You also need a resize policy (grow when the load factor passes a
+threshold) and an ownership rule for keys and values.</p>
+<h3 id="opaque-types">8. Opaque types</h3>
+<p>Hide the representation behind a forward-declared struct. Callers
+hold only pointers.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* stack.h */</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> Stack Stack<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>Stack <span class="op">*</span>stack_new<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span>    stack_push<span class="op">(</span>Stack <span class="op">*</span>s<span class="op">,</span> <span class="dt">int</span> x<span class="op">);</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span>   stack_free<span class="op">(</span>Stack <span class="op">*</span>s<span class="op">);</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">/* stack.c */</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Stack <span class="op">{</span> <span class="dt">int</span> <span class="op">*</span>data<span class="op">;</span> <span class="dt">size_t</span> len<span class="op">,</span> cap<span class="op">;</span> <span class="op">};</span></span></code></pre></div>
+<p>Callers cannot access fields or allocate the struct on their own,
+which lets you change the representation without touching client
+code.</p>
+<h3 id="ownership-conventions">9. Ownership conventions</h3>
+<p>C does not track ownership; you do, by convention and documentation.
+Decide for every pointer who allocates, who frees, and how long it stays
+valid. A common style: <code class="verbatim">*_new</code> / <code
+class="verbatim">*_free</code> pairs, functions taking <code
+class="verbatim">const</code> pointers do not retain them, and functions
+that store a pointer say so.</p>
+<h3 id="choose-the-structure-for-the-job">10. Choose the structure for
+the job</h3>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Common choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fixed-size sequence</td>
+<td>Array</td>
+</tr>
+<tr>
+<td>Growable sequence</td>
+<td>Dynamic array (pointer, len, cap)</td>
+</tr>
+<tr>
+<td>Fixed named fields</td>
+<td><code class="verbatim">struct</code></td>
+</tr>
+<tr>
+<td>One of several shapes</td>
+<td>Tagged union</td>
+</tr>
+<tr>
+<td>Set of options</td>
+<td><code class="verbatim">enum</code> or bit flags</td>
+</tr>
+<tr>
+<td>Frequent insert/delete in middle</td>
+<td>Linked list</td>
+</tr>
+<tr>
+<td>Key-value lookup</td>
+<td>Hash table (library or your own)</td>
+</tr>
+<tr>
+<td>Hide representation</td>
+<td>Opaque struct pointer</td>
+</tr>
+</tbody>
+</table>
+<p>Start with arrays and structs. Add the rest when measurements or the
+problem call for them.</p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

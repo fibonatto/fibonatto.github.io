@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C++ Functions</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/cpp/functions.html">
+  <meta property="og:title" content="C++ Functions">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/cpp/functions.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C++ Functions</h1>
+<h2 id="c-functions-1">C++ Functions</h2>
+<h3 id="declare-and-define">1. Declare and define</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">);</span>              <span class="co">// declaration (usually in a header)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span>             <span class="co">// definition</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> twice<span class="op">(</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> <span class="dv">2</span> <span class="op">*</span> x<span class="op">;</span> <span class="op">}</span>   <span class="co">// may be defined in a header</span></span></code></pre></div>
+<p>A function must be declared before use. <code
+class="verbatim">inline</code> allows the same definition to appear in
+several translation units; it is not mainly an optimization request.
+Unlike C, <code class="verbatim">int f()</code> means "no
+parameters".</p>
+<h3 id="passing-parameters">2. Passing parameters</h3>
+<p>The signature states the intent.</p>
+<table>
+<thead>
+<tr>
+<th>Intent</th>
+<th>Parameter type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read a small, cheap value</td>
+<td><code class="verbatim">int</code>, <code
+class="verbatim">double</code> (by value)</td>
+</tr>
+<tr>
+<td>Read a large object</td>
+<td><code class="verbatim">const T &amp;</code></td>
+</tr>
+<tr>
+<td>Modify the caller's object</td>
+<td><code class="verbatim">T &amp;</code></td>
+</tr>
+<tr>
+<td>Take ownership (sink) or keep a copy</td>
+<td><code class="verbatim">T</code> by value, then <code
+class="verbatim">std::move</code></td>
+</tr>
+<tr>
+<td>Maybe no object</td>
+<td><code class="verbatim">T *</code> or <code
+class="verbatim">std::optional&lt;T&gt;</code></td>
+</tr>
+<tr>
+<td>Read a contiguous range</td>
+<td><code class="verbatim">std::span&lt;const T&gt;</code> (C++20)</td>
+</tr>
+<tr>
+<td>Read text without copying</td>
+<td><code class="verbatim">std::string_view</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> print<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span>s<span class="op">);</span>        <span class="co">// no copy, read-only</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> fill<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> <span class="op">&amp;</span>v<span class="op">);</span>          <span class="co">// modifies caller&#39;s vector</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Person <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="va">name_</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> Person<span class="op">(</span><span class="bu">std::</span>string name<span class="op">)</span> <span class="op">:</span> <span class="va">name_</span><span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>name<span class="op">))</span> <span class="op">{}</span>   <span class="co">// sink</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>Passing by value and moving costs one move when the caller passes an
+rvalue and one copy plus one move when it passes an lvalue; that is
+usually fine for constructors and setters.</p>
+<h3 id="return-values">3. Return values</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> make<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> v <span class="op">=</span> <span class="op">{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">};</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> v<span class="op">;</span>                       <span class="co">// moved or elided; do not write std::move(v)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dt">int</span><span class="op">&gt;</span> divmod<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">{</span>a <span class="op">/</span> b<span class="op">,</span> a <span class="op">%</span> b<span class="op">};</span> <span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="op">[</span>q<span class="op">,</span> r<span class="op">]</span> <span class="op">=</span> divmod<span class="op">(</span><span class="dv">17</span><span class="op">,</span> <span class="dv">5</span><span class="op">);</span>        <span class="co">// structured bindings: q == 3, r == 2</span></span></code></pre></div>
+<ul>
+<li>For a few results, return a <code class="verbatim">std::pair</code>,
+<code class="verbatim">std::tuple</code>, or (better, for named fields)
+a small <code class="verbatim">struct</code>.</li>
+<li>For "maybe a value", return <code
+class="verbatim">std::optional&lt;T&gt;</code>. For value-or-error,
+<code class="verbatim">std::expected&lt;T, E&gt;</code> (C++23).</li>
+<li>Never return a reference or pointer to a local variable; it
+dangles.</li>
+</ul>
+<h3 id="overloading-and-default-arguments">4. Overloading and default
+arguments</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> log<span class="op">(</span><span class="dt">int</span> x<span class="op">);</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> log<span class="op">(</span><span class="dt">double</span> x<span class="op">);</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> log<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span>s<span class="op">);</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> <span class="fu">connect</span><span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span>host<span class="op">,</span> <span class="dt">int</span> port <span class="op">=</span> <span class="dv">80</span><span class="op">,</span> <span class="dt">bool</span> tls <span class="op">=</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">connect</span><span class="op">(</span><span class="st">&quot;example.com&quot;</span><span class="op">);</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">connect</span><span class="op">(</span><span class="st">&quot;example.com&quot;</span><span class="op">,</span> <span class="dv">443</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span></code></pre></div>
+<p>Overload resolution is done at compile time from the argument types.
+Default arguments are filled in at the call site and only trailing
+parameters can have them. C++ has no named arguments; the usual
+substitute is a parameter struct (with C++20 designated
+initializers):</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Options <span class="op">{</span> <span class="dt">int</span> port <span class="op">=</span> <span class="dv">80</span><span class="op">;</span> <span class="dt">bool</span> tls <span class="op">=</span> <span class="kw">false</span><span class="op">;</span> <span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> <span class="fu">connect</span><span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span>host<span class="op">,</span> Options opts <span class="op">=</span> <span class="op">{});</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">connect</span><span class="op">(</span><span class="st">&quot;example.com&quot;</span><span class="op">,</span> <span class="op">{.</span>port <span class="op">=</span> <span class="dv">443</span><span class="op">,</span> <span class="op">.</span>tls <span class="op">=</span> <span class="kw">true</span><span class="op">});</span></span></code></pre></div>
+<h3 id="lambdas">5. Lambdas</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> add <span class="op">=</span> <span class="op">[](</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>add<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span>                                  <span class="co">// 5</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> k <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> by_val <span class="op">=</span> <span class="op">[</span>k<span class="op">](</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> x <span class="op">+</span> k<span class="op">;</span> <span class="op">};</span>     <span class="co">// copy of k</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> by_ref <span class="op">=</span> <span class="op">[&amp;</span>k<span class="op">](</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> x <span class="op">+</span> k<span class="op">;</span> <span class="op">};</span>    <span class="co">// reference to k</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> all    <span class="op">=</span> <span class="op">[=]</span> <span class="op">{</span> <span class="cf">return</span> k<span class="op">;</span> <span class="op">};</span>                <span class="co">// copy everything used</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> counter <span class="op">=</span> <span class="op">[</span>n <span class="op">=</span> <span class="dv">0</span><span class="op">]()</span> <span class="at">mutable</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">++</span>n<span class="op">;</span> <span class="op">};</span>   <span class="co">// init capture; mutable lets it modify its copy</span></span></code></pre></div>
+<p>A lambda is an object of an unnamed class with <code
+class="verbatim">operator()</code>. By default <code
+class="verbatim">operator()</code> is <code
+class="verbatim">const</code>, so a by-value capture cannot be modified
+without <code class="verbatim">mutable</code>.</p>
+<p>Generic lambdas take <code class="verbatim">auto</code>
+parameters:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> plus <span class="op">=</span> <span class="op">[](</span><span class="kw">auto</span> a<span class="op">,</span> <span class="kw">auto</span> b<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>plus<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">);</span>          <span class="co">// int</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>plus<span class="op">(</span><span class="fl">1.5</span><span class="op">,</span> <span class="fl">2.5</span><span class="op">);</span>      <span class="co">// double</span></span></code></pre></div>
+<p>Do not return or store a lambda that captures a local by reference
+once that local is gone.</p>
+<h3 id="passing-and-storing-callables">6. Passing and storing
+callables</h3>
+<p>Several ways to accept "a function":</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Template parameter: fastest, the type is the lambda itself</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> F<span class="op">&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> each<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> <span class="op">&amp;</span>v<span class="op">,</span> F f<span class="op">)</span> <span class="op">{</span> <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">:</span> v<span class="op">)</span> f<span class="op">(</span>x<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Constrained template (C++20)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>invocable<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> F<span class="op">&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> each2<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> <span class="op">&amp;</span>v<span class="op">,</span> F f<span class="op">)</span> <span class="op">{</span> <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">:</span> v<span class="op">)</span> f<span class="op">(</span>x<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. std::function: type-erased, can be stored, may allocate</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> on_event<span class="op">(</span><span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> cb<span class="op">);</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. Plain function pointer: no captures</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> each3<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> <span class="op">&amp;</span>v<span class="op">,</span> <span class="dt">void</span> <span class="op">(*</span>f<span class="op">)(</span><span class="dt">int</span><span class="op">));</span></span></code></pre></div>
+<p>Use a template parameter by default; use <code
+class="verbatim">std::function</code> when you must store callables of
+different types in one variable or member. <code
+class="verbatim">std::function</code> requires <code
+class="verbatim">&lt;functional&gt;</code>.</p>
+<h3 id="function-objects">7. Function objects</h3>
+<p>Any object with <code class="verbatim">operator()</code> can be
+called like a function.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Scale <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> k<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> <span class="kw">operator</span><span class="op">()(</span><span class="dt">double</span> x<span class="op">)</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> k <span class="op">*</span> x<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>Scale s<span class="op">{</span><span class="fl">2.0</span><span class="op">};</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>s<span class="op">(</span><span class="fl">3.0</span><span class="op">);</span>                               <span class="co">// 6.0</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>transform<span class="op">(</span>v<span class="op">.</span>begin<span class="op">(),</span> v<span class="op">.</span>end<span class="op">(),</span> v<span class="op">.</span>begin<span class="op">(),</span> Scale<span class="op">{</span><span class="fl">2.0</span><span class="op">});</span></span></code></pre></div>
+<p>The standard library also provides <code
+class="verbatim">std::plus&lt;&gt;</code>, <code
+class="verbatim">std::less&lt;&gt;</code>, <code
+class="verbatim">std::greater&lt;&gt;</code>, and adapters such as <code
+class="verbatim">std::bind_front</code> (C++20). Prefer lambdas to <code
+class="verbatim">std::bind</code>.</p>
+<h3 id="compile-time-functions">8. Compile-time functions</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">int</span> sq<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> n <span class="op">*</span> n<span class="op">;</span> <span class="op">}</span>   <span class="co">// may run at compile time or run time</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">consteval</span> <span class="dt">int</span> sq2<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> n <span class="op">*</span> n<span class="op">;</span> <span class="op">}</span>  <span class="co">// C++20: must run at compile time</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">int</span> a <span class="op">=</span> sq<span class="op">(</span><span class="dv">8</span><span class="op">);</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> runtime_n <span class="op">=</span> read<span class="op">();</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> b <span class="op">=</span> sq<span class="op">(</span>runtime_n<span class="op">);</span>                      <span class="co">// fine: runs at run time</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">// int c = sq2(runtime_n);                  // error</span></span></code></pre></div>
+<h3 id="attributes-and-noexcept">9. Attributes and noexcept</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">int</span> compute<span class="op">();</span>         <span class="co">// warn if the caller ignores the result</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> swap<span class="op">(</span>Foo <span class="op">&amp;</span>a<span class="op">,</span> Foo <span class="op">&amp;</span>b<span class="op">)</span> <span class="kw">noexcept</span><span class="op">;</span>  <span class="co">// promises not to throw</span></span></code></pre></div>
+<p>Mark move constructors and move assignment <code
+class="verbatim">noexcept</code> where true: <code
+class="verbatim">std::vector</code> only uses them during reallocation
+if they cannot throw; otherwise it copies. If a <code
+class="verbatim">noexcept</code> function throws, the program calls
+<code class="verbatim">std::terminate</code>.</p>
+<h3 id="recursion-and-iteration">10. Recursion and iteration</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> <span class="dt">long</span> fact<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> n <span class="op">&lt;=</span> <span class="dv">1</span> <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> n <span class="op">*</span> fact<span class="op">(</span>n <span class="op">-</span> <span class="dv">1</span><span class="op">);</span> <span class="op">}</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> <span class="dt">long</span> sum<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> <span class="op">&amp;</span>v<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>accumulate<span class="op">(</span>v<span class="op">.</span>begin<span class="op">(),</span> v<span class="op">.</span>end<span class="op">(),</span> <span class="dv">0</span><span class="bu">LL</span><span class="op">);</span>   <span class="co">// &lt;numeric&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The standard does not guarantee tail-call elimination, so deep
+recursion can overflow the stack. Prefer a standard algorithm (<code
+class="verbatim">accumulate</code>, <code
+class="verbatim">transform</code>, <code
+class="verbatim">find_if</code>) when one fits; it states intent and has
+no loop bugs.</p>
+<h3 id="member-functions">11. Member functions</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Counter <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> n <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> inc<span class="op">()</span> <span class="op">{</span> <span class="op">++</span>n<span class="op">;</span> <span class="op">}</span>              <span class="co">// may modify the object</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> get<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> n<span class="op">;</span> <span class="op">}</span>    <span class="co">// promises not to modify it</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> Counter zero<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">{};</span> <span class="op">}</span>   <span class="co">// no object needed</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>A member function has an implicit <code class="verbatim">this</code>.
+Make every member function that does not modify the object <code
+class="verbatim">const</code>; a <code class="verbatim">const</code>
+object can only call <code class="verbatim">const</code> members.</p>
+<h3 id="evaluation-order">12. Evaluation order</h3>
+<p>The evaluation order of function arguments is unspecified. Do not
+depend on it:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>f<span class="op">(</span>g<span class="op">(),</span> h<span class="op">());</span>      <span class="co">// g and h both run, in unspecified order</span></span></code></pre></div>
+<p>C++17 did fix the order for some operators, notably <code
+class="verbatim">&lt;&lt;</code> and <code
+class="verbatim">&gt;&gt;</code> (left to right) and assignment (right
+operand first).</p>
+<h3 id="quick-reference">Quick reference</h3>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">const T &amp;</code></td>
+<td>Read a large object without copying</td>
+</tr>
+<tr>
+<td><code class="verbatim">T &amp;</code></td>
+<td>Modify the caller's object</td>
+</tr>
+<tr>
+<td><code class="verbatim">T</code> + <code
+class="verbatim">std::move</code></td>
+<td>Take ownership of an argument</td>
+</tr>
+<tr>
+<td><code class="verbatim">auto f = [..](..){..}</code></td>
+<td>Lambda</td>
+</tr>
+<tr>
+<td><code class="verbatim">[x]</code>, <code
+class="verbatim">[&amp;x]</code>, <code
+class="verbatim">[n = 0]=| By-value, by-reference, and init captures       | | =template &lt;typename F&gt;</code></td>
+<td>Accept any callable, no overhead</td>
+</tr>
+<tr>
+<td><code class="verbatim">std::function&lt;R(A)&gt;</code></td>
+<td>Store a callable of unknown type</td>
+</tr>
+<tr>
+<td><code class="verbatim">constexpr</code>, <code
+class="verbatim">consteval=| Compile-time evaluation                         | | =noexcept</code></td>
+<td>Promise not to throw</td>
+</tr>
+<tr>
+<td><code class="verbatim">[[nodiscard]]</code></td>
+<td>Warn when a result is ignored</td>
+</tr>
+</tbody>
+</table>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

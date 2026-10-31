@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Ownership, Borrowing, and Lifetimes</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/03-ownership.html">
+  <meta property="og:title" content="Rust Ownership, Borrowing, and Lifetimes">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/03-ownership.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Ownership, Borrowing, and Lifetimes</h1>
+<h2 id="rust-ownership-borrowing-and-lifetimes-1">Rust Ownership,
+Borrowing, and Lifetimes</h2>
+<h3 id="the-model-in-one-page">1. The model in one page</h3>
+<p>Rust manages memory without a garbage collector and without manual
+<code class="verbatim">free</code> by tracking <em>ownership</em> at
+compile time:</p>
+<ol>
+<li>Every value has exactly one owner (a variable, a field, an element
+of a collection).</li>
+<li>When the owner goes out of scope, the value is dropped and its
+resources are released.</li>
+<li>Ownership can be <em>moved</em> to another owner, after which the
+old one is unusable.</li>
+<li>Others may <em>borrow</em> the value through references, under rules
+that are checked at compile time.</li>
+</ol>
+<p>The checks cost nothing at run time. In exchange, a large class of C
+bugs (use after free, double free, dangling pointers, iterator
+invalidation, data races) cannot be expressed in safe Rust.</p>
+<h3 id="moves">2. Moves</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s1 <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s2 <span class="op">=</span> s1<span class="op">;</span>                      <span class="co">// ownership moves to s2</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// println!(&quot;{s1}&quot;);              // error E0382: borrow of moved value</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> take(s<span class="op">:</span> <span class="dt">String</span>) <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s3 <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;x&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>take(s3)<span class="op">;</span>                         <span class="co">// moved into the function</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// s3 is unusable here</span></span></code></pre></div>
+<p>A move is a shallow bit copy of the value (for a <code
+class="verbatim">String</code>: pointer, length, capacity) plus the
+compiler's decision that the source is dead. No heap data is copied.
+This is why a function that receives a <code
+class="verbatim">String</code> by value owns it and will free it.</p>
+<p><strong>Copy versus Clone.</strong> Types that are cheap, plain bits
+implement <code class="verbatim">Copy</code> and are duplicated on
+assignment (integers, floats, <code class="verbatim">bool</code>, <code
+class="verbatim">char</code>, shared references, tuples and arrays of
+<code class="verbatim">Copy</code> types). Anything that owns a resource
+is not <code class="verbatim">Copy</code>. <code
+class="verbatim">Clone</code> is an explicit, possibly expensive
+duplicate:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b <span class="op">=</span> a<span class="op">;</span>                        <span class="co">// Copy: both usable</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hi&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> t <span class="op">=</span> s<span class="op">.</span>clone()<span class="op">;</span>                <span class="co">// deep copy of the heap data; both usable</span></span></code></pre></div>
+<p>A type cannot be both <code class="verbatim">Copy</code> and have a
+<code class="verbatim">Drop</code> implementation. Moves happen at
+assignments, function calls, returns, <code
+class="verbatim">match</code> bindings, and closure captures with <code
+class="verbatim">move</code>. Moving out of part of a struct (a
+<em>partial move</em>) is allowed; the remaining fields stay usable
+until the whole is needed again.</p>
+<h3 id="drop-and-raii">3. Drop and RAII</h3>
+<p>Resources are released deterministically when their owner goes out of
+scope, in reverse order of declaration. Struct fields are dropped in
+declaration order after the struct's own <code
+class="verbatim">Drop::drop</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Guard(<span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Drop</span> <span class="cf">for</span> Guard <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> drop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;drop {}&quot;</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _a <span class="op">=</span> Guard(<span class="st">&quot;a&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _b <span class="op">=</span> Guard(<span class="st">&quot;b&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;body&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>   <span class="co">// prints: body, drop b, drop a</span></span></code></pre></div>
+<ul>
+<li>Files, sockets, locks (<code class="verbatim">MutexGuard</code>),
+and allocations are released this way. This replaces the C <code
+class="verbatim">goto cleanup</code> pattern.</li>
+<li><code class="verbatim">drop(x)</code> (from the prelude) moves <code
+class="verbatim">x</code> into a function that ends it, releasing it
+early.</li>
+<li><code class="verbatim">std::mem::forget(x)</code> skips the
+destructor. It is safe (leaking is not undefined behavior) but rarely
+wanted.</li>
+<li>A <code class="verbatim">_</code> binding drops the value
+immediately; a name starting with an underscore, such as <code
+class="verbatim">_a</code>, lives to the end of the scope.</li>
+<li>Destructors must not panic during unwinding (that aborts the
+program).</li>
+</ul>
+<h3 id="borrowing">4. Borrowing</h3>
+<p>A reference lends access without transferring ownership.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> len(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span> s<span class="op">.</span>len() <span class="op">}</span>        <span class="co">// shared borrow</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> append(s<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="dt">String</span>) <span class="op">{</span> s<span class="op">.</span>push(<span class="ch">&#39;!&#39;</span>)<span class="op">;</span> <span class="op">}</span>     <span class="co">// exclusive borrow</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;hi&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> len(<span class="op">&amp;</span>s)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>append(<span class="op">&amp;</span><span class="kw">mut</span> s)<span class="op">;</span></span></code></pre></div>
+<p>The rule: at any moment, a value has <strong>either</strong> any
+number of shared references (<code class="verbatim">&amp;T</code>)
+<strong>or</strong> exactly one mutable reference (<code
+class="verbatim">&amp;mut T</code>), never both, and no reference
+outlives the value.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>v[<span class="dv">0</span>]<span class="op">;</span>             <span class="co">// shared borrow of v</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>push(<span class="dv">4</span>)<span class="op">;</span>                     <span class="co">// error E0502: needs &amp;mut v while `first` is alive</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>The push could reallocate and leave <code
+class="verbatim">first</code> dangling; the compiler rejects it, which
+is exactly the C iterator-invalidation bug.</p>
+<ul>
+<li>A borrow lasts until its <em>last use</em>, not to the end of the
+block (non-lexical lifetimes). Reordering the <code
+class="verbatim">println!</code> above before the <code
+class="verbatim">push</code> makes it compile.</li>
+<li><code class="verbatim">&amp;mut T</code> is exclusive: while it
+exists, nothing else may read or write the value, not even through other
+fields of the same struct borrowed as a whole.</li>
+<li>Two-phase borrows allow <code
+class="verbatim">v.push(v.len())</code>: the shared read finishes before
+the mutable borrow activates.</li>
+<li>A reference is never null and never dangling in safe code.</li>
+</ul>
+<h3 id="lifetimes">5. Lifetimes</h3>
+<p>A <em>lifetime</em> names the span for which a reference is valid.
+Annotations do not change how long values live; they tell the compiler
+how the lifetimes of inputs and outputs relate.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> longest<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(a<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span><span class="op">,</span> b<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a<span class="op">.</span>len() <span class="op">&gt;=</span> b<span class="op">.</span>len() <span class="op">{</span> a <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> b <span class="op">}</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The returned reference lives no longer than the shorter of the two
+inputs. Without the annotation the compiler cannot know which input the
+result borrows from (error E0106).</p>
+<p><strong>Elision rules</strong> let you omit most annotations:</p>
+<ol>
+<li>Each reference parameter gets its own lifetime.</li>
+<li>If there is exactly one input lifetime, it is given to all
+outputs.</li>
+<li>If one of the parameters is <code class="verbatim">&amp;self</code>
+or <code class="verbatim">&amp;mut self</code>, its lifetime is given to
+all outputs.</li>
+</ol>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> first_word(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> s<span class="op">.</span>split(<span class="ch">&#39; &#39;</span>)<span class="op">.</span>next()<span class="op">.</span>unwrap_or(<span class="st">&quot;&quot;</span>) <span class="op">}</span>   <span class="co">// elided</span></span></code></pre></div>
+<p>Structs that hold references need lifetime parameters, and the struct
+cannot outlive what it borrows:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Parser<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    input<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span><span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    pos<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> Parser<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> new(input<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> Parser <span class="op">{</span> input<span class="op">,</span> pos<span class="op">:</span> <span class="dv">0</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> rest(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span> <span class="op">{</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>input[<span class="kw">self</span><span class="op">.</span>pos<span class="op">..</span>] <span class="op">}</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">'static</code> means "valid for the whole
+program". A string literal is <code
+class="verbatim">&amp;'static str</code>. A bound <code
+class="verbatim">T: 'static</code> means the type contains no
+short-lived borrows (it may still be an owned heap value); threads
+spawned with <code class="verbatim">thread::spawn</code> require
+it.</li>
+<li>Error E0597 ("does not live long enough") means a reference outlives
+its referent; move the value to an outer scope, or return an owned
+value.</li>
+<li>When lifetime annotations become painful, return an owned value
+(<code class="verbatim">String</code>, <code
+class="verbatim">Vec&lt;T&gt;</code>), store indices, or restructure
+ownership. Fighting the borrow checker usually signals a design that is
+simpler with owned data.</li>
+</ul>
+<h3 id="smart-pointers">6. Smart pointers</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Owns</th>
+<th>Shared</th>
+<th>Mutation</th>
+<th>Threads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">Box&lt;T&gt;</code></td>
+<td>Heap value</td>
+<td>no</td>
+<td>via <code class="verbatim">&amp;mut</code></td>
+<td>if <code class="verbatim">T</code> is</td>
+</tr>
+<tr>
+<td><code class="verbatim">Rc&lt;T&gt;</code></td>
+<td>Heap value</td>
+<td>yes (counted)</td>
+<td>read-only; pair with <code class="verbatim">RefCell</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code class="verbatim">Arc&lt;T&gt;</code></td>
+<td>Heap value</td>
+<td>yes (atomic count)</td>
+<td>read-only; pair with <code class="verbatim">Mutex</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code class="verbatim">Cell&lt;T&gt;</code></td>
+<td>Value</td>
+<td>no</td>
+<td>get/set by copy</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code class="verbatim">RefCell&lt;T&gt;</code></td>
+<td>Value</td>
+<td>no</td>
+<td>borrow rules checked at run time</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code class="verbatim">Weak&lt;T&gt;</code></td>
+<td>Nothing (non-owning handle to an <code
+class="verbatim">Rc=/=Arc</code>)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code class="verbatim">Cow&lt;'a, T&gt;</code></td>
+<td>Borrowed or owned</td>
+<td></td>
+<td>clone on write</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b <span class="op">=</span> <span class="pp">Box::</span>new(<span class="dv">5</span>)<span class="op">;</span>                          <span class="co">// heap allocation, single owner</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::rc::</span>Rc<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a <span class="op">=</span> <span class="pp">Rc::</span>new(<span class="pp">String::</span>from(<span class="st">&quot;shared&quot;</span>))<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> c <span class="op">=</span> <span class="pp">Rc::</span>clone(<span class="op">&amp;</span>a)<span class="op">;</span>                        <span class="co">// bumps the reference count, no deep copy</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="pp">Rc::</span>strong_count(<span class="op">&amp;</span>a)<span class="op">;</span>                         <span class="co">// 2</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::cell::</span>RefCell<span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> cell <span class="op">=</span> <span class="pp">RefCell::</span>new(<span class="pp">vec!</span>[<span class="dv">1</span>])<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>cell<span class="op">.</span>borrow_mut()<span class="op">.</span>push(<span class="dv">2</span>)<span class="op">;</span>                    <span class="co">// checked at run time; panics if already borrowed</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">Box&lt;T&gt;</code> is for recursive types,
+trait objects (<code class="verbatim">Box&lt;dyn Trait&gt;</code>), and
+moving large values cheaply.</li>
+<li><code class="verbatim">Rc&lt;RefCell&lt;T&gt;&gt;</code> gives
+shared mutable state in one thread; the borrow rules still apply,
+enforced by panics instead of compile errors. A reference cycle of <code
+class="verbatim">Rc</code> values leaks; break cycles with <code
+class="verbatim">Weak</code>.</li>
+<li><code class="verbatim">Arc&lt;Mutex&lt;T&gt;&gt;</code> is the
+multi-threaded equivalent (see <code
+class="verbatim">12_concurrency.org</code>).</li>
+<li>Prefer plain ownership and indices over <code
+class="verbatim">Rc&lt;RefCell&lt;_&gt;&gt;</code> graphs.</li>
+</ul>
+<h3 id="deref-coercion">7. Deref coercion</h3>
+<p>Smart pointers implement <code class="verbatim">Deref</code>, so a
+reference to one converts automatically where a reference to its target
+is expected:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> hello(name<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;hi {name}&quot;</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s <span class="op">=</span> <span class="pp">String::</span>from(<span class="st">&quot;Ada&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>hello(<span class="op">&amp;</span>s)<span class="op">;</span>                    <span class="co">// &amp;String coerces to &amp;str</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b <span class="op">=</span> <span class="pp">Box::</span>new(<span class="pp">String::</span>from(<span class="st">&quot;Bo&quot;</span>))<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>hello(<span class="op">&amp;</span>b)<span class="op">;</span>                    <span class="co">// &amp;Box&lt;String&gt; -&gt; &amp;String -&gt; &amp;str</span></span></code></pre></div>
+<p>Method calls auto-reference and auto-dereference: <code
+class="verbatim">x.len()</code> works whether <code
+class="verbatim">x</code> is a <code class="verbatim">String</code>, a
+<code class="verbatim">&amp;String</code>, or a <code
+class="verbatim">Box&lt;String&gt;</code>. This is why you take <code
+class="verbatim">&amp;str</code> and <code
+class="verbatim">&amp;[T]</code> in parameters: callers can pass <code
+class="verbatim">&amp;String</code>, <code
+class="verbatim">&amp;Vec&lt;T&gt;</code>, arrays, or literals.</p>
+<h3 id="working-with-the-borrow-checker">8. Working with the borrow
+checker</h3>
+<p>Techniques, in rough order of preference:</p>
+<ul>
+<li><strong>Shorten the borrow</strong>: use the value, then mutate; or
+copy out what you need (<code class="verbatim">let n = v[0];</code> for
+<code class="verbatim">Copy</code> types).</li>
+<li><strong>Return owned data</strong> rather than references into
+temporary storage.</li>
+<li><strong>Split a struct's borrows</strong>: borrowing two different
+fields independently is allowed (<code
+class="verbatim">let a = &amp;mut s.x; let b = &amp;mut s.y;</code>);
+borrowing through methods is not.</li>
+<li><strong>Use indices</strong> instead of references (store <code
+class="verbatim">usize</code> into a <code class="verbatim">Vec</code>
+rather than <code class="verbatim">&amp;T</code> into it).</li>
+<li><strong>Mutate through methods that do it atomically</strong>:</li>
+</ul>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> old <span class="op">=</span> <span class="pp">std::mem::</span>replace(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">.</span>state<span class="op">,</span> <span class="pp">State::</span>Done)<span class="op">;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> taken <span class="op">=</span> <span class="pp">std::mem::</span>take(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">.</span>buffer)<span class="op">;</span>        <span class="co">// leaves Default::default() behind</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> head <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>head<span class="op">.</span>take()<span class="op">;</span>                         <span class="co">// Option::take leaves None</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (left<span class="op">,</span> right) <span class="op">=</span> slice<span class="op">.</span>split_at_mut(mid)<span class="op">;</span>         <span class="co">// two disjoint &amp;mut slices</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>map<span class="op">.</span>entry(key)<span class="op">.</span>or_insert(<span class="dv">0</span>) <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span>                   <span class="co">// lookup and insert in one borrow</span></span></code></pre></div>
+<ul>
+<li><strong>Clone</strong> when the data is small or the copy is not on
+a hot path.</li>
+<li><strong>Share</strong> with <code class="verbatim">Rc</code> / <code
+class="verbatim">Arc</code> when ownership is genuinely shared.</li>
+</ul>
+<h3 id="bugs-the-compiler-prevents">9. Bugs the compiler prevents</h3>
+<table>
+<thead>
+<tr>
+<th>C bug</th>
+<th>Rust mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Use after free</td>
+<td>Borrow checker: references cannot outlive their owner</td>
+</tr>
+<tr>
+<td>Double free</td>
+<td>Single ownership; a moved value is not dropped twice</td>
+</tr>
+<tr>
+<td>Dangling pointer (local)</td>
+<td>Lifetimes reject returning a reference to a local</td>
+</tr>
+<tr>
+<td>Iterator invalidation</td>
+<td>Shared and exclusive borrows cannot overlap</td>
+</tr>
+<tr>
+<td>Buffer overflow</td>
+<td>Bounds-checked indexing; slices carry their length</td>
+</tr>
+<tr>
+<td>Null dereference</td>
+<td>No null references; <code class="verbatim">Option&lt;T&gt;</code>
+must be handled</td>
+</tr>
+<tr>
+<td>Uninitialized read</td>
+<td>Variables must be definitely initialized before use</td>
+</tr>
+<tr>
+<td>Data race</td>
+<td><code class="verbatim">Send</code> / <code
+class="verbatim">Sync</code> and the borrow rules (see <code
+class="verbatim">12_concurrency.org</code>)</td>
+</tr>
+<tr>
+<td>Memory leak</td>
+<td>Not prevented: <code class="verbatim">Rc</code> cycles and <code
+class="verbatim">mem::forget</code> leak, and leaks are safe</td>
+</tr>
+</tbody>
+</table>
+<p>Logic errors, deadlocks, and resource exhaustion remain possible.
+Inside <code class="verbatim">unsafe</code> blocks, the guarantees
+become your responsibility.</p>
+<h3 id="where-values-live">10. Where values live</h3>
+<ul>
+<li>Locals and function arguments live on the stack; the stack is
+limited (commonly 8 MB for the main thread, 2 MB for spawned threads),
+so avoid very large arrays on it and deep unbounded recursion.</li>
+<li><code class="verbatim">Box</code>, <code
+class="verbatim">Vec</code>, <code class="verbatim">String</code>, <code
+class="verbatim">Rc</code>, and <code class="verbatim">Arc</code>
+allocate on the heap. A <code class="verbatim">Vec&lt;T&gt;</code> is
+three words (pointer, capacity, length), so moving it copies 24 bytes,
+not its elements.</li>
+<li><code class="verbatim">static</code> items live for the whole
+program.</li>
+<li>Use <code class="verbatim">Vec</code> (or <code
+class="verbatim">vec![0; n]</code>) for large buffers rather than huge
+arrays.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>One owner; assignment and calls move; <code
+class="verbatim">Copy</code> types are the exception; <code
+class="verbatim">Clone</code> is explicit.</li>
+<li>Many shared borrows or one mutable borrow, and a borrow ends at its
+last use.</li>
+<li><code class="verbatim">Drop</code> gives you RAII: no <code
+class="verbatim">goto cleanup</code>.</li>
+<li>Lifetimes describe relations between references; elision handles
+most cases; owned data is the escape hatch.</li>
+<li><code class="verbatim">Rc</code> / <code class="verbatim">Arc</code>
+share ownership; <code class="verbatim">RefCell</code> / <code
+class="verbatim">Mutex</code> move the borrow check to run time.</li>
+<li>Take <code class="verbatim">&amp;str</code> and <code
+class="verbatim">&amp;[T]</code> in parameters; deref coercion does the
+rest.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

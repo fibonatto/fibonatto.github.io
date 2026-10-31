@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Technical Leadership in Web3</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/19-technical-leadership.html">
+  <meta property="og:title" content="Technical Leadership in Web3">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/19-technical-leadership.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Technical Leadership in Web3</h1>
+<h2 id="technical-leadership-in-web3-1">Technical Leadership in
+Web3</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Leading engineering in Web3 means owning risk that is public,
+irreversible, and fast-moving, in teams that mix protocol engineers,
+infrastructure engineers, researchers, community contributors, and legal
+and business stakeholders. The technical content of the previous files
+is necessary and insufficient: Staff and Principal impact comes from
+setting direction, building the practices that keep systems safe, and
+growing people and decisions around them. You are expected to:</p>
+<ul>
+<li>own technical strategy and the quality bar across teams, including
+security and reliability standards;</li>
+<li>make and teach good decisions under uncertainty and time pressure,
+without normalizing recklessness;</li>
+<li>communicate risk clearly to executives, lawyers, auditors,
+communities, and users;</li>
+<li>build teams and processes (reviews, incident response, release
+gates) that scale beyond individual heroics;</li>
+<li>keep up with an ecosystem that changes quarterly, with a disciplined
+way to evaluate and adopt change.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">16_security-auditing.org</code>, <code
+class="verbatim">17_reliability-and-monitoring.org</code>, <code
+class="verbatim">18_architecture-decisions.org</code>. Software
+Architecture notes: technical debt, architecture review, and decision
+records; the Staff-engineering references there (StaffEng guides) frame
+the role.</p>
+<h3 id="the-role-and-its-scope">1. The role and its scope</h3>
+<ul>
+<li><strong>What Staff and Principal engineers do</strong> (common
+patterns, not a fixed job description): set technical direction for a
+protocol or product area; lead the hardest projects and incidents; raise
+the quality of designs and reviews; make cross-team decisions; mentor;
+represent engineering to leadership and to the community. StaffEng
+describes archetypes (Tech Lead, Architect, Solver, Right Hand); in Web3
+organizations a Staff engineer is often also the de facto security
+owner, protocol architect, or reliability owner.</li>
+<li><strong>Domain-specific responsibilities</strong>: ownership of the
+threat model and launch gates; the audit and bounty programs; the
+on-chain operational procedures (keys, upgrades, pauses); relationships
+with auditors, infrastructure vendors, and ecosystem partners; the
+technical voice in governance discussions.</li>
+<li><strong>Scope beyond code</strong>: the cost of failure is public
+and sometimes existential for the project; that shapes how you plan,
+review, and communicate.</li>
+</ul>
+<h3 id="setting-engineering-standards">2. Setting engineering
+standards</h3>
+<ul>
+<li><strong>Secure development lifecycle (SDL)</strong>: requirements
+and threat model, design review, implementation standards, testing
+(unit, fuzz, invariant), static analysis, internal review, external
+audit, staged launch, monitoring, incident response, post-mortem. Write
+it down as a living document with owners, checklists, and entry and exit
+criteria for each stage.</li>
+<li><strong>Definition of done for contract changes</strong>:
+specification updated, invariants and tests written, gas and storage
+layout checked, static analysis clean or triaged, review by at least two
+engineers (one outside the author's immediate team for critical code),
+documentation and events updated, monitoring updated.</li>
+<li><strong>Code standards</strong>: compiler and library pinning, style
+and naming, NatSpec, error handling, upgrade and storage rules,
+restrictions on assembly and unchecked blocks, dependency policy.</li>
+<li><strong>Review practices</strong>: small pull requests, reviewers
+who understand the domain, mandatory review for any change touching
+value flows or permissions, explicit approval for privileged-role and
+parameter changes, and architecture review for new components (see <code
+class="verbatim">10_architecture-review.org</code> in the Software
+Architecture notes).</li>
+<li><strong>Release management</strong>: versioned releases, changelogs,
+deployment runbooks, rollback and migration plans, and a go or no-go
+meeting for mainnet changes.</li>
+<li><strong>Tooling and automation</strong>: CI gates for tests, static
+analysis, gas snapshots, storage layout checks, and secret scanning (see
+<code class="verbatim">20_tooling-and-development-workflow.org</code>);
+automation beats exhortation.</li>
+<li><strong>Make the safe path the easy path</strong>: templates,
+scaffolding, shared libraries, and internal documentation reduce
+variance; platform teams own these.</li>
+</ul>
+<h3 id="decision-making-and-managing-irreversible-risk">3.
+Decision-making and managing irreversible risk</h3>
+<ul>
+<li><strong>Separate reversible from irreversible decisions</strong>:
+decide the former quickly and locally; the latter with broader input,
+evidence, and a record (see <code
+class="verbatim">18_architecture-decisions.org</code>).</li>
+<li><strong>Name the risk owner</strong>: every accepted risk has a
+person who accepted it, a reason, and an expiry.</li>
+<li><strong>Resist schedule pressure on irreversible steps</strong>:
+market windows and token launches create pressure to cut review and
+audit time; your job is to quantify what shortcuts cost in risk and to
+offer alternatives (reduced scope, caps, staged launch) rather than only
+saying no.</li>
+<li><strong>Pre-mortems and red teams</strong> for major launches; treat
+dissent as information; reward people who find problems.</li>
+<li><strong>Calibrated communication</strong>: avoid false precision and
+false reassurance; give ranges and probabilities where honest, state
+assumptions, and distinguish facts, estimates, and opinions.</li>
+<li><strong>Learning from incidents</strong>: blameless post-mortems;
+ecosystem post-mortems studied as case material; feed lessons into
+standards.</li>
+<li><strong>Technical strategy</strong>: a written strategy (diagnosis,
+guiding policies, coherent actions) for security, architecture,
+infrastructure, and talent; revisit when the ecosystem changes.</li>
+</ul>
+<h3 id="communicating-across-audiences">4. Communicating across
+audiences</h3>
+<ul>
+<li><strong>Executives and investors</strong>: translate risk into
+business terms (probable loss, worst case, cost and benefit of controls,
+schedule impact); avoid jargon; bring options with costs.</li>
+<li><strong>Legal and compliance</strong>: engage early on token design,
+distribution, marketing, permissioning, data handling, and
+jurisdictional constraints; document the technical facts counsel needs;
+do not make legal claims yourself.</li>
+<li><strong>Auditors and researchers</strong>: be responsive, honest
+about known issues, and respectful of their time; treat reports as
+collaboration.</li>
+<li><strong>Community and users</strong>: transparent, timely, factual
+communication about releases, risks, incidents, and governance
+proposals; publish post-mortems; avoid hype and unverifiable claims;
+correct errors publicly.</li>
+<li><strong>Governance participants and delegates</strong>: technical
+proposals with clear problem statements, specifications, risk analysis,
+and simulation of on-chain actions; make review easy.</li>
+<li><strong>Engineering teams</strong>: context, goals, and rationale;
+written design documents and decision records; consistent
+standards.</li>
+<li><strong>Writing</strong>: decisive Staff-level work is mostly
+writing (design documents, decision records, strategy, post-mortems,
+standards); invest in clarity.</li>
+</ul>
+<h3 id="building-teams-and-organizations">5. Building teams and
+organizations</h3>
+<ul>
+<li><strong>Team structure</strong>: protocol and contracts engineers,
+security engineering, infrastructure and SRE, data and indexing,
+frontend and wallet engineering, research and mechanism design, and
+product and legal liaisons; define ownership, interfaces, and
+on-call.</li>
+<li><strong>Hiring and interviewing</strong>: assess reasoning about
+adversarial systems, ability to read and write secure contracts, testing
+discipline, and ability to explain trade-offs; work samples (reviewing a
+vulnerable contract, designing a small protocol, debugging a failing
+test) predict better than trivia; check ethics and judgment; verify
+references; be alert to hiring-related social engineering and fraudulent
+candidates.</li>
+<li><strong>Onboarding</strong>: architecture overview, threat model,
+runbooks, a safe first change in a test environment, shadowing of
+reviews and incidents.</li>
+<li><strong>Mentoring and growth</strong>: pair on reviews and incident
+response; give feedback on design documents; create paths from smart
+contract developer to protocol engineer and security specialist;
+encourage writing and speaking.</li>
+<li><strong>Culture</strong>: psychological safety to raise concerns;
+blamelessness with accountability; humility about what is unknown; rigor
+in testing and review; sustainable on-call; resistance to hype.</li>
+<li><strong>Career ladders and expectations</strong>: define Staff and
+Principal expectations for scope, influence, and technical depth in this
+domain; use impact examples (launches secured, incidents handled,
+standards adopted).</li>
+<li><strong>External contributors and open source</strong>: contribution
+guidelines, security disclosure policy, review capacity, licensing, and
+clear communication of what is accepted; maintain relationships with the
+open-source ecosystem you depend on.</li>
+<li><strong>Vendors and partners</strong>: manage auditors,
+infrastructure providers, and custodians as dependencies with owners and
+review dates (see the dependency register in <code
+class="verbatim">18_architecture-decisions.org</code>).</li>
+</ul>
+<h3 id="operational-security-for-engineers-and-teams">6. Operational
+security for engineers and teams</h3>
+<ul>
+<li><strong>Personal security</strong>: hardware security keys for
+accounts; separate devices or profiles for signing and for browsing; no
+signing keys on development laptops; careful handling of unsolicited
+repositories, job tests, and links; verified channels for key
+ceremonies; screen for phishing in chat and email.</li>
+<li><strong>Targeted attacks</strong>: state-sponsored groups have
+targeted crypto engineers through fake recruiters, trojaned coding
+assignments, and compromised dependencies; train the team, and treat
+unsolicited code as untrusted.</li>
+<li><strong>Repository and build security</strong>: protected branches,
+required reviews, signed commits for critical repositories, secret
+scanning, dependency review and pinning, least-privilege CI tokens, and
+isolated release pipelines.</li>
+<li><strong>Access control</strong>: role-based access to
+infrastructure, regular access reviews, prompt offboarding, and
+break-glass procedures with audit trails.</li>
+<li><strong>Key ceremonies and multisig operations</strong>: documented,
+witnessed, and rehearsed (see <code
+class="verbatim">08_wallets-and-cryptography.org</code>).</li>
+<li><strong>Insider risk</strong>: separation of duties, multi-party
+approval for large movements, monitoring of privileged actions.</li>
+</ul>
+<h3 id="keeping-up-with-a-fast-ecosystem">7. Keeping up with a fast
+ecosystem</h3>
+<ul>
+<li><strong>Protocol and tooling change quickly</strong> (hard forks,
+new EIPs, new compiler versions, new L2 stages, new standards). Build a
+lightweight, disciplined process: a technology radar (adopt, trial,
+assess, hold), a small group responsible for tracking upgrades and
+advisories, regular reviews of compiler and library versions, and a
+policy for adopting new standards (see <code
+class="verbatim">07_tokens-and-standards.org</code>).</li>
+<li><strong>Sources</strong>: Ethereum Foundation protocol updates and
+meta-EIPs, core developer call notes, compiler release notes, client
+release notes, audit firm advisories, security researcher feeds, L2BEAT,
+and the documentation of key dependencies.</li>
+<li><strong>Evaluate with spikes</strong>: time-boxed prototypes with
+measurable criteria; do not adopt new infrastructure in production
+without a pilot and an exit.</li>
+<li><strong>Deprecation</strong>: have a plan for retiring dependencies,
+testnets, and old interfaces; communicate dates.</li>
+<li><strong>Avoid shiny-object drift</strong>: protect focus; tie
+adoption to product and risk needs.</li>
+</ul>
+<h3 id="ethics-responsibility-and-sustainability">8. Ethics,
+responsibility, and sustainability</h3>
+<ul>
+<li><strong>Responsibility to users</strong>: user funds and data are at
+stake; be honest about risks, limits, and trust assumptions in
+documentation and marketing; do not oversell decentralization, security,
+or yields.</li>
+<li><strong>Respect for the ecosystem</strong>: coordinate disclosures,
+avoid exploiting vulnerabilities, credit researchers, and contribute
+fixes upstream.</li>
+<li><strong>Compliance and law</strong>: follow applicable laws; seek
+counsel; do not give legal advice yourself.</li>
+<li><strong>Sustainable engineering</strong>: avoid constant crisis
+mode; protect time for testing, reviews, and learning; rotate on-call;
+recognize the stress of irreversible systems; build teams that can say
+no to unsafe launches.</li>
+<li><strong>Personal conduct</strong>: conflicts of interest (holding
+tokens, advising projects) should be disclosed and managed; follow
+trading and information-handling policies relevant to your
+organization.</li>
+</ul>
+<h3 id="self-check">9. Self-check</h3>
+<ol>
+<li>Your CEO wants to launch next week; your audit found two unresolved
+high-severity issues. Write the options you present, with risks and
+costs.</li>
+<li>What belongs in your team's definition of done for a contract
+change, and how is each element enforced?</li>
+<li>Describe how you would run a pre-mortem and a blameless post-mortem,
+and what you do with the results.</li>
+<li>What would you include in a technical strategy document for a
+protocol team over the next year?</li>
+<li>How do you assess a candidate's ability to reason about adversarial
+systems?</li>
+<li>How do you evaluate and adopt a new standard or tool without
+destabilizing production?</li>
+</ol>
+<h3 id="exercises">10. Exercises</h3>
+<ul>
+<li>Warm-up: write a one-page SDL for your team, with stages, owners,
+entry and exit criteria, and checklists.</li>
+<li>Core: write a launch risk memo for executives for a hypothetical
+protocol: top risks, controls, residual risk, and options with schedule
+impact.</li>
+<li>Core: design an interview loop for a smart contract engineer,
+including a vulnerable-contract review exercise and scoring rubric.</li>
+<li>Core: run a blameless post-mortem on a past incident (yours or
+public), and produce action items with owners and dates.</li>
+<li>Stretch: write a technology radar for your stack (adopt, trial,
+assess, hold) with rationale, and a process to update it quarterly.</li>
+<li>Stretch: write a technical strategy document using diagnosis,
+guiding policies, and coherent actions for security, reliability, and
+architecture.</li>
+</ul>
+<h3 id="resources">11. Resources</h3>
+<ul>
+<li>StaffEng guides and book on the Staff role, technical strategy,
+writing, and decision-making: <a
+href="https://staffeng.com/guides/">https://staffeng.com/guides/</a></li>
+<li>Software Architecture notes in this repository (technical debt,
+architecture review, decision records, evolutionary architecture).</li>
+<li>Rumelt, <em>Good Strategy / Bad Strategy</em> (diagnosis, guiding
+policy, coherent action); Reilly, <em>The Staff Engineer's Path</em>;
+Larson, <em>Staff Engineer</em> and <em>An Elegant Puzzle</em>;
+Forsgren, Humble, Kim, <em>Accelerate</em>.</li>
+<li>Public post-mortems, audit reports, and incident reviews;
+emergency-response communities; protocol governance forums.</li>
+<li>Security engineering references: Anderson, <em>Security
+Engineering</em>; Shostack, <em>Threat Modeling</em>.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Leadership here is owning irreversible, public risk: standards,
+gates, and honest communication matter as much as technical skill.</li>
+<li>Make safe practices the default through process and tooling;
+automate what you can.</li>
+<li>Separate reversible and irreversible decisions; name risk owners;
+resist schedule pressure with options, not only refusals.</li>
+<li>Communicate to each audience in its terms; write clearly; learn
+publicly from incidents.</li>
+<li>Protect people and focus: sustainable teams, personal and
+operational security, and disciplined adoption of change.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

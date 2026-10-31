@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wallets and Cryptography</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/08-wallets-and-cryptography.html">
+  <meta property="og:title" content="Wallets and Cryptography">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/08-wallets-and-cryptography.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Wallets and Cryptography</h1>
+<h2 id="wallets-and-cryptography-1">Wallets and Cryptography</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>In Web3 the private key is the account, the identity, and the vault.
+Most catastrophic losses are key, signing, and wallet-interaction
+failures rather than contract bugs. At Staff and Principal scope you are
+expected to:</p>
+<ul>
+<li>understand the cryptographic primitives well enough to use them
+correctly and to spot misuse (signature replay, malleability, domain
+separation, randomness);</li>
+<li>design key management for organizations and users: custody models,
+signing policies, recovery, and operational procedures;</li>
+<li>design signing flows that users can understand (clear signing) and
+that resist phishing and supply-chain attacks;</li>
+<li>evaluate account-abstraction and delegation designs for security and
+operational trade-offs.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">03_smart-contract-security.org</code>, <code
+class="verbatim">07_tokens-and-standards.org</code>, <code
+class="verbatim">19_technical-leadership.org</code> (operational
+security). In the Foundations notes: discrete mathematics (number theory
+behind public-key cryptography), data representation (hashing and
+encodings).</p>
+<h3 id="cryptographic-primitives-in-use">1. Cryptographic primitives in
+use</h3>
+<ul>
+<li><strong>Hash functions</strong>: Ethereum uses Keccak-256 (not NIST
+SHA3-256; the padding differs). Bitcoin uses SHA-256. Hashes give
+commitments, identifiers, and Merkle trees. Collision, preimage, and
+second-preimage resistance are the properties to rely on.</li>
+<li><strong>Elliptic-curve signatures</strong>: Ethereum and Bitcoin use
+ECDSA over secp256k1; a signature is (r, s, v) and the signer's public
+key can be recovered from it (the <code>ecrecover</code> precompile).
+The <strong>address</strong> is the last 20 bytes of Keccak-256 of the
+public key; EIP-55 adds a mixed-case checksum. Other ecosystems use
+Ed25519 (EdDSA) or P-256; Ethereum's consensus layer uses BLS signatures
+over BLS12-381 (aggregatable). Recent protocol work adds support for
+verifying P-256 signatures cheaply on-chain, which helps passkey-based
+accounts; check the current precompile status.</li>
+<li><strong>Signature pitfalls</strong>: ECDSA signatures are malleable
+((r, s) and (r, n - s) both verify) unless the contract enforces the
+low-s rule (EIP-2 did for transactions; contracts must handle it, which
+OpenZeppelin's ECDSA library does); <code>ecrecover</code> returns the
+zero address for invalid input, so never treat zero as a valid signer;
+nonce reuse in ECDSA reveals the private key; a poor random number
+generator is fatal.</li>
+<li><strong>Typed data signing</strong>: EIP-191
+(personal<sub>sign</sub> prefix) and EIP-712 (structured data with a
+domain separator containing name, version, chain id, and verifying
+contract). Always include the chain id, the verifying contract, a nonce
+or unique id, and a deadline to prevent replay across chains, contracts,
+and time.</li>
+<li><strong>Contract signatures</strong>: ERC-1271
+(<code>isValidSignature</code>) lets smart wallets and multisigs "sign";
+ERC-6492 extends it to undeployed accounts. Code that verifies
+signatures should support both when contract wallets are expected.</li>
+<li><strong>Commitments and Merkle proofs</strong>: commit-reveal
+schemes; Merkle proofs for membership (allowlists, airdrops); KZG
+polynomial commitments for blobs (with a trusted setup ceremony).</li>
+<li><strong>Zero-knowledge proofs</strong>: prove a statement without
+revealing the witness. zk-SNARKs (small proofs, often a trusted setup,
+for example Groth16 per circuit or universal setups like PLONK) and
+zk-STARKs (transparent, hash-based, larger proofs). On Ethereum,
+verification of BN254-based proofs uses precompiles and costs on the
+order of a few hundred thousand gas. Uses: rollup validity proofs,
+privacy, identity attestations, light-client proofs. Circuits are code:
+under-constrained circuits are a major bug class; audit them like
+contracts.</li>
+<li><strong>Threshold and multiparty computation</strong>: split a key
+into shares so that no single party holds it; sign with t of n shares;
+used by custodians and wallet providers.</li>
+<li><strong>Randomness</strong>: block-derived values and the beacon
+chain's RANDAO are biasable to some extent; use verifiable random
+functions (VRFs) or commit-reveal designs for value-bearing randomness
+(see <code class="verbatim">03_smart-contract-security.org</code>).</li>
+</ul>
+<pre class="solidity"><code>// EIP-712 signature verification with nonces and deadlines (OpenZeppelin v5 style).
+import {EIP712} from &quot;@openzeppelin/contracts/utils/cryptography/EIP712.sol&quot;;
+import {ECDSA} from &quot;@openzeppelin/contracts/utils/cryptography/ECDSA.sol&quot;;
+
+contract Exchange is EIP712 {
+    struct Order { address maker; uint256 amount; uint256 nonce; uint256 deadline; }
+    bytes32 private constant ORDER_TYPEHASH =
+        keccak256(&quot;Order(address maker,uint256 amount,uint256 nonce,uint256 deadline)&quot;);
+    mapping(address =&gt; mapping(uint256 =&gt; bool)) public used;
+
+    error Expired();
+    error BadSignature();
+    error NonceUsed();
+
+    constructor() EIP712(&quot;Exchange&quot;, &quot;1&quot;) {}
+
+    function _verify(Order calldata o, bytes calldata sig) internal {
+        if (block.timestamp &gt; o.deadline) revert Expired();
+        if (used[o.maker][o.nonce]) revert NonceUsed();
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(abi.encode(ORDER_TYPEHASH, o.maker, o.amount, o.nonce, o.deadline))
+        );
+        if (ECDSA.recover(digest, sig) != o.maker) revert BadSignature();
+        used[o.maker][o.nonce] = true;
+    }
+}
+</code></pre>
+<p>(Illustrative; for contract signers use ERC-1271 through
+OpenZeppelin's SignatureChecker. Not compiled here.)</p>
+<h3 id="keys-mnemonics-and-wallets">2. Keys, mnemonics, and wallets</h3>
+<ul>
+<li><strong>Key generation and storage</strong>: a private key is a
+256-bit secret; security depends on entropy and storage. Use audited
+libraries and hardware; never generate keys with a weak RNG or paste
+them into websites.</li>
+<li><strong>Hierarchical deterministic wallets</strong>: BIP-39 turns
+128 to 256 bits of entropy into a 12 to 24-word mnemonic (with an
+optional passphrase) and a seed through PBKDF2; BIP-32 derives a tree of
+keys; BIP-44 defines derivation paths (Ethereum accounts typically at
+<code>m/44'/60'/0'/0/n</code>). The mnemonic is the master secret:
+anyone with it controls every derived account.</li>
+<li><strong>Wallet types</strong>:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Key location</th>
+<th>Strengths</th>
+<th>Weaknesses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Software (browser, mobile)</td>
+<td>Device storage</td>
+<td>Convenient</td>
+<td>Malware, phishing, device compromise</td>
+</tr>
+<tr>
+<td>Hardware wallet</td>
+<td>Secure element, signing on device</td>
+<td>Strong key isolation</td>
+<td>Display limits (blind signing), supply chain, loss</td>
+</tr>
+<tr>
+<td>Multisig (for example Safe)</td>
+<td>Several keys; threshold approval</td>
+<td>No single key can move funds; policies</td>
+<td>Operational complexity, signer compromise, UI risks</td>
+</tr>
+<tr>
+<td>Smart-contract account (ERC-4337)</td>
+<td>Contract with flexible validation</td>
+<td>Recovery, limits, session keys, batching</td>
+<td>Contract risk, bundler and paymaster dependency</td>
+</tr>
+<tr>
+<td>MPC wallet</td>
+<td>Key shares with a provider</td>
+<td>No full key anywhere; policy engines</td>
+<td>Vendor trust and availability</td>
+</tr>
+<tr>
+<td>Custodial</td>
+<td>Held by a provider</td>
+<td>Familiar UX; recovery</td>
+<td>Counterparty risk, regulation</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Wallet interfaces</strong>: the EIP-1193 provider
+(<code>request({method, params})</code>) is the injected browser API;
+EIP-6963 standardizes discovery of multiple wallets; WalletConnect (now
+under the Reown brand) connects mobile wallets to web apps; Sign-In with
+Ethereum (EIP-4361) standardizes authentication by signing a message;
+chain-switching and chain-adding requests have their own phishing and
+misconfiguration issues.</li>
+<li><strong>Account delegation (EIP-7702)</strong>: an EOA can sign an
+authorization that sets its code to a delegation pointing to a contract,
+allowing batching, sponsored fees, and other smart-account features for
+existing addresses. Security considerations: authorizations that are
+valid on all chains are dangerous if the delegate is unsafe; a malicious
+delegate can drain the account, so wallets must warn clearly; the
+account's storage context and the private key still control the account
+(the key can always replace the delegation); contracts that assume
+~msg.sender == tx.origin means an EOA without code must be
+reviewed.</li>
+</ul>
+<h3 id="key-management-for-organizations">3. Key management for
+organizations</h3>
+<ul>
+<li><strong>Principles</strong>: no single person or device can move
+significant funds; separate hot (small balances, automated) from warm
+and cold (treasury) keys; every key has an owner, a purpose, and a
+rotation and recovery plan; signing is policy-driven.</li>
+<li><strong>Options</strong>: multisig with signers on hardware wallets
+and an m-of-n policy; MPC or threshold custody; cloud KMS or HSM-backed
+keys (for example key management services that support secp256k1
+signing) for service accounts; smart accounts with spending limits and
+allowlists; hybrid designs with timelocks (delay on dangerous actions so
+that monitoring can intervene).</li>
+<li><strong>Signing policies</strong>: allowlisted destinations and
+contracts, per-transaction and per-day limits, mandatory simulation,
+multiple approvers for large amounts, role separation between initiator,
+reviewer, and signer, and emergency procedures.</li>
+<li><strong>Transaction verification</strong>: simulate and decode every
+transaction before signing; verify calldata independently, not only
+through the interface that created it; use independent verification
+tools for multisig transactions. The 2025 Bybit incident showed that
+signers can approve a malicious transaction when the signing interface
+is compromised and displays benign data; hardware wallets that cannot
+decode the data ("blind signing") leave no defense.</li>
+<li><strong>Supply chain</strong>: pin and verify dependencies; restrict
+who can change frontends and wallet-related infrastructure; monitor for
+unexpected changes to hosted scripts; use subresource integrity and
+reproducible builds; segment devices used for signing.</li>
+<li><strong>Ceremonies and procedures</strong>: documented key
+generation (with witnesses and verified hardware), backup and recovery
+tests, access reviews, offboarding procedures, and tabletop exercises
+for compromise scenarios.</li>
+<li><strong>Operational security of people</strong>: phishing-resistant
+authentication (hardware security keys), dedicated signing devices,
+careful handling of unsolicited code (state-sponsored actors have
+targeted crypto engineers with fake recruiters and trojaned coding
+tests), least privilege on repositories and cloud accounts.</li>
+<li><strong>Recovery</strong>: social recovery with guardians (smart
+accounts), multisig signer replacement, backup shares in separated
+locations with tested restoration, and clear legal documents for
+organizational custody.</li>
+</ul>
+<h3 id="user-facing-wallet-ux-and-phishing-resistance">4. User-facing
+wallet UX and phishing resistance</h3>
+<ul>
+<li><strong>Clear signing</strong>: show what a transaction or message
+does in human terms (assets, recipients, spenders, allowance amounts),
+not raw hex; decode typed data fully; warn on unlimited approvals,
+setApprovalForAll, permit signatures, and delegation
+authorizations.</li>
+<li><strong>Phishing vectors</strong>: fake sites and extensions,
+malicious approvals and permit signatures, address poisoning (lookalike
+addresses in history), fake support and airdrops, drainer kits,
+compromised social accounts, and malicious RPC or chain
+suggestions.</li>
+<li><strong>Defenses in products</strong>: transaction simulation with
+asset-change previews, allowlists and risk scoring, revoke-approval
+tools, domain binding for signatures (EIP-712 domain), and education at
+the moment of risk.</li>
+<li><strong>Sessions and permissions</strong>: session keys and scoped
+permissions (spending caps, time limits, allowed contracts) reduce the
+need for repeated signing without granting full control; implement them
+in smart accounts with careful review.</li>
+<li><strong>Passkeys and device security</strong>: WebAuthn/passkeys
+with P-256 signatures (verified by smart accounts) offer familiar UX and
+hardware-backed keys; recovery and multi-device flows are the hard
+part.</li>
+</ul>
+<h3 id="privacy">5. Privacy</h3>
+<ul>
+<li><strong>Pseudonymity, not anonymity</strong>: addresses are public
+and linkable by analysis; patterns, timing, exchanges, and ENS names
+deanonymize users. Privacy-sensitive designs require explicit privacy
+tools.</li>
+<li><strong>Techniques</strong>: stealth addresses (for example
+ERC-5564), zero-knowledge shielded pools, mixers (with regulatory and
+sanctions consequences), private mempools, selective disclosure with
+zero-knowledge credentials, and viewing keys for compliance.</li>
+<li><strong>Product and legal implications</strong>: balance user
+privacy with compliance requirements (sanctions screening, travel-rule
+obligations where applicable); take advice from counsel.</li>
+</ul>
+<h3 id="self-check">6. Self-check</h3>
+<ol>
+<li>Why can a naive signature-verification contract be replayed on
+another chain, and what changes fix it?</li>
+<li>What are signature malleability and the zero-address trap with
+ecrecover, and how do libraries address them?</li>
+<li>Compare a 3-of-5 multisig on hardware wallets with an MPC custody
+solution: failure modes and operational burdens.</li>
+<li>Describe the Bybit-style attack on signers and four controls that
+reduce its risk.</li>
+<li>What new risks does EIP-7702 delegation create for users and for
+contracts that assume an address is an EOA?</li>
+<li>A treasury needs to pay vendors weekly. Design the key and policy
+architecture.</li>
+</ol>
+<h3 id="exercises">7. Exercises</h3>
+<ul>
+<li>Warm-up: derive an Ethereum address from a private key by hand (with
+a library) and verify the checksum encoding; recover the signer from a
+signature with ecrecover logic.</li>
+<li>Core: implement EIP-712 order signing in TypeScript and verification
+in Solidity; test replay (wrong chain, wrong contract, reused nonce,
+expired deadline) and ERC-1271 contract signers.</li>
+<li>Core: set up a test multisig and practice the full flow: propose,
+simulate, independently verify calldata, sign on different devices, and
+execute.</li>
+<li>Core: write a signing policy for an organization (roles, limits,
+simulation, emergency procedures) and test it in a tabletop
+exercise.</li>
+<li>Stretch: implement a minimal ERC-4337 smart account with passkey
+(P-256) validation using a verifier contract; document the recovery
+model.</li>
+<li>Stretch: write a threat model for a wallet's connection flow
+(provider injection, WalletConnect, chain switching) and list
+mitigations.</li>
+</ul>
+<h3 id="resources">8. Resources</h3>
+<ul>
+<li>BIP-32, BIP-39, BIP-44 (HD wallets and mnemonics); EIP-55, EIP-191,
+EIP-712, EIP-1193, EIP-6963, EIP-4361, ERC-1271, ERC-6492, ERC-4337,
+EIP-7702: <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a></li>
+<li>OpenZeppelin Contracts, cryptography utilities (ECDSA, EIP712,
+SignatureChecker): <a
+href="https://docs.openzeppelin.com/contracts">https://docs.openzeppelin.com/contracts</a></li>
+<li>Boneh and Shoup, <em>A Graduate Course in Applied Cryptography</em>
+(free); Katz and Lindell, <em>Introduction to Modern Cryptography</em>;
+the ZK learning resources of the proof systems you use.</li>
+<li>Safe documentation on multisig security and transaction
+verification; hardware wallet vendors' guidance on clear signing.</li>
+<li>Foundations notes in this repository: discrete mathematics (modular
+arithmetic, number theory), data representation (hashes,
+encodings).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>The key is the account; most large losses are key, signing, and
+wallet-interaction failures.</li>
+<li>Use typed-data signatures with domain separation, nonces, and
+deadlines; handle malleability and contract signers.</li>
+<li>Organizations need role-separated, policy-driven signing with
+independent verification and tested recovery.</li>
+<li>Clear signing and simulation are the user's main defense against
+phishing and compromised interfaces.</li>
+<li>Smart accounts and delegation add power and new failure modes;
+review them like contracts.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

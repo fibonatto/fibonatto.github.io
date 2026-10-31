@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Types</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/02-types.html">
+  <meta property="og:title" content="Rust Types">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/02-types.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Types</h1>
+<h2 id="rust-types-1">Rust Types</h2>
+<h3 id="scalar-types">1. Scalar types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">i8</code> <code class="verbatim">i16</code>
+<code class="verbatim">i32</code> <code class="verbatim">i64</code>
+<code class="verbatim">i128</code></td>
+<td>1, 2, 4, 8, 16 bytes</td>
+<td>Signed, two's complement</td>
+</tr>
+<tr>
+<td><code class="verbatim">u8</code> <code class="verbatim">u16</code>
+<code class="verbatim">u32</code> <code class="verbatim">u64</code>
+<code class="verbatim">u128</code></td>
+<td>1, 2, 4, 8, 16 bytes</td>
+<td>Unsigned</td>
+</tr>
+<tr>
+<td><code class="verbatim">isize</code>, <code
+class="verbatim">usize</code></td>
+<td>Pointer width</td>
+<td>Indexing and lengths use <code class="verbatim">usize</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">f32</code>, <code
+class="verbatim">f64</code></td>
+<td>4, 8 bytes</td>
+<td>IEEE 754</td>
+</tr>
+<tr>
+<td><code class="verbatim">bool</code></td>
+<td>1 byte</td>
+<td><code class="verbatim">true</code> or <code
+class="verbatim">false</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">char</code></td>
+<td>4 bytes</td>
+<td>One Unicode scalar value (not a byte)</td>
+</tr>
+<tr>
+<td><code class="verbatim">()</code></td>
+<td>0 bytes</td>
+<td>Unit: the "nothing" value</td>
+</tr>
+<tr>
+<td><code class="verbatim">!</code></td>
+<td>0</td>
+<td>Never type: functions that do not return</td>
+</tr>
+</tbody>
+</table>
+<p>Defaults: an integer literal with no other constraint is <code
+class="verbatim">i32</code>, a float literal is <code
+class="verbatim">f64</code>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a <span class="op">=</span> <span class="dv">1_000_000</span><span class="op">;</span>        <span class="co">// underscores for readability</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b <span class="op">=</span> <span class="dv">0xff</span><span class="op">;</span>             <span class="co">// hex</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> c <span class="op">=</span> <span class="dv">0o77</span><span class="op">;</span>             <span class="co">// octal</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> d <span class="op">=</span> <span class="dv">0b1010_1010</span><span class="op">;</span>      <span class="co">// binary</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> e <span class="op">=</span> <span class="ch">b&#39;A&#39;</span><span class="op">;</span>             <span class="co">// a u8 byte literal: 65</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f <span class="op">=</span> <span class="dv">255u8</span><span class="op">;</span>            <span class="co">// suffix selects the type</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> g <span class="op">=</span> <span class="dv">2.5e3_f64</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> bytes <span class="op">=</span> <span class="st">b&quot;abc&quot;</span><span class="op">;</span>       <span class="co">// &amp;[u8; 3]</span></span></code></pre></div>
+<p>Fixed-width types, with no platform-dependent <code
+class="verbatim">int</code>, remove most C portability problems; <code
+class="verbatim">usize</code> and <code class="verbatim">isize</code>
+are the only platform-dependent ones.</p>
+<h3 id="integer-overflow">2. Integer overflow</h3>
+<p>Overflow is never silent undefined behavior. By default it
+<em>panics</em> in debug builds and <em>wraps</em> in release builds
+(controlled by <code class="verbatim">overflow-checks</code> in the
+Cargo profile). State your intent with explicit methods:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x<span class="op">:</span> <span class="dt">u8</span> <span class="op">=</span> <span class="dv">250</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>x<span class="op">.</span>checked_add(<span class="dv">10</span>)<span class="op">;</span>           <span class="co">// None</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>x<span class="op">.</span>wrapping_add(<span class="dv">10</span>)<span class="op">;</span>          <span class="co">// 4</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>x<span class="op">.</span>saturating_add(<span class="dv">10</span>)<span class="op">;</span>        <span class="co">// 255</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>x<span class="op">.</span>overflowing_add(<span class="dv">10</span>)<span class="op">;</span>       <span class="co">// (4, true)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="pp">i32::</span><span class="cn">MAX</span><span class="op">.</span>checked_mul(<span class="dv">2</span>)<span class="op">;</span>     <span class="co">// None</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="dv">10u32</span><span class="op">.</span>abs_diff(<span class="dv">15</span>)<span class="op">;</span>          <span class="co">// 5: difference without underflow</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>(<span class="op">-</span><span class="dv">7i32</span>)<span class="op">.</span>rem_euclid(<span class="dv">3</span>)<span class="op">;</span>       <span class="co">// 2: remainder that is never negative</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>(<span class="op">-</span><span class="dv">7i32</span>) <span class="op">%</span> <span class="dv">3</span><span class="op">;</span>                 <span class="co">// -1: % keeps the sign of the dividend</span></span></code></pre></div>
+<ul>
+<li>Division and remainder by zero panic, as does <code
+class="verbatim">i32::MIN / -1</code>.</li>
+<li>A shift by the type's width or more panics in debug builds.</li>
+<li>Indexing with a <code class="verbatim">usize</code> that is too
+large panics (bounds check). Subtracting from a <code
+class="verbatim">usize</code> below zero is overflow: <code
+class="verbatim">len - 1</code> on an empty slice panics in debug and
+wraps in release.</li>
+<li>Prefer <code class="verbatim">checked_*</code> when the arithmetic
+comes from external input.</li>
+</ul>
+<h3 id="conversions">3. Conversions</h3>
+<p>Rust never converts numeric types implicitly. Choose the conversion
+that says what you mean:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">From</code> / <code
+class="verbatim">Into</code></td>
+<td>Lossless, cannot fail: <code
+class="verbatim">u64::from(x_u32)</code>, <code
+class="verbatim">let y: u64 = x.into()</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">TryFrom</code> / <code
+class="verbatim">TryInto</code></td>
+<td>May fail: <code class="verbatim">u8::try_from(300)</code> returns
+<code class="verbatim">Err</code></td>
+</tr>
+<tr>
+<td><code>as</code></td>
+<td>Primitive casts, may truncate silently</td>
+</tr>
+<tr>
+<td><code class="verbatim">parse::&lt;T&gt;()</code></td>
+<td>Text to a number (returns <code class="verbatim">Result</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">to_string()</code>, <code
+class="verbatim">format!</code></td>
+<td>Value to text</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a<span class="op">:</span> <span class="dt">u8</span> <span class="op">=</span> <span class="pp">u8::</span>try_from(<span class="dv">300_i32</span>)<span class="op">.</span>unwrap_or(<span class="pp">u8::</span><span class="cn">MAX</span>)<span class="op">;</span>   <span class="co">// 255</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b <span class="op">=</span> <span class="dv">300_i32</span> <span class="kw">as</span> <span class="dt">u8</span><span class="op">;</span>                  <span class="co">// 44: `as` truncates (keeps the low bits)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> c <span class="op">=</span> <span class="op">-</span><span class="dv">1_i32</span> <span class="kw">as</span> <span class="dt">u32</span><span class="op">;</span>                  <span class="co">// 4294967295: same bits reinterpreted</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> d <span class="op">=</span> <span class="dv">3.99_f64</span> <span class="kw">as</span> <span class="dt">i32</span><span class="op">;</span>                <span class="co">// 3: truncates toward zero</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> e <span class="op">=</span> <span class="dv">1e20_f64</span> <span class="kw">as</span> <span class="dt">i32</span><span class="op">;</span>                <span class="co">// i32::MAX: saturates (NaN becomes 0)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f <span class="op">=</span> <span class="dv">65_u8</span> <span class="kw">as</span> <span class="dt">char</span><span class="op">;</span>                  <span class="co">// &#39;A&#39;: only u8 converts to char with `as`</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> g <span class="op">=</span> <span class="ch">&#39;A&#39;</span> <span class="kw">as</span> <span class="dt">u32</span><span class="op">;</span>                     <span class="co">// 65</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> h <span class="op">=</span> <span class="pp">char::</span>from_u32(<span class="dv">0x1F600</span>)<span class="op">;</span>        <span class="co">// Some(&#39;😀&#39;): validated</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> <span class="st">&quot;42&quot;</span><span class="op">.</span>parse()<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> m <span class="op">=</span> <span class="st">&quot;x&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>()<span class="op">;</span>             <span class="co">// Err(ParseIntError)</span></span></code></pre></div>
+<p>Casts with <code>as</code> are always defined (no UB), but can lose
+information; prefer <code class="verbatim">From</code> and <code
+class="verbatim">TryFrom</code> when the conversion should be exact.</p>
+<h3 id="floating-point">4. Floating point</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">0.1</span> <span class="op">+</span> <span class="dv">0.2</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>x <span class="op">==</span> <span class="dv">0.3</span><span class="op">;</span>                      <span class="co">// false</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>(x <span class="op">-</span> <span class="dv">0.3</span>)<span class="op">.</span>abs() <span class="op">&lt;</span> <span class="pp">f64::</span><span class="cn">EPSILON</span> <span class="op">*</span> <span class="dv">4.0</span><span class="op">;</span>   <span class="co">// compare with a tolerance you choose</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">f64::</span><span class="cn">NAN</span> <span class="op">==</span> <span class="pp">f64::</span><span class="cn">NAN</span><span class="op">;</span>          <span class="co">// false</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="pp">f64::</span><span class="cn">NAN</span><span class="op">.</span>is_nan()<span class="op">;</span>             <span class="co">// true</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="dv">1.0</span> <span class="op">/</span> <span class="dv">0.0</span><span class="op">;</span>                     <span class="co">// inf (no panic)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">&quot;{:.3}&quot;</span><span class="op">,</span> <span class="dv">3.14159</span>)<span class="op">;</span>    <span class="co">// 3.142</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">f32</code> and <code
+class="verbatim">f64</code> implement <code
+class="verbatim">PartialEq</code> and <code
+class="verbatim">PartialOrd</code> but not <code
+class="verbatim">Eq</code> or <code class="verbatim">Ord</code>, because
+of NaN. Consequently they cannot be <code
+class="verbatim">HashMap</code> keys, and <code
+class="verbatim">sort()</code> does not compile for <code
+class="verbatim">Vec&lt;f64&gt;</code>.</li>
+<li>Sort floats with <code
+class="verbatim">v.sort_by(|a, b| a.partial_cmp(b).unwrap())</code> or
+the total order <code
+class="verbatim">v.sort_by(f64::total_cmp)</code>.</li>
+<li><code class="verbatim">f64::EPSILON</code> is the gap above 1.0, not
+a general tolerance; scale it to your values.</li>
+</ul>
+<h3 id="char-strings-and-bytes">5. char, strings, and bytes</h3>
+<p>A <code class="verbatim">char</code> is a Unicode scalar value (4
+bytes), not a byte and not a "character" as a user sees it. A <code
+class="verbatim">String</code> / <code class="verbatim">&amp;str</code>
+is UTF-8 text:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s <span class="op">=</span> <span class="st">&quot;héllo&quot;</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>len()<span class="op">;</span>                       <span class="co">// 6 bytes</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>chars()<span class="op">.</span>count()<span class="op">;</span>             <span class="co">// 5 scalar values</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>as_bytes()<span class="op">;</span>                  <span class="co">// &amp;[u8]</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>char_indices()<span class="op">;</span>              <span class="co">// (byte offset, char) pairs</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>is_char_boundary(<span class="dv">2</span>)<span class="op">;</span>         <span class="co">// false: slicing there would panic</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ch">&#39;é&#39;</span><span class="op">.</span>len_utf8()<span class="op">;</span>                <span class="co">// 2</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="ch">&#39;a&#39;</span><span class="op">.</span>is_alphabetic()<span class="op">;</span>           <span class="co">// true (Unicode-aware)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="ch">&#39;a&#39;</span><span class="op">.</span>to_ascii_uppercase()<span class="op">;</span>      <span class="co">// &#39;A&#39;</span></span></code></pre></div>
+<p>Use <code class="verbatim">&amp;[u8]</code> and <code
+class="verbatim">Vec&lt;u8&gt;</code> for binary data, <code
+class="verbatim">String</code> for text, and <code
+class="verbatim">OsString</code> / <code class="verbatim">Path</code>
+for file names that may not be valid UTF-8. Strings cannot be indexed by
+integer (<code class="verbatim">s[0]</code> does not compile).</p>
+<h3 id="compound-and-reference-types">6. Compound and reference
+types</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> t<span class="op">:</span> (<span class="dt">i32</span><span class="op">,</span> <span class="dt">f64</span><span class="op">,</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">=</span> (<span class="dv">1</span><span class="op">,</span> <span class="dv">2.0</span><span class="op">,</span> <span class="st">&quot;x&quot;</span>)<span class="op">;</span>     <span class="co">// tuple, fixed heterogeneous</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a<span class="op">:</span> [<span class="dt">i32</span><span class="op">;</span> <span class="dv">4</span>] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>]<span class="op">;</span>              <span class="co">// array: length is part of the type</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">i32</span>] <span class="op">=</span> <span class="op">&amp;</span>a[<span class="dv">1</span><span class="op">..</span><span class="dv">3</span>]<span class="op">;</span>                    <span class="co">// slice: borrowed view (pointer + length)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> r<span class="op">:</span> <span class="op">&amp;</span><span class="dt">i32</span> <span class="op">=</span> <span class="op">&amp;</span>a[<span class="dv">0</span>]<span class="op">;</span>                         <span class="co">// shared reference</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> arr2 <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span>]<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> m<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="dt">i32</span> <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> arr2[<span class="dv">0</span>]<span class="op">;</span>              <span class="co">// exclusive reference</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f<span class="op">:</span> <span class="kw">fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">=</span> <span class="op">|</span>x<span class="op">|</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span>           <span class="co">// function pointer (non-capturing)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="bu">Fn</span>(<span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">Box::</span>new(<span class="op">|</span>x<span class="op">|</span> x <span class="op">+</span> <span class="dv">1</span>)<span class="op">;</span>   <span class="co">// heap-allocated trait object</span></span></code></pre></div>
+<p>References are never null and always valid. Pointers to slices (<code
+class="verbatim">&amp;[T]</code>, <code
+class="verbatim">&amp;str</code>) and to trait objects (<code
+class="verbatim">&amp;dyn Trait</code>) are <em>fat</em>: they carry a
+length or a vtable pointer in addition to the address.</p>
+<h3 id="type-inference-and-annotations">7. Type inference and
+annotations</h3>
+<p>The compiler infers types across a whole function, in both
+directions, but some places need a hint:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">Vec::</span>new()<span class="op">;</span>               <span class="co">// annotate the binding</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="pp">Vec::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span><span class="pp">::</span>new()<span class="op">;</span>                  <span class="co">// or use the turbofish ::&lt;&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> <span class="st">&quot;5&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span>()<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> total<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> items<span class="op">.</span>iter()<span class="op">.</span>sum()<span class="op">;</span>        <span class="co">// sum and collect need the target type</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> words<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">&gt;</span> <span class="op">=</span> text<span class="op">.</span>split(<span class="ch">&#39; &#39;</span>)<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="pp">Default::</span><span class="kw">default</span>()<span class="op">;</span>            <span class="co">// 0.0</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> items<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;</span> <span class="op">=</span> (<span class="dv">0</span><span class="op">..</span><span class="dv">3</span>)<span class="op">.</span>collect()<span class="op">;</span>       <span class="co">// _ lets the compiler fill in part</span></span></code></pre></div>
+<p>Function signatures always need full types; only bodies are inferred.
+When inference fails, the error says "type annotations needed" and
+points at the expression.</p>
+<h3 id="newtypes-and-type-aliases">8. Newtypes and type aliases</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> UserId(<span class="dt">u64</span>)<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> OrderId(<span class="dt">u64</span>)<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load(id<span class="op">:</span> UserId) <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// load(OrderId(5));            // error: different types, same representation</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> <span class="pp">std::result::</span><span class="dt">Result</span><span class="op">&lt;</span>T<span class="op">,</span> MyError<span class="op">&gt;;</span>     <span class="co">// alias: no new type</span></span></code></pre></div>
+<p>A newtype is a distinct type with zero run-time cost (<code
+class="verbatim">#[repr(transparent)]</code> guarantees the same
+layout). It prevents mixing IDs and units, and lets you implement traits
+for foreign types.</p>
+<h3 id="sizes-layout-and-sized-types">9. Sizes, layout, and sized
+types</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::mem::</span><span class="op">{</span>size_of<span class="op">,</span> align_of<span class="op">};</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="pp">size_of::</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;</span>()<span class="op">;</span>                    <span class="co">// 1</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="pp">size_of::</span><span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;</span>()<span class="op">;</span>                  <span class="co">// 4</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="pp">size_of::</span><span class="op">&lt;&amp;</span><span class="dt">u8</span><span class="op">&gt;</span>()<span class="op">;</span>                   <span class="co">// 8 on 64-bit</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="pp">size_of::</span><span class="op">&lt;&amp;</span>[<span class="dt">u8</span>]<span class="op">&gt;</span>()<span class="op">;</span>                 <span class="co">// 16: pointer + length</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="pp">size_of::</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="dt">u8</span><span class="op">&gt;&gt;</span>()<span class="op">;</span>           <span class="co">// 8: the null niche stores None for free</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="pp">size_of::</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;&gt;&gt;</span>()<span class="op">;</span>       <span class="co">// 8</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="pp">align_of::</span><span class="op">&lt;</span><span class="dt">u64</span><span class="op">&gt;</span>()<span class="op">;</span>                  <span class="co">// 8</span></span></code></pre></div>
+<ul>
+<li>The compiler may reorder the fields of a struct to reduce padding;
+the default layout is unspecified. Use <code
+class="verbatim">#[repr(C)]</code> for a C-compatible layout (see <code
+class="verbatim">13_unsafe-and-ffi.org</code>).</li>
+<li><code class="verbatim">str</code>, <code
+class="verbatim">[T]</code>, and <code class="verbatim">dyn Trait</code>
+are <em>dynamically sized</em> (DSTs): they exist only behind a pointer
+(<code class="verbatim">&amp;str</code>, <code
+class="verbatim">Box&lt;[T]&gt;</code>, <code
+class="verbatim">Box&lt;dyn Trait&gt;</code>). Generics assume <code
+class="verbatim">Sized</code>; write <code
+class="verbatim">T: ?Sized</code> to accept DSTs too.</li>
+<li><code class="verbatim">Option&lt;&amp;T&gt;</code>, <code
+class="verbatim">Option&lt;Box&lt;T&gt;&gt;</code>, and <code
+class="verbatim">Option&lt;NonZeroU32&gt;</code> cost nothing extra,
+thanks to niche optimization.</li>
+</ul>
+<h3 id="the-never-type-and-default">10. The never type and Default</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> fail(msg<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">!</span> <span class="op">{</span> <span class="pp">panic!</span>(<span class="st">&quot;{msg}&quot;</span>) <span class="op">}</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n<span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> <span class="cf">match</span> s<span class="op">.</span>parse() <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(v) <span class="op">=&gt;</span> v<span class="op">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(_) <span class="op">=&gt;</span> fail(<span class="st">&quot;bad number&quot;</span>)<span class="op">,</span>     <span class="co">// ! coerces to any type</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Default</span><span class="at">)]</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Config <span class="op">{</span> port<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span> verbose<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span> name<span class="op">:</span> <span class="dt">String</span> <span class="op">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> c <span class="op">=</span> Config <span class="op">{</span> port<span class="op">:</span> <span class="dv">8080</span><span class="op">,</span> <span class="op">..</span><span class="pp">Default::</span><span class="kw">default</span>() <span class="op">};</span></span></code></pre></div>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Fixed-width integers; overflow panics in debug and wraps in release,
+so choose <code class="verbatim">checked_</code> / <code
+class="verbatim">wrapping_</code> / <code
+class="verbatim">saturating_</code> deliberately.</li>
+<li>No implicit conversions: <code class="verbatim">From</code> for
+lossless, <code class="verbatim">TryFrom</code> for fallible,
+<code>as</code> for truncating primitive casts.</li>
+<li>Floats are not <code class="verbatim">Eq</code> or <code
+class="verbatim">Ord</code>; compare with a tolerance and sort with
+<code class="verbatim">total_cmp</code>.</li>
+<li><code class="verbatim">char</code> is a Unicode scalar, strings are
+UTF-8 and not indexable by integer.</li>
+<li>Newtypes are free and prevent mix-ups.</li>
+<li>DSTs live behind pointers; fat pointers carry length or vtable;
+<code class="verbatim">Option</code> of a reference is the same size as
+the reference.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

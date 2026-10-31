@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C I/O and Error Handling</title>
+  <meta name="description" content="Practical input/output and error-handling patterns in C. Covers standard streams, buffering, formatted output, safe string formatting, file operations, text and binary I/O, line and character reading, scanf pitfalls, errno, return codes, cleanup paths, assertions, process termination, non-local jumps, and POSIX file descriptors. Distinguishes ISO C facilities from POSIX extensions and addresses partial transfers, resource management, and reliable error reporting.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/07-io-and-errors.html">
+  <meta property="og:title" content="C I/O and Error Handling">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/07-io-and-errors.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C I/O and Error Handling</h1>
+<h2 id="c-io-and-error-handling-1">C I/O and Error Handling</h2>
+<h3 id="streams">1. Streams</h3>
+<p><code class="verbatim">&lt;stdio.h&gt;</code> works on <code
+class="verbatim">FILE *</code> streams. Three are open at program start:
+<code class="verbatim">stdin</code>, <code
+class="verbatim">stdout</code>, <code
+class="verbatim">stderr</code>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>fputs<span class="op">(</span><span class="st">&quot;hello</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> stdout<span class="op">);</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>fprintf<span class="op">(</span>stderr<span class="op">,</span> <span class="st">&quot;error: </span><span class="sc">%s\n</span><span class="st">&quot;</span><span class="op">,</span> msg<span class="op">);</span>     <span class="co">/* diagnostics go to stderr */</span></span></code></pre></div>
+<p>Streams are buffered:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Behavior</th>
+<th>Default for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full</td>
+<td>Flush when the buffer fills</td>
+<td>files, and stdout if not a terminal</td>
+</tr>
+<tr>
+<td>Line</td>
+<td>Flush on newline</td>
+<td>stdout when it is a terminal</td>
+</tr>
+<tr>
+<td>Unbuffered</td>
+<td>Write immediately</td>
+<td>stderr</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fflush<span class="op">(</span>stdout<span class="op">);</span>                            <span class="co">/* push buffered output now */</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>setvbuf<span class="op">(</span>stdout<span class="op">,</span> NULL<span class="op">,</span> _IOLBF<span class="op">,</span> <span class="dv">0</span><span class="op">);</span>          <span class="co">/* change the mode (before any I/O on the stream) */</span></span></code></pre></div>
+<p>Buffering explains output that appears late, or not at all when a
+program crashes: data still in the buffer is lost. Flush before <code
+class="verbatim">fork</code>, before a prompt you read an answer to, and
+after writing progress messages that must be seen.</p>
+<h3 id="writing-with-printf">2. Writing with printf</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st"> items, </span><span class="sc">%.2f%%</span><span class="st"> done, name=</span><span class="sc">%s\n</span><span class="st">&quot;</span><span class="op">,</span> n<span class="op">,</span> pct<span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>snprintf<span class="op">(</span>buf<span class="op">,</span> <span class="kw">sizeof</span> buf<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">-</span><span class="sc">%04d</span><span class="st">&quot;</span><span class="op">,</span> prefix<span class="op">,</span> id<span class="op">);</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>fprintf<span class="op">(</span>f<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%zu\n</span><span class="st">&quot;</span><span class="op">,</span> count<span class="op">);</span></span></code></pre></div>
+<ul>
+<li>The format string and arguments must agree in number and type; a
+mismatch is undefined behavior. Never pass user data as the format:
+<code class="verbatim">printf(s)</code> is a vulnerability; write <code
+class="verbatim">printf("%s", s)</code>.</li>
+<li>Use <code class="verbatim">snprintf</code>, not <code
+class="verbatim">sprintf</code>. It returns the length that
+<em>would</em> have been written; a result &gt;= the buffer size means
+truncation:</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> n <span class="op">=</span> snprintf<span class="op">(</span>buf<span class="op">,</span> <span class="kw">sizeof</span> buf<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">/</span><span class="sc">%s</span><span class="st">&quot;</span><span class="op">,</span> dir<span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">||</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)</span>n <span class="op">&gt;=</span> <span class="kw">sizeof</span> buf<span class="op">)</span> <span class="op">{</span> <span class="co">/* error or truncated */</span> <span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">%%</code> prints a percent sign; see <code
+class="verbatim">02_types.org</code> for specifiers by type.</li>
+</ul>
+<h3 id="opening-reading-and-closing-files">3. Opening, reading, and
+closing files</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>f <span class="op">=</span> fopen<span class="op">(</span><span class="st">&quot;data.txt&quot;</span><span class="op">,</span> <span class="st">&quot;r&quot;</span><span class="op">);</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>f <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    perror<span class="op">(</span><span class="st">&quot;data.txt&quot;</span><span class="op">);</span>                    <span class="co">/* prints &quot;data.txt: No such file or directory&quot; */</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">/* ... */</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>fclose<span class="op">(</span>f<span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> <span class="co">/* a write error may only show up here */</span> <span class="op">}</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"r"</td>
+<td>Read; the file must exist</td>
+</tr>
+<tr>
+<td>"w"</td>
+<td>Write; truncate or create</td>
+</tr>
+<tr>
+<td>"a"</td>
+<td>Append; create if missing</td>
+</tr>
+<tr>
+<td>"r+"</td>
+<td>Read and write; the file must exist</td>
+</tr>
+<tr>
+<td>"w+"</td>
+<td>Read and write; truncate or create</td>
+</tr>
+<tr>
+<td>"b"</td>
+<td>Add to any mode (e.g. <code class="verbatim">"rb"</code>) for binary
+on systems that distinguish; harmless elsewhere</td>
+</tr>
+<tr>
+<td>"x"</td>
+<td>C11: with "w", fail if the file exists</td>
+</tr>
+</tbody>
+</table>
+<p>Check the result of <code class="verbatim">fclose</code> on files you
+wrote: buffered data is written at close and may fail then.</p>
+<h3 id="reading-text">4. Reading text</h3>
+<h4 id="lines">Lines</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> line<span class="op">[</span><span class="dv">256</span><span class="op">];</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>fgets<span class="op">(</span>line<span class="op">,</span> <span class="kw">sizeof</span> line<span class="op">,</span> f<span class="op">)</span> <span class="op">!=</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> len <span class="op">=</span> strcspn<span class="op">(</span>line<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    line<span class="op">[</span>len<span class="op">]</span> <span class="op">=</span> <span class="ch">&#39;</span><span class="sc">\0</span><span class="ch">&#39;</span><span class="op">;</span>                      <span class="co">/* strip the newline, if any */</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* a line longer than the buffer arrives in pieces */</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>POSIX <code class="verbatim">getline</code> handles arbitrary line
+lengths:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _POSIX_C_SOURCE </span><span class="dv">200809</span><span class="bu">L</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>line <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> cap <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="dt">ssize_t</span> len<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">((</span>len <span class="op">=</span> getline<span class="op">(&amp;</span>line<span class="op">,</span> <span class="op">&amp;</span>cap<span class="op">,</span> f<span class="op">))</span> <span class="op">!=</span> <span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* line holds the text including the newline; len is its length */</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>free<span class="op">(</span>line<span class="op">);</span></span></code></pre></div>
+<h4 id="characters-and-the-eof-loop">Characters and the EOF loop</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> c<span class="op">;</span>                                     <span class="co">/* int, so EOF (negative) is distinguishable */</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">((</span>c <span class="op">=</span> fgetc<span class="op">(</span>f<span class="op">))</span> <span class="op">!=</span> EOF<span class="op">)</span> <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>ferror<span class="op">(</span>f<span class="op">))</span> <span class="op">{</span> <span class="co">/* a read error occurred */</span> <span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>           <span class="op">{</span> <span class="co">/* reached end of file */</span> <span class="op">}</span></span></code></pre></div>
+<p>Do not write <code>while (!feof(f))</code>: <code
+class="verbatim">feof</code> becomes true only <em>after</em> a read
+fails, so the loop runs once too often. Test the return value of the
+read, then use <code class="verbatim">feof</code> / <code
+class="verbatim">ferror</code> to tell why it stopped.</p>
+<h4 id="scanf">scanf</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> n<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> name<span class="op">[</span><span class="dv">32</span><span class="op">];</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>scanf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st"> </span><span class="sc">%31s</span><span class="st">&quot;</span><span class="op">,</span> <span class="op">&amp;</span>n<span class="op">,</span> name<span class="op">)</span> <span class="op">!=</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span> <span class="co">/* bad input */</span> <span class="op">}</span></span></code></pre></div>
+<p>Always check the return value (the number of items converted), and
+always give <code class="verbatim">%s</code> a width one less than the
+buffer. <code class="verbatim">scanf</code> leaves unread input in the
+stream on failure, which is why many programs read a line with <code
+class="verbatim">fgets</code> and parse it with <code
+class="verbatim">sscanf</code> or <code class="verbatim">strtol</code>
+instead.</p>
+<h3 id="binary-io">5. Binary I/O</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>f <span class="op">=</span> fopen<span class="op">(</span><span class="st">&quot;out.bin&quot;</span><span class="op">,</span> <span class="st">&quot;wb&quot;</span><span class="op">);</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> wrote <span class="op">=</span> fwrite<span class="op">(</span>items<span class="op">,</span> <span class="kw">sizeof</span> items<span class="op">[</span><span class="dv">0</span><span class="op">],</span> n<span class="op">,</span> f<span class="op">);</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>wrote <span class="op">!=</span> n<span class="op">)</span> <span class="op">{</span> <span class="co">/* error */</span> <span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> got <span class="op">=</span> fread<span class="op">(</span>items<span class="op">,</span> <span class="kw">sizeof</span> items<span class="op">[</span><span class="dv">0</span><span class="op">],</span> n<span class="op">,</span> f<span class="op">);</span>   <span class="co">/* may be short at EOF or on error */</span></span></code></pre></div>
+<p>Do not dump structs or multi-byte integers with <code
+class="verbatim">fwrite</code> if the file must be portable: padding and
+byte order differ between systems (encode explicitly; see <code
+class="verbatim">02_types.org</code>).</p>
+<p>Reading a whole file:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>read_file<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>path<span class="op">,</span> <span class="dt">size_t</span> <span class="op">*</span>out_len<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>f <span class="op">=</span> fopen<span class="op">(</span>path<span class="op">,</span> <span class="st">&quot;rb&quot;</span><span class="op">);</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>f <span class="op">==</span> NULL<span class="op">)</span> <span class="cf">return</span> NULL<span class="op">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>fseek<span class="op">(</span>f<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> SEEK_END<span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> fclose<span class="op">(</span>f<span class="op">);</span> <span class="cf">return</span> NULL<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">long</span> n <span class="op">=</span> ftell<span class="op">(</span>f<span class="op">);</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">||</span> fseek<span class="op">(</span>f<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> SEEK_SET<span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> fclose<span class="op">(</span>f<span class="op">);</span> <span class="cf">return</span> NULL<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span> <span class="op">*</span>buf <span class="op">=</span> malloc<span class="op">((</span><span class="dt">size_t</span><span class="op">)</span>n <span class="op">+</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>buf <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span> fclose<span class="op">(</span>f<span class="op">);</span> <span class="cf">return</span> NULL<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> got <span class="op">=</span> fread<span class="op">(</span>buf<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)</span>n<span class="op">,</span> f<span class="op">);</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>got <span class="op">!=</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)</span>n <span class="op">&amp;&amp;</span> ferror<span class="op">(</span>f<span class="op">))</span> <span class="op">{</span> free<span class="op">(</span>buf<span class="op">);</span> fclose<span class="op">(</span>f<span class="op">);</span> <span class="cf">return</span> NULL<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    fclose<span class="op">(</span>f<span class="op">);</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    buf<span class="op">[</span>got<span class="op">]</span> <span class="op">=</span> <span class="ch">&#39;</span><span class="sc">\0</span><span class="ch">&#39;</span><span class="op">;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>out_len<span class="op">)</span> <span class="op">*</span>out_len <span class="op">=</span> got<span class="op">;</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> buf<span class="op">;</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This does not work for pipes or other non-seekable streams: there,
+read in chunks into a growing buffer. For files over 2 GB on 32-bit
+<code class="verbatim">long</code>, use <code
+class="verbatim">fseeko</code> / <code class="verbatim">ftello</code>
+(POSIX).</p>
+<h3 id="errno">6. errno</h3>
+<p>Many library and system calls set the thread-local variable <code
+class="verbatim">errno</code> on failure.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;errno.h&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string.h&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>errno <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> v <span class="op">=</span> strtol<span class="op">(</span>s<span class="op">,</span> <span class="op">&amp;</span>end<span class="op">,</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>errno <span class="op">==</span> ERANGE<span class="op">)</span> <span class="op">{</span> <span class="co">/* out of range */</span> <span class="op">}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>fprintf<span class="op">(</span>stderr<span class="op">,</span> <span class="st">&quot;open failed: </span><span class="sc">%s\n</span><span class="st">&quot;</span><span class="op">,</span> strerror<span class="op">(</span>errno<span class="op">));</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>perror<span class="op">(</span><span class="st">&quot;open&quot;</span><span class="op">);</span>                              <span class="co">/* same, with a prefix */</span></span></code></pre></div>
+<p>Rules:</p>
+<ul>
+<li><code class="verbatim">errno</code> is meaningful only immediately
+after a call that reported failure. Successful calls may change it.</li>
+<li>Check the function's return value first; then read <code
+class="verbatim">errno</code>.</li>
+<li>Functions that can legitimately return any value (<code
+class="verbatim">strtol</code>, <code class="verbatim">strtod</code>)
+need <code class="verbatim">errno = 0</code> before the call.</li>
+<li>Save <code class="verbatim">errno</code> in a local variable before
+calling anything else (even <code class="verbatim">fprintf</code>) if
+you need it later.</li>
+<li><code class="verbatim">strerror</code> may return a pointer to a
+shared buffer. In multithreaded code use <code
+class="verbatim">strerror_r</code> (POSIX) or <code
+class="verbatim">strerror_s</code> (Annex K).</li>
+</ul>
+<h3 id="error-handling-patterns">7. Error-handling patterns</h3>
+<p>C has no exceptions. Choose a convention and apply it
+consistently.</p>
+<p><strong>Return codes with out-parameters:</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">enum</span> <span class="op">{</span> OK <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> ERR_IO<span class="op">,</span> ERR_PARSE<span class="op">,</span> ERR_NOMEM <span class="op">}</span> Status<span class="op">;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>Status load_config<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>path<span class="op">,</span> Config <span class="op">*</span>out<span class="op">);</span></span></code></pre></div>
+<p><strong>A single exit path (<code
+class="verbatim">goto cleanup</code>)</strong> that releases resources
+and preserves the error:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> copy_file<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>src<span class="op">,</span> <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>dst<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> rc <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">FILE</span> <span class="op">*</span>in <span class="op">=</span> NULL<span class="op">,</span> <span class="op">*</span>out <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span> buf<span class="op">[</span><span class="dv">4096</span><span class="op">];</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> n<span class="op">;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    in <span class="op">=</span> fopen<span class="op">(</span>src<span class="op">,</span> <span class="st">&quot;rb&quot;</span><span class="op">);</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>in <span class="op">==</span> NULL<span class="op">)</span> <span class="cf">goto</span> done<span class="op">;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> fopen<span class="op">(</span>dst<span class="op">,</span> <span class="st">&quot;wb&quot;</span><span class="op">);</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>out <span class="op">==</span> NULL<span class="op">)</span> <span class="cf">goto</span> done<span class="op">;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">((</span>n <span class="op">=</span> fread<span class="op">(</span>buf<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="kw">sizeof</span> buf<span class="op">,</span> in<span class="op">))</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>fwrite<span class="op">(</span>buf<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> n<span class="op">,</span> out<span class="op">)</span> <span class="op">!=</span> n<span class="op">)</span> <span class="cf">goto</span> done<span class="op">;</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ferror<span class="op">(</span>in<span class="op">))</span> <span class="cf">goto</span> done<span class="op">;</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    rc <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>done<span class="op">:</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>out <span class="op">!=</span> NULL <span class="op">&amp;&amp;</span> fclose<span class="op">(</span>out<span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> rc <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>in <span class="op">!=</span> NULL<span class="op">)</span> fclose<span class="op">(</span>in<span class="op">);</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rc<span class="op">;</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Assertions</strong> check programmer errors (broken
+invariants), not run-time conditions such as a missing file:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;assert.h&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>assert<span class="op">(</span>index <span class="op">&lt;</span> len<span class="op">);</span>            <span class="co">/* aborts with file and line; removed if NDEBUG is defined */</span></span></code></pre></div>
+<p>Never put side effects inside <code class="verbatim">assert</code>:
+they vanish in release builds. Validate external input with real checks,
+not assertions.</p>
+<p><strong>Termination:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Call</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">return</code> from <code
+class="verbatim">main</code> / <code
+class="verbatim">exit(code)</code></td>
+<td>Runs <code class="verbatim">atexit</code> handlers, flushes and
+closes streams</td>
+</tr>
+<tr>
+<td><code class="verbatim">_Exit(code)</code></td>
+<td>Exits immediately; no cleanup</td>
+</tr>
+<tr>
+<td><code class="verbatim">abort()</code></td>
+<td>Raises <code class="verbatim">SIGABRT</code>; typically a core
+dump</td>
+</tr>
+<tr>
+<td><code class="verbatim">atexit(fn)</code></td>
+<td>Registers a handler to run at <code
+class="verbatim">exit</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="setjmp-and-longjmp">8. setjmp and longjmp</h3>
+<p><code class="verbatim">setjmp</code> saves the execution context;
+<code class="verbatim">longjmp</code> jumps back to it, unwinding the
+stack without running any cleanup.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;setjmp.h&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> jmp_buf env<span class="op">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> fail<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span> longjmp<span class="op">(</span>env<span class="op">,</span> <span class="dv">1</span><span class="op">);</span> <span class="op">}</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>setjmp<span class="op">(</span>env<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        fail<span class="op">();</span>                       <span class="co">/* does not return */</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        puts<span class="op">(</span><span class="st">&quot;recovered&quot;</span><span class="op">);</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Restrictions are many: the function containing <code
+class="verbatim">setjmp</code> must still be active; modified non-<code
+class="verbatim">volatile</code> locals have indeterminate values after
+the jump; resources (memory, files, locks) between the two points leak.
+Treat it as a tool for rare cases (an error escape from deep recursion,
+a parser abort), not a general exception mechanism.</p>
+<h3 id="posix-file-descriptors">9. POSIX file descriptors</h3>
+<p>Below <code class="verbatim">FILE *</code> lies the POSIX system-call
+layer: <code class="verbatim">open</code>, <code
+class="verbatim">read</code>, <code class="verbatim">write</code>, <code
+class="verbatim">close</code> on integer descriptors (<code
+class="verbatim">&lt;fcntl.h&gt;</code>, <code
+class="verbatim">&lt;unistd.h&gt;</code>). Those calls may transfer
+fewer bytes than requested and may fail with <code
+class="verbatim">EINTR</code> after a signal, so wrap them:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;errno.h&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unistd.h&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ssize_t</span> write_all<span class="op">(</span><span class="dt">int</span> fd<span class="op">,</span> <span class="dt">const</span> <span class="dt">void</span> <span class="op">*</span>buf<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>p <span class="op">=</span> buf<span class="op">;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> left <span class="op">=</span> n<span class="op">;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>left <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">ssize_t</span> w <span class="op">=</span> write<span class="op">(</span>fd<span class="op">,</span> p<span class="op">,</span> left<span class="op">);</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>w <span class="op">&lt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>errno <span class="op">==</span> EINTR<span class="op">)</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        p <span class="op">+=</span> w<span class="op">;</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        left <span class="op">-=</span> <span class="op">(</span><span class="dt">size_t</span><span class="op">)</span>w<span class="op">;</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">ssize_t</span><span class="op">)</span>n<span class="op">;</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Do not mix <code class="verbatim">stdio</code> and raw descriptor I/O
+on the same file without flushing, because the buffers are
+independent.</p>
+<h3 id="other-useful-calls">10. Other useful calls</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>remove<span class="op">(</span><span class="st">&quot;old.txt&quot;</span><span class="op">);</span>                     <span class="co">/* delete a file */</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>rename<span class="op">(</span><span class="st">&quot;a.txt&quot;</span><span class="op">,</span> <span class="st">&quot;b.txt&quot;</span><span class="op">);</span>              <span class="co">/* rename or move (atomic on POSIX within a filesystem) */</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>t <span class="op">=</span> tmpfile<span class="op">();</span>                   <span class="co">/* anonymous temporary file, deleted at close */</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>rewind<span class="op">(</span>f<span class="op">);</span>                             <span class="co">/* back to the start and clear error state */</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>fseek<span class="op">(</span>f<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> SEEK_SET<span class="op">);</span>  ftell<span class="op">(</span>f<span class="op">);</span>      <span class="co">/* reposition, query */</span></span></code></pre></div>
+<p>For atomic updates of a file, write a temporary file in the same
+directory, flush and <code class="verbatim">fsync</code> it, then <code
+class="verbatim">rename</code> it over the original.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Check the result of every I/O call, including <code
+class="verbatim">fclose</code> on files you wrote.</li>
+<li>Use <code class="verbatim">int</code> for <code
+class="verbatim">fgetc</code> / <code class="verbatim">getchar</code>
+results; do not loop on <code class="verbatim">feof</code>.</li>
+<li>Never pass external data as a <code class="verbatim">printf</code>
+format; use <code class="verbatim">snprintf</code> and check
+truncation.</li>
+<li><code class="verbatim">errno</code> is valid only right after a
+failing call; save it before doing anything else.</li>
+<li>Pick one error convention (codes + <code
+class="verbatim">goto cleanup</code> is common) and be consistent.</li>
+<li><code class="verbatim">assert</code> is for bugs, not for expected
+failures.</li>
+<li>Raw <code class="verbatim">read</code> / <code
+class="verbatim">write</code> need loops for partial transfers and <code
+class="verbatim">EINTR</code>.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coupling and Cohesion</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/software-architecture/03-coupling-and-cohesion.html">
+  <meta property="og:title" content="Coupling and Cohesion">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/software-architecture/03-coupling-and-cohesion.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Coupling and Cohesion</h1>
+<h2 id="coupling-and-cohesion-1">Coupling and Cohesion</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Coupling and cohesion are the vocabulary for talking about the cost
+of change. The cost of a change is largely the number of things that
+must change with it, the distance between them, and how many people must
+agree. At Staff and Principal scope you are expected to:</p>
+<ul>
+<li>name the <em>kind</em> of coupling in a design review ("this is
+temporal coupling through a synchronous chain", "this is a shared-schema
+coupling"), because the remedy depends on the kind;</li>
+<li>reason about strength, distance, and volatility together instead of
+declaring "coupling is bad";</li>
+<li>recognize decoupling that costs more than it saves (indirection,
+eventual consistency, duplication);</li>
+<li>measure coupling with evidence from the code and from the history of
+changes.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">02_modularity-and-boundaries.org</code> (where
+boundaries go), <code
+class="verbatim">04_abstraction-and-interfaces.org</code> (how to make
+coupling weak), and <code class="verbatim">09_technical-debt.org</code>
+(the interest that bad coupling generates).</p>
+<h3 id="definitions">1. Definitions</h3>
+<ul>
+<li><strong>Coupling</strong> is the degree to which a change in one
+part of a system forces or enables a change in another.
+<strong>Cohesion</strong> is how strongly the elements inside a part
+belong together (how much they change for the same reasons).</li>
+<li>The design goal is <strong>low coupling between</strong> modules and
+<strong>high cohesion within</strong> them, so that most changes land
+inside one module.</li>
+<li>Coupling is not eliminated, only managed: a system whose parts do
+not depend on each other is not a system. Every useful interaction is a
+coupling; the question is its form, its strength, and its distance.</li>
+<li>Ousterhout's formulation: complexity shows up as <strong>change
+amplification</strong> (a simple change needs edits in many places),
+<strong>cognitive load</strong> (how much you must know to make a
+change), and <strong>unknown unknowns</strong> (you cannot tell what
+must change). Coupling and weak cohesion produce all three.</li>
+</ul>
+<h3 id="connascence-a-common-vocabulary">2. Connascence: a common
+vocabulary</h3>
+<p>Connascence (Page-Jones; popularized by Weirich) says two components
+are connascent if a change in one requires a change in the other to keep
+the system correct. It classifies coupling by <em>form</em>, and by
+three properties: <strong>strength</strong> (how hard to refactor),
+<strong>degree</strong> (how many components involved), and
+<strong>locality</strong> (how close they are). Rules of thumb: convert
+strong forms to weaker ones, and keep strong connascence local (inside
+one module, one function, one file).</p>
+<p>Static forms (visible in the source), roughly from weakest to
+strongest:</p>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Meaning</th>
+<th>Example</th>
+<th>Typical remedy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Components agree on a name</td>
+<td>Calling a function by its name</td>
+<td>Tooling renames; acceptable</td>
+</tr>
+<tr>
+<td>Type</td>
+<td>Components agree on a type</td>
+<td>Parameter and argument types</td>
+<td>Typed interfaces</td>
+</tr>
+<tr>
+<td>Meaning (convention)</td>
+<td>Agree on the meaning of values</td>
+<td>Status 1 means active; magic numbers</td>
+<td>Enums, named constants, value objects</td>
+</tr>
+<tr>
+<td>Position</td>
+<td>Agree on the order of values</td>
+<td>Positional arguments, tuple fields, CSV columns</td>
+<td>Named parameters, records</td>
+</tr>
+<tr>
+<td>Algorithm</td>
+<td>Agree on an algorithm</td>
+<td>Both sides must use the same hash or encoding</td>
+<td>Shared library, or a documented contract</td>
+</tr>
+</tbody>
+</table>
+<p>Dynamic forms (visible only at run time), generally stronger and
+harder to see:</p>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Meaning</th>
+<th>Example</th>
+<th>Typical remedy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Execution order</td>
+<td>Operations must happen in a particular order</td>
+<td>Call init before use; protocol steps</td>
+<td>Encapsulate the order, state machines</td>
+</tr>
+<tr>
+<td>Timing</td>
+<td>Result depends on timing</td>
+<td>Race conditions, sleeps to wait for another service</td>
+<td>Synchronization, explicit events</td>
+</tr>
+<tr>
+<td>Value</td>
+<td>Several values must change together</td>
+<td>Invariants across fields or across services</td>
+<td>One owner, transactions, aggregates</td>
+</tr>
+<tr>
+<td>Identity</td>
+<td>Components must refer to the same instance</td>
+<td>Shared object or shared row identity</td>
+<td>Pass identifiers, ownership</td>
+</tr>
+</tbody>
+</table>
+<p>Use it in reviews: "this is connascence of position across a service
+boundary: switch to named fields" is more actionable than "this is too
+coupled".</p>
+<h3 id="classic-forms-of-coupling-between-modules">3. Classic forms of
+coupling between modules</h3>
+<p>From the structured-design tradition (Constantine, Yourdon), from
+tightest to loosest:</p>
+<table>
+<thead>
+<tr>
+<th>Coupling</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Content</td>
+<td>One module modifies or relies on another's internals</td>
+<td>Reaching into private fields, writing another module's tables</td>
+</tr>
+<tr>
+<td>Common</td>
+<td>Modules share global state</td>
+<td>Global variables, shared singletons, shared mutable caches</td>
+</tr>
+<tr>
+<td>External</td>
+<td>Modules depend on an external format or device</td>
+<td>Shared file formats, protocols, third-party SDK types</td>
+</tr>
+<tr>
+<td>Control</td>
+<td>One module controls another's flow by passing flags</td>
+<td>A boolean parameter that switches behavior</td>
+</tr>
+<tr>
+<td>Stamp</td>
+<td>Modules share a composite structure but use parts of it</td>
+<td>Passing a whole record when one field is needed</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>Modules share only the data needed, through parameters</td>
+<td>Passing exactly the required values</td>
+</tr>
+<tr>
+<td>Message</td>
+<td>Modules interact only by messages through an interface</td>
+<td>Events and commands with a defined schema</td>
+</tr>
+</tbody>
+</table>
+<p>Aim for data and message coupling at boundaries; tolerate stronger
+forms only inside a module.</p>
+<h3 id="coupling-at-architectural-scale">4. Coupling at architectural
+scale</h3>
+<p>Beyond code-level coupling, systems are coupled along several
+dimensions, and each has its own failure mode:</p>
+<ul>
+<li><strong>Build-time coupling</strong>: shared libraries and versions;
+a change forces rebuilds or dependency upgrades elsewhere (diamond
+dependencies, version skew).</li>
+<li><strong>Deploy-time coupling</strong>: components that must be
+released together (lockstep releases are the signature of a distributed
+monolith).</li>
+<li><strong>Runtime (temporal) coupling</strong>: caller and callee must
+both be available at the same moment; synchronous chains multiply
+latency and failure probability (see <code
+class="verbatim">06_quality-attributes-and-tradeoffs.org</code>).</li>
+<li><strong>Spatial coupling</strong>: knowing where the other side
+lives (hard-coded addresses); mitigated by discovery and gateways.</li>
+<li><strong>Data (schema) coupling</strong>: shared database tables or
+schemas; the strongest and most common architectural coupling.</li>
+<li><strong>Format coupling</strong>: serialization formats and wire
+protocols; mitigated by schema evolution rules and tolerant
+readers.</li>
+<li><strong>Semantic (domain) coupling</strong>: shared meaning of
+concepts (what "active customer" means). It cannot be removed by
+technology, only managed with explicit contexts and translation (see
+<code class="verbatim">02_modularity-and-boundaries.org</code>).</li>
+<li><strong>Platform and vendor coupling</strong>: dependence on a cloud
+service, framework, or language runtime.</li>
+<li><strong>Organizational coupling</strong>: teams that must coordinate
+to ship; Conway's law links it to the system structure.</li>
+<li><strong>Test coupling</strong>: tests that break when internals
+change, or that need the whole environment.</li>
+</ul>
+<h3 id="a-balance-model-strength-distance-volatility">5. A balance
+model: strength, distance, volatility</h3>
+<p>Khononov's balancing model (and the older connascence guidance)
+combines three variables:</p>
+<ul>
+<li><strong>Integration strength</strong>: how much knowledge one
+component has of another, from knowing only a published contract (weak)
+to knowing models, implementation functions, or internals (strong).</li>
+<li><strong>Distance</strong>: how far apart the components are: same
+function, same class, same module, same repository, different team,
+different organization, different network location. Distance raises the
+cost of any change that crosses it (more people, more coordination, more
+risk).</li>
+<li><strong>Volatility</strong>: how likely each side is to change.</li>
+</ul>
+<p>Guidance that follows:</p>
+<ul>
+<li>Strong coupling over a short distance is fine: related code in one
+module that changes together (high cohesion).</li>
+<li>Strong coupling over a long distance is expensive and fragile: it is
+where distributed monoliths come from.</li>
+<li>Coupling to something stable (a mature standard, a rarely changing
+library) is cheap even at distance; coupling to something volatile is
+costly at any distance, so put a stable contract in between.</li>
+<li>Weak coupling is not automatically good: if components that change
+together are separated by a weak contract (and distance), you pay
+indirection costs for no isolation benefit. Cohesion says such things
+should live together.</li>
+</ul>
+<p>Use the three questions in a review: how strongly, over what
+distance, to what volatility?</p>
+<h3 id="cohesion">6. Cohesion</h3>
+<p>Types of cohesion in a module, from worst to best (Constantine,
+Yourdon):</p>
+<ul>
+<li><strong>Coincidental</strong>: unrelated pieces thrown together (the
+"utils" module).</li>
+<li><strong>Logical</strong>: grouped by category, selected by flags
+(string, math, and date helpers in one function).</li>
+<li><strong>Temporal</strong>: grouped because they run at the same time
+(startup tasks).</li>
+<li><strong>Procedural</strong>: grouped because they run in
+sequence.</li>
+<li><strong>Communicational</strong>: operate on the same data.</li>
+<li><strong>Sequential</strong>: output of one is input of the
+next.</li>
+<li><strong>Functional</strong>: all elements contribute to one
+well-defined task or concept. This is the target.</li>
+</ul>
+<p>Architectural versions of the same ideas:</p>
+<ul>
+<li><strong>Common closure principle</strong> (Martin): things that
+change together belong together; components should be closed against the
+same kinds of change. This is cohesion measured by change, which is what
+matters.</li>
+<li><strong>Common reuse principle</strong>: do not force users of a
+component to depend on things they do not use.</li>
+<li><strong>Reuse/release equivalence</strong>: the unit of reuse is the
+unit of release.</li>
+<li><strong>Vertical slices over horizontal layers</strong>: a feature
+slice (UI to storage) usually has higher cohesion than a layer, because
+features change as a unit.</li>
+<li><strong>Low cohesion symptoms</strong>: classes with many unrelated
+dependencies, methods that use disjoint subsets of fields, modules that
+change for several unrelated reasons, names with "And" or "Manager" or
+"Helper".</li>
+</ul>
+<p>Cohesion is relative to the reasons for change: a module is cohesive
+when it has one reason to change (single responsibility, understood as
+responsibility to one actor or stakeholder, not "does one thing").</p>
+<h3 id="cyclic-dependencies">7. Cyclic dependencies</h3>
+<ul>
+<li><strong>Why they are harmful</strong>: components in a cycle cannot
+be built, tested, versioned, or released independently; they are
+effectively one component, while appearing to be several. Cycles also
+hide in services: A calls B calls A, causing deadlocks, retry storms,
+and cascading failures.</li>
+<li><strong>Detection</strong>: compute the strongly connected
+components of the dependency graph (linear time, see the algorithms file
+in Foundations); any component with more than one member is a cycle. Run
+this in CI, with a baseline that cannot grow.</li>
+<li><strong>Breaking cycles</strong>:
+<ol>
+<li><strong>Dependency inversion</strong>: the module that needs a
+service defines an interface (a port); the other module implements it,
+reversing the compile-time edge.</li>
+<li><strong>Extract the shared concept</strong> (the thing both need)
+into a lower-level module that both depend on.</li>
+<li><strong>Merge the modules</strong>: if they cannot be separated,
+admit it.</li>
+<li><strong>Events or callbacks</strong>: replace a call back to the
+caller with a notification the caller subscribes to.</li>
+<li><strong>Move behavior to the owner of the data</strong> so the
+dependency is one-way.</li>
+</ol>
+Beware of "fixing" a cycle by adding a shared "common" module that
+collects everything the cycle needed; it becomes the new magnet.</li>
+</ul>
+<h3 id="the-cost-of-change">8. The cost of change</h3>
+<p>A simple model makes coupling discussable with product and finance
+partners. For a pair of components A and B:</p>
+<ul>
+<li>expected coordination cost per period = (changes to A per period) x
+(probability a change to A requires a change in B) x (cost of
+coordinating that change), where the cost grows with distance (same
+engineer, same team, different team, different company);</li>
+<li>summed over all pairs, this is a proxy for the drag coupling imposes
+on delivery.</li>
+</ul>
+<p>Ways the cost shows up: change amplification (more files and teams
+per change), long lead time, large pull requests, release trains, merge
+conflicts, regression fear, onboarding time, and incidents caused by
+unexpected interactions. Treat these as the "interest" that bad coupling
+charges (see <code class="verbatim">09_technical-debt.org</code>).</p>
+<h3 id="measuring-coupling-and-cohesion">9. Measuring coupling and
+cohesion</h3>
+<ul>
+<li><strong>Static structure</strong>: afferent and efferent coupling,
+instability, fan-in and fan-out, dependency cycles, depth of the
+dependency graph, and dependency structure matrices. Tools exist for
+most ecosystems; most are cheap to run in CI.</li>
+<li><strong>Cohesion metrics</strong> such as lack of cohesion of
+methods (LCOM) are crude but useful as flags; combine with reading.</li>
+<li><strong>Change coupling</strong> from version control: how often
+files or modules change together in the same commit, pull request, or
+release. This measures the coupling that matters, including semantic and
+implicit coupling that static analysis cannot see.</li>
+<li><strong>Deployment coupling</strong>: the share of deployments that
+require another deployment; time spent waiting on other teams; number of
+teams in a typical change.</li>
+<li><strong>Incident coupling</strong>: incidents where a failure
+crossed a boundary; the blast radius.</li>
+<li><strong>Lead time and change failure rate</strong> per component or
+team (as in the DORA metrics): hot spots of slowness often coincide with
+coupling.</li>
+<li><strong>Pitfalls</strong>: metrics become targets (Goodhart's law);
+a low static-coupling score with high change coupling means hidden
+coupling; do not optimize numbers, investigate causes.</li>
+</ul>
+<h3 id="decoupling-techniques-and-their-costs">10. Decoupling techniques
+and their costs</h3>
+<p>Every decoupling move buys isolation and costs something.</p>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>What it decouples</th>
+<th>Cost or risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interface and dependency injection</td>
+<td>Implementation from caller</td>
+<td>Indirection; interfaces with one implementation are noise</td>
+</tr>
+<tr>
+<td>Dependency inversion (ports)</td>
+<td>Policy from detail; direction of dependency</td>
+<td>More types and mapping</td>
+</tr>
+<tr>
+<td>Events and messaging</td>
+<td>Time and knowledge between sender and receiver</td>
+<td>Eventual consistency; hidden flows; debugging</td>
+</tr>
+<tr>
+<td>Anti-corruption layer</td>
+<td>Your model from someone else's</td>
+<td>Translation code; duplication</td>
+</tr>
+<tr>
+<td>Versioned contracts</td>
+<td>Release cycles</td>
+<td>Maintaining several versions</td>
+</tr>
+<tr>
+<td>Data replication (local copies)</td>
+<td>Runtime availability and latency</td>
+<td>Staleness; synchronization logic</td>
+</tr>
+<tr>
+<td>Caching</td>
+<td>Load and latency</td>
+<td>Invalidation; stale reads</td>
+</tr>
+<tr>
+<td>Feature flags</td>
+<td>Deploy from release</td>
+<td>Flag debt; combinatorial states</td>
+</tr>
+<tr>
+<td>Duplication of code or data</td>
+<td>Change between components</td>
+<td>Divergence; but often cheaper than the wrong sharing</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>DRY versus coupling</strong>: removing duplication creates
+coupling between all the places that share the code. Sandi Metz's
+observation that duplication is far cheaper than the wrong abstraction
+applies at module and service scale; the "rule of three" (wait for three
+uses) and the distinction between accidental similarity and a shared
+concept help decide.</li>
+<li><strong>Shared libraries</strong> across services couple release
+cadences and versions: share contracts and generated clients carefully,
+and keep business logic out of shared libraries.</li>
+<li><strong>Over-decoupling smell</strong>: a system of tiny components
+wired by configuration and events in which nobody can say what happens
+when a button is pressed.</li>
+</ul>
+<h3 id="practical-heuristics">11. Practical heuristics</h3>
+<ol>
+<li>Make coupling <em>visible</em> (explicit interfaces, typed
+contracts) before trying to make it weak; hidden coupling is the real
+enemy.</li>
+<li>Keep strong coupling local: inside a function, class, or module, and
+between things that change together.</li>
+<li>Couple to contracts and stable abstractions, not to implementations
+or to volatile modules.</li>
+<li>Across boundaries, use data or message coupling: pass what is
+needed, in a documented schema.</li>
+<li>Prefer one owner per piece of state; avoid shared mutable state and
+shared tables.</li>
+<li>Follow the Law of Demeter ("do not talk to strangers") and "tell,
+don't ask": ask the owner to act instead of pulling its data and
+deciding.</li>
+<li>Minimize the public surface of each module; every public element is
+a future coupling.</li>
+<li>Co-locate what changes together; separate what changes at different
+rates.</li>
+<li>When two modules keep changing together, either merge them or find
+the missing concept they share.</li>
+<li>Review dependency diffs in code review, not only code diffs.</li>
+</ol>
+<h3 id="self-check">12. Self-check</h3>
+<ol>
+<li>Classify the following in connascence terms and propose a weaker
+form: a function taking five positional booleans; a service that expects
+a magic string in a header; two services that must retry in a specific
+order.</li>
+<li>A change to field X of the "customer" record requires changes in six
+services. Which kinds of coupling are present, and what would you change
+first?</li>
+<li>Why can strong coupling be acceptable inside a module but dangerous
+across services?</li>
+<li>How would you tell, from data, that two modules are more coupled
+than their import graph suggests?</li>
+<li>A shared library of "common" code has grown to 200,000 lines.
+Describe a plan to reduce its coupling without a big-bang rewrite.</li>
+<li>Give an example where adding an interface or an event made the
+system worse.</li>
+</ol>
+<h3 id="exercises">13. Exercises</h3>
+<ul>
+<li>Warm-up: compute Ca, Ce, and instability for every module in a small
+codebase; identify the stable and unstable ones and compare with your
+intuition.</li>
+<li>Core: compute the strongly connected components of a dependency
+graph, and write the plan to break the largest cycle using dependency
+inversion.</li>
+<li>Core: analyze change coupling: list the 20 pairs of files that most
+often change together and explain each pair (a missing abstraction, an
+intentional dependency, or a boundary in the wrong place).</li>
+<li>Core: pick three connascence smells in your code and refactor each
+toward a weaker form.</li>
+<li>Stretch: build a tiny tool that reads git history and prints a
+co-change matrix between top-level directories; use it on a project you
+own.</li>
+</ul>
+<h3 id="resources">14. Resources</h3>
+<ul>
+<li>Page-Jones, <em>What Every Programmer Should Know About
+Object-Oriented Design</em> (connascence); Weirich's talks on
+connascence; the connascence catalog site: <a
+href="https://connascence.io">https://connascence.io</a></li>
+<li>Ousterhout, <em>A Philosophy of Software Design</em> (complexity,
+deep modules, change amplification).</li>
+<li>Martin, <em>Clean Architecture</em> (component cohesion and coupling
+principles); Constantine and Yourdon, <em>Structured Design</em>
+(coupling and cohesion classification).</li>
+<li>Khononov, <em>Balancing Coupling in Software Design</em> (strength,
+distance, volatility).</li>
+<li>Tornhill, <em>Software Design X-Rays</em> (change coupling and
+hotspots).</li>
+<li>Forsgren, Humble, Kim, <em>Accelerate</em> and the DORA research
+program (delivery metrics): <a
+href="https://dora.dev">https://dora.dev</a></li>
+<li>Metz, <em>The Wrong Abstraction</em> (blog essay) and Fowler,
+<em>Refactoring</em> (code smells that signal coupling).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Name the kind of coupling; the remedy depends on it.</li>
+<li>Strength, distance, and volatility together determine cost; keep
+strong coupling local.</li>
+<li>Cohesion is measured by reasons to change; vertical slices usually
+beat layers.</li>
+<li>Cycles turn several components into one; detect and break them.</li>
+<li>Every decoupling technique has a price; duplication can be cheaper
+than the wrong abstraction.</li>
+<li>Measure with change coupling and delivery metrics, not only with
+static metrics.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

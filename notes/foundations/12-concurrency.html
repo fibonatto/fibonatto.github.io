@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concurrency and Distributed Systems Foundations</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/12-concurrency.html">
+  <meta property="og:title" content="Concurrency and Distributed Systems Foundations">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/12-concurrency.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Concurrency and Distributed Systems Foundations</h1>
+<h2 id="concurrency-and-distributed-systems-foundations-1">Concurrency
+and Distributed Systems Foundations</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Concurrency is where correct-looking code fails rarely, expensively,
+and irreproducibly. At Staff scope you will:</p>
+<ul>
+<li>design systems whose correctness rests on stated invariants and
+failure models, not on "it passed the tests";</li>
+<li>choose a concurrency model (threads and locks, message passing,
+async, actors, data parallelism) for each part of a system and defend
+the trade-off;</li>
+<li>reason about consistency, ordering, and failure across machines:
+what a database, queue, or cache actually guarantees, and what your
+application must add (idempotency, fencing, retries);</li>
+<li>predict capacity and tail latency with simple queueing models, and
+design overload behavior (backpressure, shedding, timeouts).</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">02_logic-and-proofs.org</code> (invariants, safety and
+liveness), <code class="verbatim">04_complexity.org</code>, <code
+class="verbatim">11_memory-management.org</code>, <code
+class="verbatim">05_data-structures.org</code>, and the concurrency
+files in the C and Rust notes for language-level APIs.</p>
+<h3 id="concepts-and-costs">1. Concepts and costs</h3>
+<ul>
+<li><strong>Concurrency</strong> is structuring a program as
+independently progressing activities; <strong>parallelism</strong> is
+running them simultaneously on multiple processors. Concurrency can
+exist on one core (interleaving); parallelism needs several.</li>
+<li><strong>Units</strong>: processes (isolated address spaces, heavy),
+OS threads (shared memory, preemptively scheduled), user-level or green
+threads and coroutines (cheap, scheduled by a runtime), event loops
+(single thread, cooperative). A context switch costs microseconds and
+pollutes caches.</li>
+<li><strong>Preemptive versus cooperative scheduling</strong>:
+preemptive can interrupt at any instruction (races possible anywhere);
+cooperative switches only at explicit points (await, yield), which
+removes some races but lets one task starve the loop.</li>
+<li><strong>Amdahl's law</strong>: if a fraction f of the work
+parallelizes perfectly across p workers, the speedup is 1 / ((1 - f) + f
+/ p), bounded by 1 / (1 - f). With 90% parallel work, 1000 cores give
+less than 10x. <strong>Gustafson's law</strong> notes that larger
+machines usually solve larger problems, so scaled speedup is s + p (1 -
+s) for serial fraction s of the parallel run.</li>
+<li><strong>Universal Scalability Law</strong> (Gunther): throughput
+C(N) = N / (1 + a (N - 1) + b N (N - 1)), where a models contention and
+b models coherence (crosstalk) costs; with b &gt; 0 throughput peaks and
+then <em>falls</em> as workers are added. Fit it to measurements when
+scaling stalls.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> amdahl(f, p):</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span> <span class="op">/</span> ((<span class="dv">1</span> <span class="op">-</span> f) <span class="op">+</span> f <span class="op">/</span> p)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>(amdahl(<span class="fl">0.9</span>, <span class="dv">10</span>) <span class="op">-</span> <span class="fl">5.263</span>) <span class="op">&lt;</span> <span class="fl">1e-3</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> amdahl(<span class="fl">0.9</span>, <span class="dv">1000</span>) <span class="op">&lt;</span> <span class="dv">10</span>                      <span class="co"># capped by 1 / (1 - f) = 10</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> usl(n, a, b):</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n <span class="op">/</span> (<span class="dv">1</span> <span class="op">+</span> a <span class="op">*</span> (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> b <span class="op">*</span> n <span class="op">*</span> (n <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>peak <span class="op">=</span> <span class="bu">max</span>(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">200</span>), key<span class="op">=</span><span class="kw">lambda</span> n: usl(n, <span class="fl">0.05</span>, <span class="fl">0.001</span>))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="dv">1</span> <span class="op">&lt;</span> peak <span class="op">&lt;</span> <span class="dv">199</span> <span class="kw">and</span> usl(<span class="dv">199</span>, <span class="fl">0.05</span>, <span class="fl">0.001</span>) <span class="op">&lt;</span> usl(peak, <span class="fl">0.05</span>, <span class="fl">0.001</span>)   <span class="co"># more workers, less throughput</span></span></code></pre></div>
+<h3 id="what-can-go-wrong">2. What can go wrong</h3>
+<ul>
+<li><strong>Data race</strong>: two threads access the same memory
+location concurrently, at least one writes, with no synchronization. In
+C, C++, and Rust (unsafe) it is undefined behavior; in Java and Go it
+yields weakly defined results. Distinguish it from a <strong>race
+condition</strong>, a logic bug that depends on timing (check-then-act)
+and can occur even when every access is atomic.</li>
+<li><strong>Atomicity violation</strong>: a multi-step update
+interleaved with another (lost update, write skew).</li>
+<li><strong>Deadlock</strong>: threads wait for each other forever. Four
+necessary conditions (Coffman): mutual exclusion, hold-and-wait, no
+preemption, circular wait. Break one: lock ordering, try-lock with
+back-off, acquiring all locks at once, lock-free designs.</li>
+<li><strong>Livelock</strong> (threads keep reacting without progress),
+<strong>starvation</strong> (one thread never gets the resource),
+<strong>priority inversion</strong> (a low-priority thread holding a
+lock blocks a high-priority one; mitigated by priority
+inheritance).</li>
+<li><strong>Visibility and reordering</strong>: compilers and CPUs
+reorder operations; without synchronization one thread may never see
+another's write, or see writes out of order (section 4).</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> find_deadlock(wait_for):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;wait_for: {thread: lock_or_thread_it_waits_on}, as a graph; returns a cycle or None.&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    color, stack <span class="op">=</span> {}, []</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> dfs(u):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        color[u] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        stack.append(u)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v <span class="kw">in</span> wait_for.get(u, []):</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> color.get(v, <span class="dv">0</span>) <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> stack[stack.index(v):] <span class="op">+</span> [v]</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> color.get(v, <span class="dv">0</span>) <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                cyc <span class="op">=</span> dfs(v)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> cyc:</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> cyc</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        stack.pop()</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        color[u] <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> u <span class="kw">in</span> <span class="bu">list</span>(wait_for):</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> color.get(u, <span class="dv">0</span>) <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            cyc <span class="op">=</span> dfs(u)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cyc:</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> cyc</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co"># T1 holds A and waits for B&#39;s holder T2; T2 holds B and waits for A&#39;s holder T1.</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> find_deadlock({<span class="st">&quot;T1&quot;</span>: [<span class="st">&quot;T2&quot;</span>], <span class="st">&quot;T2&quot;</span>: [<span class="st">&quot;T1&quot;</span>]}) <span class="op">==</span> [<span class="st">&quot;T1&quot;</span>, <span class="st">&quot;T2&quot;</span>, <span class="st">&quot;T1&quot;</span>]</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> find_deadlock({<span class="st">&quot;T1&quot;</span>: [<span class="st">&quot;T2&quot;</span>], <span class="st">&quot;T2&quot;</span>: [<span class="st">&quot;T3&quot;</span>], <span class="st">&quot;T3&quot;</span>: []}) <span class="kw">is</span> <span class="va">None</span></span></code></pre></div>
+<h3 id="synchronization-primitives">3. Synchronization primitives</h3>
+<table>
+<thead>
+<tr>
+<th>Primitive</th>
+<th>Purpose</th>
+<th>Caveats</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mutex (lock)</td>
+<td>Mutual exclusion over a critical section</td>
+<td>Deadlock, contention, priority inversion</td>
+</tr>
+<tr>
+<td>Spinlock</td>
+<td>Busy-wait lock for very short sections</td>
+<td>Wastes CPU; dangerous when preempted holder</td>
+</tr>
+<tr>
+<td>Read-write lock</td>
+<td>Many readers or one writer</td>
+<td>Writer starvation; overhead often exceeds a mutex</td>
+</tr>
+<tr>
+<td>Semaphore</td>
+<td>Counting permits (resource pools, bounded buffers)</td>
+<td>Easy to misuse; no ownership</td>
+</tr>
+<tr>
+<td>Condition variable / monitor</td>
+<td>Wait for a predicate while releasing a lock</td>
+<td>Spurious wakeups: always re-check in a loop</td>
+</tr>
+<tr>
+<td>Barrier / latch</td>
+<td>Wait for N parties / for an event</td>
+<td>Reuse and cancellation subtleties</td>
+</tr>
+<tr>
+<td>Atomic operations (CAS, fetch-add)</td>
+<td>Lock-free updates of single words</td>
+<td>ABA problem; memory ordering</td>
+</tr>
+<tr>
+<td>Futex</td>
+<td>OS building block: sleep on an address if its value is
+unchanged</td>
+<td>Used to build the above</td>
+</tr>
+</tbody>
+</table>
+<p>Design points:</p>
+<ul>
+<li><strong>Lock granularity</strong>: coarse locks are simple and
+contend; fine-grained locks scale and deadlock; lock striping and
+sharding reduce contention.</li>
+<li><strong>Lock-free and wait-free</strong>: lock-free guarantees some
+thread always makes progress; wait-free guarantees every thread does.
+Built from compare-and-swap, they avoid blocking but are hard to get
+right: memory reclamation (hazard pointers, epoch-based reclamation,
+RCU), the ABA problem (a value changes from A to B and back to A,
+fooling a CAS), and memory-ordering mistakes. Use proven libraries.</li>
+<li><strong>Read-copy-update</strong> (RCU) lets readers proceed without
+locks while writers publish new versions and defer freeing old ones;
+heavily used in the Linux kernel.</li>
+<li>Keep critical sections short; never call unknown code or block on
+I/O while holding a lock; prefer immutable shared data and single-writer
+designs.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> threading</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BoundedBuffer:</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Producer-consumer with a mutex and two condition variables (monitor style).&quot;&quot;&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, capacity):</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.items, <span class="va">self</span>.capacity <span class="op">=</span> [], capacity</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.lock <span class="op">=</span> threading.Lock()</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.not_empty <span class="op">=</span> threading.Condition(<span class="va">self</span>.lock)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.not_full <span class="op">=</span> threading.Condition(<span class="va">self</span>.lock)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> put(<span class="va">self</span>, x):</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> <span class="va">self</span>.not_full:</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">while</span> <span class="bu">len</span>(<span class="va">self</span>.items) <span class="op">==</span> <span class="va">self</span>.capacity:      <span class="co"># loop: re-check after every wakeup</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.not_full.wait()</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.items.append(x)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.not_empty.notify()</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get(<span class="va">self</span>):</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> <span class="va">self</span>.not_empty:</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">while</span> <span class="kw">not</span> <span class="va">self</span>.items:</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.not_empty.wait()</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> <span class="va">self</span>.items.pop(<span class="dv">0</span>)</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.not_full.notify()</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> x</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>buf, results <span class="op">=</span> BoundedBuffer(<span class="dv">4</span>), []</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> producer():</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>):</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        buf.put(i)</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    buf.put(<span class="va">None</span>)                                         <span class="co"># sentinel: end of stream</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> consumer():</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> (x <span class="op">:=</span> buf.get()) <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        results.append(x)</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>ts <span class="op">=</span> [threading.Thread(target<span class="op">=</span>producer), threading.Thread(target<span class="op">=</span>consumer)]</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> ts: t.start()</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> ts: t.join()</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> results <span class="op">==</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="dv">1000</span>))                       <span class="co"># FIFO order preserved, nothing lost</span></span></code></pre></div>
+<h3 id="memory-models-and-ordering">4. Memory models and ordering</h3>
+<p>A <strong>memory model</strong> defines which values a read may
+return when threads share memory.</p>
+<ul>
+<li><strong>Sequential consistency</strong> (SC, Lamport): the result is
+as if all operations ran in one total order consistent with each
+thread's program order. It is the easiest to reason about and the
+slowest to implement.</li>
+<li><strong>Total store order</strong> (x86): stores go through a store
+buffer, so a thread may read before its own earlier store is visible to
+others (store-to-load reordering). <strong>Weaker models</strong> (ARM,
+POWER, RISC-V) also reorder loads and stores more aggressively.</li>
+<li>Compilers reorder and eliminate memory operations too, so the
+language-level model matters most: <strong>C11/C++11</strong>,
+<strong>Java</strong> (JSR-133), <strong>Go</strong>, and
+<strong>Rust</strong> (which adopts the C++ model) all promise
+<strong>data-race-free programs behave as if sequentially
+consistent</strong> (the DRF-SC guarantee), while giving atomics with
+orderings (relaxed, acquire, release, sequentially consistent) for
+experts.</li>
+<li><strong>Happens-before</strong>: a partial order built from program
+order and synchronization edges (unlock then lock of the same mutex,
+release store then acquire load that reads it, thread start and join).
+If a write happens-before a read, the read sees it; two accesses
+unordered by happens-before and conflicting are a data race.</li>
+</ul>
+<p>Litmus tests show the differences:</p>
+<pre class="text"><code>Store buffering (SB):    x = y = 0
+  Thread 1: x = 1; r1 = y        Thread 2: y = 1; r2 = x
+  Can r1 == 0 and r2 == 0?   Not under SC. Yes under x86-TSO and weaker models.
+
+Message passing (MP):    data = flag = 0
+  Thread 1: data = 42; flag = 1  Thread 2: while (flag == 0) {}; r = data
+  Is r == 42 guaranteed?   Only if flag is an atomic with release/acquire (or SC), or protected by a lock.
+</code></pre>
+<p>Rules of thumb: protect shared mutable data with locks or atomics;
+<code class="verbatim">volatile</code> is not synchronization in C and
+C++ (it is in Java, with different meaning); default to sequentially
+consistent atomics; use weaker orderings only with a proof or a model
+checker. See the C and Rust notes for APIs.</p>
+<h3 id="concurrency-models">5. Concurrency models</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Idea</th>
+<th>Strengths</th>
+<th>Weaknesses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Threads with shared memory and locks</td>
+<td>Direct, efficient</td>
+<td>Fast; ubiquitous</td>
+<td>Races and deadlocks; hard composition</td>
+</tr>
+<tr>
+<td>Message passing / actors</td>
+<td>Isolated state, communicate by messages (Erlang, Akka)</td>
+<td>Fault isolation; location transparency; supervision</td>
+<td>Message ordering and mailbox growth; harder global invariants</td>
+</tr>
+<tr>
+<td>CSP / channels</td>
+<td>Typed channels between sequential processes (Go, Rust)</td>
+<td>Clear ownership transfer</td>
+<td>Deadlock on channels; leaks of blocked goroutines</td>
+</tr>
+<tr>
+<td>Software transactional memory</td>
+<td>Atomic blocks with retry</td>
+<td>Composable atomicity</td>
+<td>Overheads; limited to memory (no I/O in transactions)</td>
+</tr>
+<tr>
+<td>Async / event loop</td>
+<td>Single thread, non-blocking I/O, tasks yield at await</td>
+<td>Many connections cheaply; no data races within a task</td>
+<td>Blocking calls stall everything; function coloring; CPU-bound work
+needs threads</td>
+</tr>
+<tr>
+<td>Fork-join and data parallelism</td>
+<td>Split data, process in parallel, combine</td>
+<td>Scales with cores; determinism possible</td>
+<td>Needs independent work and good granularity</td>
+</tr>
+<tr>
+<td>Dataflow / reactive</td>
+<td>Values propagate through a graph</td>
+<td>Declarative</td>
+<td>Debugging; glitches and ordering</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Structured concurrency</strong> (task scopes that cannot
+outlive their parent, as in Kotlin, Swift, Java's structured
+concurrency, Trio) ties task lifetimes to scopes so that errors
+propagate and nothing leaks. Prefer <strong>sharing less</strong>:
+partition data per thread, hand off ownership through queues, keep one
+writer per piece of state, and treat shared mutable state as a last
+resort.</p>
+<h3 id="distributed-systems-models-and-impossibility">6. Distributed
+systems: models and impossibility</h3>
+<p>Distributed systems add partial failure, unbounded message delay, and
+no shared clock.</p>
+<ul>
+<li><strong>Failure models</strong>: crash-stop, crash-recovery,
+omission, timing, and Byzantine (arbitrary, malicious behavior).
+<strong>Timing models</strong>: synchronous (bounded delay),
+asynchronous (no bound), partially synchronous (bounded eventually; the
+realistic model).</li>
+<li><strong>The network is unreliable</strong>: messages can be lost,
+duplicated, delayed, and reordered; a timeout cannot distinguish a slow
+node from a dead one.</li>
+<li><strong>CAP theorem</strong> (Gilbert and Lynch): when a network
+partition occurs, a system must give up either linearizable consistency
+or availability. It says nothing about the no-partition case;
+<strong>PACELC</strong> adds that even without partitions there is a
+latency versus consistency trade-off.</li>
+<li><strong>FLP impossibility</strong> (Fischer, Lynch, Paterson): in a
+fully asynchronous system no deterministic protocol can guarantee
+consensus if even one process may crash. Practical protocols stay safe
+always and guarantee progress only when the system is sufficiently
+synchronous, using timeouts, leader election, or randomization.</li>
+<li><strong>Consensus</strong>: agreeing on one value (or a sequence: a
+replicated log). <strong>Paxos</strong> (Lamport) and
+<strong>Raft</strong> (Ongaro and Ousterhout, 2014, designed for
+understandability) tolerate f crash failures with 2f + 1 replicas using
+majority quorums; Byzantine tolerance needs 3f + 1 (PBFT and
+successors). Consensus underlies replicated state machines, leader
+election, configuration stores (etcd, ZooKeeper), and distributed
+databases.</li>
+<li><strong>Quorums</strong>: with N replicas, reads from R and writes
+to W replicas always overlap if R + W &gt; N; overlapping alone does not
+give linearizability without extra mechanisms (versioning, read repair,
+consensus).</li>
+<li><strong>Time and ordering</strong>: wall clocks drift and jump; do
+not use them to order events across machines unless bounded-error clocks
+are available. <strong>Lamport clocks</strong> give a total order
+consistent with causality (if a happened before b, then C(a) &lt; C(b));
+<strong>vector clocks</strong> detect whether two events are causally
+ordered or concurrent; hybrid logical clocks combine physical and
+logical time.</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> combinations</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LamportProcess:</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.t <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> local(<span class="va">self</span>):</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.t <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.t</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> send(<span class="va">self</span>):</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.t <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.t</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> recv(<span class="va">self</span>, ts):</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.t <span class="op">=</span> <span class="bu">max</span>(<span class="va">self</span>.t, ts) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.t</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>p, q <span class="op">=</span> LamportProcess(), LamportProcess()</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> p.local()<span class="op">;</span> m <span class="op">=</span> p.send()<span class="op">;</span> b <span class="op">=</span> q.recv(m)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> a <span class="op">&lt;</span> m <span class="op">&lt;</span> b                                   <span class="co"># causality respected</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> vc_compare(a, b):</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a <span class="op">==</span> b:</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&quot;equal&quot;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">all</span>(x <span class="op">&lt;=</span> y <span class="cf">for</span> x, y <span class="kw">in</span> <span class="bu">zip</span>(a, b)):</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&quot;before&quot;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">all</span>(x <span class="op">&gt;=</span> y <span class="cf">for</span> x, y <span class="kw">in</span> <span class="bu">zip</span>(a, b)):</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&quot;after&quot;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;concurrent&quot;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> vc_compare([<span class="dv">1</span>, <span class="dv">0</span>], [<span class="dv">2</span>, <span class="dv">0</span>]) <span class="op">==</span> <span class="st">&quot;before&quot;</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> vc_compare([<span class="dv">2</span>, <span class="dv">1</span>], [<span class="dv">1</span>, <span class="dv">2</span>]) <span class="op">==</span> <span class="st">&quot;concurrent&quot;</span>      <span class="co"># neither event caused the other</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> always_overlap(n, r, w):</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">all</span>(<span class="bu">set</span>(x) <span class="op">&amp;</span> <span class="bu">set</span>(y) <span class="cf">for</span> x <span class="kw">in</span> combinations(<span class="bu">range</span>(n), r) <span class="cf">for</span> y <span class="kw">in</span> combinations(<span class="bu">range</span>(n), w))</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> always_overlap(<span class="dv">5</span>, <span class="dv">3</span>, <span class="dv">3</span>) <span class="kw">and</span> always_overlap(<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">5</span>)</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="kw">not</span> always_overlap(<span class="dv">5</span>, <span class="dv">2</span>, <span class="dv">3</span>)                     <span class="co"># R + W = N does not guarantee overlap</span></span></code></pre></div>
+<h3 id="consistency-models-and-transactions">7. Consistency models and
+transactions</h3>
+<p>Jepsen's consistency map relates these models; stronger models allow
+fewer behaviors and cost more latency and availability.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linearizable</td>
+<td>Each operation appears to take effect atomically at some instant
+between its invocation and response; the order respects real time. Gold
+standard for single objects</td>
+</tr>
+<tr>
+<td>Sequentially consistent</td>
+<td>All operations appear in one order consistent with each process's
+order; no real-time requirement</td>
+</tr>
+<tr>
+<td>Serializable</td>
+<td>Transactions behave as if executed one at a time in some order (no
+real-time requirement)</td>
+</tr>
+<tr>
+<td>Strict serializable</td>
+<td>Serializable and consistent with real time (linearizability for
+transactions)</td>
+</tr>
+<tr>
+<td>Snapshot isolation</td>
+<td>Each transaction reads a consistent snapshot; write-write conflicts
+abort; allows <em>write skew</em></td>
+</tr>
+<tr>
+<td>Read committed / read uncommitted</td>
+<td>Weak isolation levels: anomalies such as non-repeatable reads and
+phantoms</td>
+</tr>
+<tr>
+<td>Causal consistency</td>
+<td>Causally related operations are seen in order by everyone</td>
+</tr>
+<tr>
+<td>Eventual consistency</td>
+<td>Replicas converge if updates stop; no ordering guarantee while they
+run</td>
+</tr>
+</tbody>
+</table>
+<p>Practical consequences:</p>
+<ul>
+<li>Know your database's real default isolation level and the anomalies
+it permits. Many bugs are write skew or lost updates under snapshot or
+read-committed isolation.</li>
+<li><strong>CRDTs</strong> (conflict-free replicated data types) and
+<strong>operational transformation</strong> merge concurrent updates
+deterministically for collaborative and highly available systems.</li>
+<li><strong>Distributed transactions</strong>: two-phase commit (blocks
+if the coordinator fails), consensus-based commit (Spanner-style), and
+<strong>sagas</strong> (a sequence of local transactions with
+compensating actions) for long workflows.</li>
+<li><strong>Exactly-once</strong> delivery is not achievable in general;
+the practical form is at-least-once delivery plus
+<strong>idempotent</strong> handling (idempotency keys, deduplication,
+upserts).</li>
+<li><strong>Fencing tokens</strong> guard against a paused or
+partitioned leader that still believes it holds a lock or lease: the
+storage layer rejects writes with stale tokens. Leases without fencing
+are unsafe.</li>
+</ul>
+<h3 id="queueing-capacity-and-tail-latency">8. Queueing, capacity, and
+tail latency</h3>
+<ul>
+<li><strong>Little's law</strong>: for a stable system, the average
+number in the system L equals the arrival rate times the average time in
+the system: L = lambda W. It applies to queues, thread pools, connection
+pools, and whole services, and sizes pools and buffers.</li>
+<li><strong>Utilization and latency</strong>: in the simple M/M/1 queue
+(random arrivals, random service, one server), mean time in system is W
+= 1 / (mu - lambda), so at 90% utilization latency is 10 times the
+service time, and at 99% it is 100 times. Plan for headroom: keep
+average utilization well below saturation.</li>
+<li><strong>Tail at scale</strong>: when a request fans out to N
+services, the chance that at least one is slow is 1 - (1 - q)^N; with q
+= 1% and N = 100 that is 63%. Mitigations: hedged and tied requests,
+timeouts, redundancy, reducing fan-out, and measuring percentiles (p99
+and above), never only averages.</li>
+<li><strong>Overload behavior</strong>: unbounded queues turn overload
+into huge latency and memory growth. Use bounded queues,
+<strong>backpressure</strong> (propagate "slow down" upstream),
+<strong>load shedding</strong> (reject excess work early), <strong>rate
+limiting</strong> (token bucket), <strong>timeouts</strong> on every
+remote call with a budget that shrinks along the call chain,
+<strong>circuit breakers</strong> (stop calling a failing dependency),
+<strong>bulkheads</strong> (isolate pools per dependency), and
+<strong>retries</strong> only for idempotent calls with exponential
+backoff and jitter and a retry budget (otherwise retries multiply load:
+a retry storm).</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mm1_mean_sojourn(lam, mu, n, seed<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Simulate an M/M/1 queue with Lindley&#39;s recursion; return the mean time in system.&quot;&quot;&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    rng <span class="op">=</span> random.Random(seed)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    wait, total <span class="op">=</span> <span class="fl">0.0</span>, <span class="fl">0.0</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        service <span class="op">=</span> rng.expovariate(mu)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        total <span class="op">+=</span> wait <span class="op">+</span> service</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        interarrival <span class="op">=</span> rng.expovariate(lam)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        wait <span class="op">=</span> <span class="bu">max</span>(<span class="fl">0.0</span>, wait <span class="op">+</span> service <span class="op">-</span> interarrival)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> total <span class="op">/</span> n</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> mm1_mean_sojourn(<span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="dv">400_000</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>(w <span class="op">-</span> <span class="dv">1</span> <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">-</span> <span class="fl">0.5</span>)) <span class="op">&lt;</span> <span class="fl">0.1</span>              <span class="co"># theory: W = 1/(mu - lambda) = 2.0</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>((<span class="dv">1</span> <span class="op">-</span> <span class="fl">0.99</span> <span class="op">**</span> <span class="dv">100</span>) <span class="op">-</span> <span class="fl">0.634</span>) <span class="op">&lt;</span> <span class="fl">0.001</span>      <span class="co"># fan-out of 100 with 1% slow calls</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TokenBucket:</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, rate, capacity, now<span class="op">=</span><span class="fl">0.0</span>):</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rate, <span class="va">self</span>.capacity, <span class="va">self</span>.tokens, <span class="va">self</span>.last <span class="op">=</span> rate, capacity, capacity, now</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> allow(<span class="va">self</span>, now, cost<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.tokens <span class="op">=</span> <span class="bu">min</span>(<span class="va">self</span>.capacity, <span class="va">self</span>.tokens <span class="op">+</span> (now <span class="op">-</span> <span class="va">self</span>.last) <span class="op">*</span> <span class="va">self</span>.rate)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.last <span class="op">=</span> now</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.tokens <span class="op">&gt;=</span> cost:</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.tokens <span class="op">-=</span> cost</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>tb <span class="op">=</span> TokenBucket(rate<span class="op">=</span><span class="dv">1</span>, capacity<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> [tb.allow(<span class="dv">0</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>)] <span class="op">==</span> [<span class="va">True</span>, <span class="va">True</span>, <span class="va">True</span>, <span class="va">False</span>]     <span class="co"># burst of 3, then limited</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> tb.allow(<span class="fl">1.0</span>) <span class="kw">is</span> <span class="va">True</span> <span class="kw">and</span> tb.allow(<span class="fl">1.0</span>) <span class="kw">is</span> <span class="va">False</span>                 <span class="co"># refills at 1 token/second</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> backoff_full_jitter(attempt, base<span class="op">=</span><span class="fl">0.1</span>, cap<span class="op">=</span><span class="fl">10.0</span>, rng<span class="op">=</span>random):</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rng.uniform(<span class="dv">0</span>, <span class="bu">min</span>(cap, base <span class="op">*</span> <span class="dv">2</span> <span class="op">**</span> attempt))                <span class="co"># &quot;full jitter&quot; strategy</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">all</span>(<span class="dv">0</span> <span class="op">&lt;=</span> backoff_full_jitter(a) <span class="op">&lt;=</span> <span class="bu">min</span>(<span class="fl">10.0</span>, <span class="fl">0.1</span> <span class="op">*</span> <span class="dv">2</span> <span class="op">**</span> a) <span class="cf">for</span> a <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">12</span>))</span></code></pre></div>
+<h3 id="testing-and-debugging-concurrent-systems">9. Testing and
+debugging concurrent systems</h3>
+<ul>
+<li><strong>Race detectors</strong>: ThreadSanitizer (C, C++, Go, Rust
+nightly), Helgrind, Java's race detectors; run tests under them in CI. A
+clean run does not prove absence of races.</li>
+<li><strong>Stress and chaos</strong>: random delays, thread count
+sweeps, fault injection (kill, partition, slow, clock skew),
+Jepsen-style tests that record histories and check them against a
+consistency model.</li>
+<li><strong>Model checking</strong>: TLA+ and TLC for protocols; Loom
+(Rust) and similar tools explore interleavings of small concurrent
+programs exhaustively.</li>
+<li><strong>Deterministic simulation</strong>: run the whole distributed
+system in a single-threaded simulator with a seeded scheduler and fake
+network and disk; failures become reproducible by seed. Some database
+vendors built their testing around this idea.</li>
+<li><strong>Observability</strong>: distributed tracing with causal
+context, structured logs with request ids, metrics for queue depth,
+saturation, and error budgets. In a hang, capture all thread stacks
+first (<code class="verbatim">jstack</code>, <code
+class="verbatim">gdb thread apply all bt</code>, goroutine dumps).</li>
+<li><strong>Make races reproducible</strong>: shrink the program, add
+sleeps at suspected points, use a deterministic scheduler, and replay
+recorded executions.</li>
+</ul>
+<h3 id="design-heuristics">10. Design heuristics</h3>
+<ol>
+<li>State the invariants and the failure model before designing; write
+them in the design document.</li>
+<li>Prefer designs where the hard part is one well-understood primitive
+(a queue, a database transaction, a consensus service) rather than ad
+hoc locking.</li>
+<li>Share nothing, or share immutable data; transfer ownership; keep a
+single writer.</li>
+<li>Make operations idempotent and retryable; attach ids and
+versions.</li>
+<li>Bound everything: queues, retries, timeouts, concurrency,
+memory.</li>
+<li>Plan for partial failure: what happens when one dependency is slow,
+one node dies mid-operation, or messages are duplicated and
+reordered?</li>
+<li>Prove or model-check the small, critical protocol; test the rest
+with faults.</li>
+<li>Choose the strongest consistency you can afford for the data that
+needs it, and the weakest everywhere else.</li>
+</ol>
+<h3 id="self-check">11. Self-check</h3>
+<ol>
+<li>Give a program with no data race (all accesses atomic) that is still
+incorrect, and fix it.</li>
+<li>Explain why an unlocked double-checked-locking singleton can fail
+even though it looks safe, and how modern languages fix it.</li>
+<li>Your service retries failed calls three times; a dependency slows
+down. What happens to its load, and how do you design retries so this
+does not cascade?</li>
+<li>A lock-based lease protects a resource. A GC pause makes the holder
+wake up after the lease expired. Describe how a fencing token prevents
+corruption.</li>
+<li>Why does Raft need a majority, and what happens with an even number
+of nodes?</li>
+<li>An endpoint's average latency is 50 ms but customers complain. What
+do you measure next?</li>
+<li>Under snapshot isolation, construct a write-skew example (two
+doctors on call).</li>
+<li>Estimate how many threads a service needs for 2,000 requests/s with
+40 ms mean latency per request (Little's law), and what changes if
+latency doubles.</li>
+</ol>
+<h3 id="exercises">12. Exercises</h3>
+<ul>
+<li>Warm-up: implement a bounded blocking queue with a mutex and
+condition variables in your favorite language; write a stress test.</li>
+<li>Core: demonstrate a lost update and a deadlock deliberately; fix
+them; add TSan or equivalent to the test run.</li>
+<li>Core: implement a token-bucket rate limiter and a circuit breaker
+with injectable time, and test them deterministically.</li>
+<li>Core: simulate an M/M/1 and an M/M/c queue; compare with theory;
+observe the knee near saturation.</li>
+<li>Core: implement Lamport and vector clocks for a simulated
+message-passing system; write a causal-delivery buffer.</li>
+<li>Stretch: write a TLA+ (or Python state-explorer) model of two-phase
+commit and find the blocking scenario; then model a lease with and
+without fencing.</li>
+<li>Stretch: implement leader election and log replication from the Raft
+paper in a simulator with message loss and delays; run property checks
+(one leader per term, committed entries persist).</li>
+<li>Stretch: write a history checker for linearizability on a small
+register (try all orderings consistent with real time) and run it on a
+deliberately buggy replicated register.</li>
+</ul>
+<h3 id="resources">13. Resources</h3>
+<ul>
+<li>Arpaci-Dusseau and Arpaci-Dusseau, <em>Operating Systems: Three Easy
+Pieces</em>, the concurrency part (locks, condition variables,
+semaphores, common concurrency bugs, event-based concurrency; free): <a
+href="https://pages.cs.wisc.edu/~remzi/OSTEP/">https://pages.cs.wisc.edu/~remzi/OSTEP/</a></li>
+<li>McKenney, <em>Is Parallel Programming Hard, And, If So, What Can You
+Do About It?</em> (free; hardware, locking, RCU, memory ordering,
+validation): <a
+href="https://www.kernel.org/pub/linux/kernel/people/paulmck/perfbook/perfbook.html">https://www.kernel.org/pub/linux/kernel/people/paulmck/perfbook/perfbook.html</a></li>
+<li>Jepsen, consistency models map (linearizability, serializability,
+snapshot isolation, causal, and the hierarchy between them): <a
+href="https://jepsen.io/consistency/models">https://jepsen.io/consistency/models</a></li>
+<li>Herlihy and Shavit, <em>The Art of Multiprocessor Programming</em>;
+Goetz et al., <em>Java Concurrency in Practice</em>; Williams, <em>C++
+Concurrency in Action</em>; Kleppmann, <em>Designing Data-Intensive
+Applications</em> (replication, partitioning, transactions,
+consensus).</li>
+<li>Papers: Lamport, <em>Time, Clocks, and the Ordering of Events in a
+Distributed System</em> (1978); Herlihy and Wing,
+<em>Linearizability</em> (1990); Fischer, Lynch, Paterson (1985); Ongaro
+and Ousterhout, <em>In Search of an Understandable Consensus Algorithm
+(Raft)</em> (2014); Dean and Barroso, <em>The Tail at Scale</em> (2013);
+Gilbert and Lynch on CAP (2002).</li>
+<li>Language notes: the C concurrency notes (threads, atomics, memory
+orders) and the Rust notes (<code class="verbatim">Send</code>, <code
+class="verbatim">Sync</code>, channels, async).</li>
+<li>ACM/IEEE-CS/AAAI <em>Computer Science Curricula 2023</em>, Parallel
+and Distributed Computing knowledge area: <a
+href="https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf">https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Data races are undefined or weakly defined; race conditions are
+logic errors; invariants and a stated failure model make both
+tractable.</li>
+<li>Prefer sharing less: ownership transfer, single writers,
+immutability.</li>
+<li>Distributed systems have partial failure and no global clock;
+consensus needs majorities; consistency costs latency or
+availability.</li>
+<li>Little's law and M/M/1 explain queues; keep utilization below
+saturation; bound queues and retries.</li>
+<li>Test with race detectors, fault injection, model checking, and
+deterministic simulation.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Language Reference</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/01-language.html">
+  <meta property="og:title" content="Rust Language Reference">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/01-language.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Language Reference</h1>
+<h2 id="rust-language-reference-1">Rust Language Reference</h2>
+<h3 id="editions-and-release-channels">1. Editions and release
+channels</h3>
+<p>Rust is released every six weeks on the <strong>stable</strong>
+channel; <strong>beta</strong> and <strong>nightly</strong> come before
+it. Language changes that could break old code arrive in
+<em>editions</em>, chosen per crate in <code
+class="verbatim">Cargo.toml</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[package]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">&quot;demo&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">version</span> <span class="op">=</span> <span class="st">&quot;0.1.0&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">edition</span> <span class="op">=</span> <span class="st">&quot;2021&quot;</span></span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Edition</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2015</td>
+<td>The original</td>
+</tr>
+<tr>
+<td>2018</td>
+<td>New module paths, <code class="verbatim">async</code>, <code
+class="verbatim">dyn</code> required</td>
+</tr>
+<tr>
+<td>2021</td>
+<td>Disjoint closure captures, array <code
+class="verbatim">IntoIterator</code>, new prelude items</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Stable since Rust 1.85: <code class="verbatim">unsafe</code>
+tightened (see <code class="verbatim">13_unsafe-and-ffi.org</code>), new
+temporary and <code class="verbatim">impl Trait</code> capture
+rules</td>
+</tr>
+</tbody>
+</table>
+<p>Crates in different editions interoperate; <code
+class="verbatim">cargo fix --edition</code> migrates code. New projects
+should use the newest stable edition.</p>
+<h3 id="expressions-and-statements">2. Expressions and statements</h3>
+<p>Rust is expression-oriented. A block evaluates to its last
+expression; a semicolon turns an expression into a statement whose value
+is <code class="verbatim">()</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> a <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    a <span class="op">*</span> <span class="dv">3</span>            <span class="co">// no semicolon: the block&#39;s value is 6</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> label <span class="op">=</span> <span class="cf">if</span> x <span class="op">&gt;</span> <span class="dv">5</span> <span class="op">{</span> <span class="st">&quot;big&quot;</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="st">&quot;small&quot;</span> <span class="op">};</span>     <span class="co">// if is an expression</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> n <span class="op">=</span> <span class="cf">match</span> label <span class="op">{</span> <span class="st">&quot;big&quot;</span> <span class="op">=&gt;</span> <span class="dv">1</span><span class="op">,</span> _ <span class="op">=&gt;</span> <span class="dv">0</span> <span class="op">};</span>          <span class="co">// so is match</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="cf">loop</span> <span class="op">{</span> <span class="cf">break</span> <span class="dv">42</span><span class="op">;</span> <span class="op">};</span>                          <span class="co">// loop can return a value with break</span></span></code></pre></div>
+<p>Both arms of an <code class="verbatim">if</code> must have the same
+type. Without an <code class="verbatim">else</code>, an <code
+class="verbatim">if</code> has type <code class="verbatim">()</code>.
+The commonest beginner error ("expected <code
+class="verbatim">i32</code>, found <code class="verbatim">()</code>") is
+a stray semicolon on the last line of a function.</p>
+<h3 id="bindings-mutability-and-shadowing">3. Bindings, mutability, and
+shadowing</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>            <span class="co">// immutable</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> y <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>        <span class="co">// mutable</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>y <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> x <span class="op">*</span> <span class="dv">2</span><span class="op">;</span>        <span class="co">// shadowing: a new variable with the same name (may change type)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> x<span class="op">.</span>to_string()<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (a<span class="op">,</span> b) <span class="op">=</span> (<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span>)<span class="op">;</span>                      <span class="co">// destructuring</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> Point <span class="op">{</span> x<span class="op">:</span> px<span class="op">,</span> y<span class="op">:</span> py <span class="op">}</span> <span class="op">=</span> point<span class="op">;</span>       <span class="co">// destructuring a struct</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> [first<span class="op">,</span> <span class="op">..,</span> last] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>]<span class="op">;</span>     <span class="co">// array pattern</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="cn">Some</span>(v) <span class="op">=</span> opt <span class="cf">else</span> <span class="op">{</span> <span class="cf">return</span><span class="op">;</span> <span class="op">};</span>       <span class="co">// let-else: diverge when the pattern fails</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> _ <span class="op">=</span> f()<span class="op">;</span>                              <span class="co">// evaluate and discard</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> _unused <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>                          <span class="co">// leading underscore silences the unused warning</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="cn">MAX</span><span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>                     <span class="co">// compile-time constant, inlined, type required</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> NAME<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;app&quot;</span><span class="op">;</span>                <span class="co">// one fixed memory location, &#39;static lifetime</span></span></code></pre></div>
+<p>Immutability is the default, and the compiler tells you when <code
+class="verbatim">mut</code> is unnecessary. Use <code
+class="verbatim">const</code> for values and <code
+class="verbatim">static</code> when you need an address or interior
+state (<code class="verbatim">AtomicUsize</code>, <code
+class="verbatim">OnceLock</code>). Avoid <code
+class="verbatim">static mut</code>.</p>
+<h3 id="control-flow">4. Control flow</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> n <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">{</span> <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> n <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> n <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span> n <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">5</span> <span class="op">{</span> <span class="op">}</span>                <span class="co">// 0 to 4</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> (<span class="dv">0</span><span class="op">..</span><span class="dv">5</span>)<span class="op">.</span>rev() <span class="op">{</span> <span class="op">}</span>        <span class="co">// 4 down to 0</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i<span class="op">,</span> x) <span class="kw">in</span> v<span class="op">.</span>iter()<span class="op">.</span>enumerate() <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ot">&#39;outer</span><span class="op">:</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">10</span> <span class="op">{</span>         <span class="co">// labels: break or continue an outer loop</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">10</span> <span class="op">{</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> i <span class="op">*</span> j <span class="op">&gt;</span> <span class="dv">20</span> <span class="op">{</span> <span class="cf">break</span> <span class="ot">&#39;outer</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">let</span> <span class="cn">Some</span>(top) <span class="op">=</span> stack<span class="op">.</span>pop() <span class="op">{</span> <span class="op">}</span>     <span class="co">// loop while the pattern matches</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(x) <span class="op">=</span> opt <span class="op">{</span> <span class="op">}</span></span></code></pre></div>
+<p>There are no parentheses around conditions and no truthiness: a
+condition must be a <code class="verbatim">bool</code>. <code
+class="verbatim">for</code> works over anything implementing <code
+class="verbatim">IntoIterator</code> (see <code
+class="verbatim">07_iterators.org</code>).</p>
+<h3 id="pattern-matching">5. Pattern matching</h3>
+<p><code class="verbatim">match</code> tests a value against patterns in
+order and must be exhaustive.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> n <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span> <span class="op">=&gt;</span> <span class="st">&quot;zero&quot;</span><span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span> <span class="op">|</span> <span class="dv">2</span> <span class="op">=&gt;</span> <span class="st">&quot;one or two&quot;</span><span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3</span><span class="op">..=</span><span class="dv">9</span> <span class="op">=&gt;</span> <span class="st">&quot;small&quot;</span><span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    x <span class="cf">if</span> x <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">=&gt;</span> <span class="st">&quot;negative&quot;</span><span class="op">,</span>        <span class="co">// guard</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=&gt;</span> <span class="st">&quot;large&quot;</span><span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> msg <span class="op">{</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Message::</span>Move <span class="op">{</span> x<span class="op">,</span> y <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{x},{y}&quot;</span>)<span class="op">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Message::</span><span class="bu">Write</span>(text) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Message::</span>Quit <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> pair <span class="op">{</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">0</span><span class="op">,</span> y) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;on the y axis at {y}&quot;</span>)<span class="op">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    (x<span class="op">,</span> <span class="dv">0</span>) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;on the x axis at {x}&quot;</span>)<span class="op">,</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=&gt;</span> <span class="op">{}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> n <span class="op">{</span> v <span class="op">@</span> <span class="dv">1</span><span class="op">..=</span><span class="dv">5</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;small {v}&quot;</span>)<span class="op">,</span> _ <span class="op">=&gt;</span> <span class="op">{}</span> <span class="op">}</span>   <span class="co">// bind while testing</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> slice <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    [] <span class="op">=&gt;</span> <span class="st">&quot;empty&quot;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    [x] <span class="op">=&gt;</span> <span class="st">&quot;one&quot;</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    [first<span class="op">,</span> <span class="op">..,</span> last] <span class="op">=&gt;</span> <span class="st">&quot;many&quot;</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Patterns can destructure tuples, structs, enums, references, slices,
+and nest freely.</li>
+<li>A pattern that cannot fail (irrefutable) is allowed in <code
+class="verbatim">let</code> and function parameters; refutable ones need
+<code class="verbatim">match</code>, <code
+class="verbatim">if let</code>, <code class="verbatim">let else</code>,
+or <code class="verbatim">while let</code>.</li>
+<li>By default a pattern binding moves or copies the matched value;
+match on a reference (<code class="verbatim">match &amp;x</code>, or
+<code class="verbatim">match x</code> where <code
+class="verbatim">x: &amp;T</code>) to bind references.</li>
+<li>Adding an enum variant turns every non-exhaustive <code
+class="verbatim">match</code> into a compile error; avoid <code
+class="verbatim">_</code> arms on your own enums if you want that
+protection.</li>
+</ul>
+<h3 id="operators">6. Operators</h3>
+<p>Precedence, tightest first: method calls and field access; <code
+class="verbatim">?</code>; unary <code class="verbatim">-</code> <code
+class="verbatim">!</code> <code class="verbatim">*</code> <code
+class="verbatim">&amp;</code>; <code class="verbatim">as</code>; <code
+class="verbatim">*</code> <code class="verbatim">/</code> <code
+class="verbatim">%</code>; <code class="verbatim">+</code> <code
+class="verbatim">-</code>; <code class="verbatim">&lt;&lt;</code> <code
+class="verbatim">&gt;&gt;</code>; <code class="verbatim">&amp;</code>;
+<code class="verbatim">^</code>; a bar for bitwise OR; comparisons
+(non-associative: <code class="verbatim">a &lt; b &lt; c</code> is an
+error); <code class="verbatim">&amp;&amp;</code>; two bars for logical
+OR; ranges <code class="verbatim">..</code> <code
+class="verbatim">..</code>; assignment (right to left).</p>
+<ul>
+<li>No <code class="verbatim">++</code> or <code
+class="verbatim">--</code>; write <code class="verbatim">x +</code>
+1=.</li>
+<li>No implicit numeric conversions: use <code
+class="verbatim">as</code>, <code class="verbatim">From=/=Into</code>,
+or <code class="verbatim">TryFrom</code> (see <code
+class="verbatim">02_types.org</code>).</li>
+<li><code class="verbatim">&amp;&amp;</code> and the logical OR
+short-circuit.</li>
+<li>Comparison operators work through the <code
+class="verbatim">PartialEq</code> / <code
+class="verbatim">PartialOrd</code> traits; arithmetic operators through
+<code class="verbatim">std::ops</code> traits, so they can be
+implemented for your types (see <code
+class="verbatim">06_traits-and-generics.org</code>).</li>
+<li>Comparing a <code class="verbatim">&amp;T</code> with a <code
+class="verbatim">T</code> does not compile; dereference or reference
+explicitly.</li>
+<li>Evaluation order within an expression is left to right (unlike
+C).</li>
+</ul>
+<h3 id="items">7. Items</h3>
+<p>At module level you declare <em>items</em>: <code
+class="verbatim">fn</code>, <code class="verbatim">struct</code>, <code
+class="verbatim">enum</code>, <code class="verbatim">trait</code>, <code
+class="verbatim">impl</code>, <code class="verbatim">const</code>, <code
+class="verbatim">static</code>, <code class="verbatim">type</code>,
+<code class="verbatim">use</code>, <code class="verbatim">mod</code>,
+and macros. Items may appear in any order; a function can be used before
+its definition.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Grid <span class="op">=</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">u8</span><span class="op">&gt;&gt;;</span>                 <span class="co">// alias, not a new type</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Meters(<span class="dt">f64</span>)<span class="op">;</span>                       <span class="co">// tuple struct (a new type)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Unit<span class="op">;</span>                              <span class="co">// unit struct</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Meters <span class="op">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> ZERO<span class="op">:</span> Meters <span class="op">=</span> Meters(<span class="dv">0.0</span>)<span class="op">;</span>     <span class="co">// associated constant</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> new(v<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> Meters(v) <span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="comments-and-documentation">8. Comments and documentation</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// line comment</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">/* block comment, nestable */</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// Documentation for the item that follows (Markdown).</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">/// ```</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">/// assert_eq!(demo::add(1, 2), 3);   // runs as a doc test</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// ```</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> add(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> a <span class="op">+</span> b <span class="op">}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">//! Documentation for the enclosing module or crate (at the top of the file).</span></span></code></pre></div>
+<p><code class="verbatim">cargo doc --open</code> builds the HTML
+documentation and <code class="verbatim">cargo test</code> runs the code
+blocks in doc comments.</p>
+<h3 id="attributes">9. Attributes</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="at">)]</span>       <span class="co">// generate trait impls</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>allow<span class="at">(</span>dead_code<span class="at">)]</span>                      <span class="co">// silence one lint on one item</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>inline<span class="at">]</span>                                <span class="co">// hint to inline</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>must_use<span class="at">]</span>                              <span class="co">// warn if the result is ignored</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;linux&quot;</span><span class="at">)]</span>              <span class="co">// conditional compilation (see 10_modules.org)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span>                                  <span class="co">// mark a test function</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="at">#![</span>deny<span class="at">(</span>unsafe_code<span class="at">)]</span>                    <span class="co">// inner attribute: applies to the whole crate</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="at">#![</span>warn<span class="at">(</span>missing_docs<span class="at">)]</span></span></code></pre></div>
+<p>Lints fall into <code class="verbatim">allow</code>, <code
+class="verbatim">warn</code>, <code class="verbatim">deny</code>, and
+<code class="verbatim">forbid</code>. Clippy adds many more (see <code
+class="verbatim">14_toolchain.org</code>).</p>
+<h3 id="main-panics-and-exit-codes">10. main, panics, and exit
+codes</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span><span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> n<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> <span class="st">&quot;42&quot;</span><span class="op">.</span>parse()<span class="op">?;</span>           <span class="co">// an Err here is printed and the exit code is 1</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{n}&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::process::</span>ExitCode<span class="op">;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> ExitCode <span class="op">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run()<span class="op">.</span>is_err() <span class="op">{</span> <span class="cf">return</span> <span class="pp">ExitCode::</span>FAILURE<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="pp">ExitCode::</span>SUCCESS</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A <em>panic</em> (<code class="verbatim">panic!</code>, <code
+class="verbatim">unwrap</code> on <code class="verbatim">None</code>,
+array index out of bounds, integer overflow in debug builds, division by
+zero) unwinds the stack, running destructors, then ends the thread; in
+the main thread it ends the program with exit code 101. A project can
+set <code class="verbatim">panic = "abort"</code> in its profile for
+smaller binaries. Panics are for bugs; recoverable errors use <code
+class="verbatim">Result</code> (see <code
+class="verbatim">08_io-and-errors.org</code>). <code
+class="verbatim">std::process::exit(code)</code> ends immediately
+without running destructors.</p>
+<h3 id="reading-compiler-errors">11. Reading compiler errors</h3>
+<p>Rust's errors are long on purpose: they show the code, the reason,
+and often a fix.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+<th>Typical fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E0382</td>
+<td>Use of a moved value</td>
+<td>Borrow, clone, or restructure ownership</td>
+</tr>
+<tr>
+<td>E0499</td>
+<td>Two mutable borrows alive at once</td>
+<td>Shorten the first borrow</td>
+</tr>
+<tr>
+<td>E0502</td>
+<td>Mutable borrow while a shared borrow is alive</td>
+<td>Finish reading before mutating</td>
+</tr>
+<tr>
+<td>E0505</td>
+<td>Move out while borrowed</td>
+<td>End the borrow first</td>
+</tr>
+<tr>
+<td>E0308</td>
+<td>Mismatched types</td>
+<td>Convert, or fix a stray semicolon</td>
+</tr>
+<tr>
+<td>E0106</td>
+<td>Missing lifetime specifier</td>
+<td>Annotate, or return an owned value</td>
+</tr>
+<tr>
+<td>E0277</td>
+<td>Trait bound not satisfied</td>
+<td>Implement or derive the trait</td>
+</tr>
+<tr>
+<td>E0597</td>
+<td>Borrowed value does not live long enough</td>
+<td>Move the value to a longer scope</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb11" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rustc</span> <span class="at">--explain</span> E0382        <span class="co"># a full explanation with examples</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> check                  <span class="co"># type-check quickly while you iterate</span></span></code></pre></div>
+<p>Fix the first error first; later ones are often consequences.</p>
+<h3 id="a-map-for-c-programmers">12. A map for C programmers</h3>
+<table>
+<thead>
+<tr>
+<th>In C</th>
+<th>In Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">malloc</code> / <code
+class="verbatim">free</code></td>
+<td><code class="verbatim">Box::new</code> and ownership; <code
+class="verbatim">Drop</code> frees automatically</td>
+</tr>
+<tr>
+<td><code class="verbatim">NULL</code></td>
+<td><code class="verbatim">Option&lt;T&gt;</code> (no null
+references)</td>
+</tr>
+<tr>
+<td><code class="verbatim">errno</code> / return codes</td>
+<td><code class="verbatim">Result&lt;T, E&gt;</code> and <code
+class="verbatim">?</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">goto cleanup</code></td>
+<td><code class="verbatim">Drop</code> (RAII) and early <code
+class="verbatim">return</code> / <code class="verbatim">?</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">void *</code> plus casts</td>
+<td>Generics and trait objects</td>
+</tr>
+<tr>
+<td>Function pointer + <code class="verbatim">void *ctx</code></td>
+<td>Closures (<code class="verbatim">Fn</code>, <code
+class="verbatim">FnMut</code>, <code
+class="verbatim">FnOnce</code>)</td>
+</tr>
+<tr>
+<td>Tagged union</td>
+<td><code class="verbatim">enum</code> with data</td>
+</tr>
+<tr>
+<td>Header files, <code class="verbatim">#include</code></td>
+<td>Modules and <code class="verbatim">use</code></td>
+</tr>
+<tr>
+<td>Macros, <code class="verbatim">#ifdef</code></td>
+<td><code class="verbatim">macro_rules!</code>, <code
+class="verbatim">#[cfg]</code>, generics</td>
+</tr>
+<tr>
+<td>Undefined behavior everywhere</td>
+<td>Only inside <code class="verbatim">unsafe</code> (and then it is
+yours)</td>
+</tr>
+<tr>
+<td>Pointer + length</td>
+<td>Slice <code class="verbatim">&amp;[T]</code>, bounds checked</td>
+</tr>
+<tr>
+<td><code class="verbatim">static inline</code> helper</td>
+<td>A generic or <code class="verbatim">#[inline]</code> function</td>
+</tr>
+<tr>
+<td>Threads and mutexes</td>
+<td><code class="verbatim">std::thread</code>, <code
+class="verbatim">Mutex&lt;T&gt;</code> owning its data, <code
+class="verbatim">Send=/=Sync</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Expressions all the way down: blocks, <code
+class="verbatim">if</code>, <code class="verbatim">match</code>, and
+<code class="verbatim">loop</code> produce values.</li>
+<li>Bindings are immutable by default; shadowing is a new variable.</li>
+<li><code class="verbatim">match</code> is exhaustive; patterns
+destructure anything.</li>
+<li>No implicit numeric conversions, no truthiness, no <code
+class="verbatim">++</code>.</li>
+<li>Panics are for bugs, <code class="verbatim">Result</code> for
+failures.</li>
+<li>Read the first compiler error, and use <code
+class="verbatim">rustc --explain</code>.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

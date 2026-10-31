@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The C Preprocessor</title>
+  <meta name="description" content="A technical reference to the C preprocessor and its role in translation. Covers preprocessing directives, header inclusion, include guards, conditional compilation, predefined macros, compiler and platform detection, feature-test macros, macro expansion rules, variadic macros, pragmas, C23 #embed, and build-system integration. Distinguishes ISO C features from compiler extensions and POSIX interfaces, with guidance on portable headers, reproducible builds, and isolating platform-specific code.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/09-preprocessor.html">
+  <meta property="og:title" content="The C Preprocessor">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/09-preprocessor.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>The C Preprocessor</h1>
+<h2 id="the-c-preprocessor-1">The C Preprocessor</h2>
+<p>This file covers how the preprocessor works and the facilities around
+it (headers, conditional compilation, predefined macros). Techniques for
+writing macros (<code class="verbatim">do { } while (0)</code>, <code
+class="verbatim">#</code> and <code class="verbatim">##</code>,
+X-macros, hygiene) are in <code
+class="verbatim">08_macros.org</code>.</p>
+<h3 id="where-it-fits">1. Where it fits</h3>
+<p>Compilation proceeds in phases. The preprocessor runs before the
+compiler proper: it joins <code class="verbatim">\</code> line
+continuations, strips comments, executes directives, expands macros, and
+produces one long stream of tokens (a <em>translation unit</em>).</p>
+<div class="sourceCode" id="cb1" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-E</span> file.c              <span class="co"># output the preprocessed source</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-E</span> <span class="at">-P</span> file.c           <span class="co"># without #line markers</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-dM</span> <span class="at">-E</span> <span class="at">-</span> <span class="op">&lt;</span> /dev/null   <span class="co"># list the compiler&#39;s predefined macros</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-C</span> <span class="at">-E</span> file.c           <span class="co"># keep comments</span></span></code></pre></div>
+<p>A directive is a line whose first non-blank token is <code
+class="verbatim">#</code>. The preprocessor knows nothing about types,
+scopes, or C syntax.</p>
+<h3 id="directives">2. Directives</h3>
+<table>
+<thead>
+<tr>
+<th>Directive</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">#include</code></td>
+<td>Insert another file</td>
+</tr>
+<tr>
+<td><code class="verbatim">#define</code>, <code
+class="verbatim">#undef</code></td>
+<td>Define or remove a macro</td>
+</tr>
+<tr>
+<td><code class="verbatim">#if</code>, <code
+class="verbatim">#elif</code>, <code class="verbatim">#else</code>,
+<code class="verbatim">#endif</code></td>
+<td>Conditional inclusion on an expression</td>
+</tr>
+<tr>
+<td><code class="verbatim">#ifdef</code>, <code
+class="verbatim">#ifndef</code></td>
+<td>Conditional on a macro being defined</td>
+</tr>
+<tr>
+<td><code class="verbatim">#elifdef</code>, <code
+class="verbatim">#elifndef</code></td>
+<td>C23: <code class="verbatim">#elif</code> forms of the above</td>
+</tr>
+<tr>
+<td><code class="verbatim">#error</code>, <code
+class="verbatim">#warning</code></td>
+<td>Stop or warn (<code class="verbatim">#warning</code> standard in
+C23, extension before)</td>
+</tr>
+<tr>
+<td><code class="verbatim">#line</code></td>
+<td>Change the reported line and file</td>
+</tr>
+<tr>
+<td><code class="verbatim">#pragma</code>, <code
+class="verbatim">_Pragma("...")</code></td>
+<td>Implementation-specific directives</td>
+</tr>
+<tr>
+<td><code class="verbatim">#embed</code></td>
+<td>C23: include a file's bytes as an initializer list</td>
+</tr>
+</tbody>
+</table>
+<h3 id="include">3. #include</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span><span class="pp">           </span><span class="co">/* searches system include directories */</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;mylib.h&quot;</span><span class="pp">           </span><span class="co">/* searches the including file&#39;s directory first, then like &lt;&gt; */</span></span></code></pre></div>
+<p>Add search paths with <code class="verbatim">-I dir</code>. The
+included text is inserted verbatim, so every header is parsed in every
+translation unit that includes it. The directive also accepts a macro
+expanding to a header name.</p>
+<h4 id="include-guards">Include guards</h4>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef MYLIB_H</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MYLIB_H</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">/* declarations */</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif </span><span class="co">/* MYLIB_H */</span></span></code></pre></div>
+<p><code class="verbatim">#pragma once</code> does the same and is
+supported by all mainstream compilers, though it is not in the standard.
+Make guard names unique (include the project name).</p>
+<h4 id="what-belongs-in-a-header">What belongs in a header</h4>
+<ul>
+<li>Declarations of functions, <code class="verbatim">extern</code>
+variables, types, and macros that other files need.</li>
+<li><code class="verbatim">static inline</code> functions.</li>
+<li>Not definitions of non-<code class="verbatim">static</code>
+functions or variables: including that header from two files produces a
+duplicate definition at link time.</li>
+<li>A header should compile on its own: include what it uses (check by
+including it first in a test <code class="verbatim">.c</code>
+file).</li>
+<li>Prefer forward declarations (<code
+class="verbatim">struct Foo;</code>) over including a header just to
+name a pointer type.</li>
+</ul>
+<h3 id="conditional-compilation">4. Conditional compilation</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#if defined(__linux__) &amp;&amp; !defined(NO_EPOLL)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* ... */</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#elif defined(_WIN32)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* ... */</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#   error &quot;unsupported platform&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#if __STDC_VERSION__ &gt;= 201112L</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* C11 or later */</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifdef DEBUG</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#   define LOG</span><span class="op">(...)</span><span class="pp"> fprintf</span><span class="op">(</span><span class="pp">stderr</span><span class="op">,</span><span class="pp"> __VA_ARGS__</span><span class="op">)</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#   define LOG</span><span class="op">(...)</span><span class="pp"> </span><span class="op">((</span><span class="dt">void</span><span class="op">)</span><span class="dv">0</span><span class="op">)</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">#if</code> takes an integer constant
+expression; <code class="verbatim">sizeof</code>, casts, and enum
+constants are not available (the preprocessor does not know types).</li>
+<li>An identifier that is not a macro evaluates to <code
+class="verbatim">0</code> in <code class="verbatim">#if</code>. A typo
+in <code class="verbatim">#if FEATURE_X</code> therefore silently
+becomes false; <code class="verbatim">-Wundef</code> reports it.</li>
+<li><code class="verbatim">defined(X)</code> (or <code
+class="verbatim">defined X</code>) tests whether a macro exists. Define
+feature macros as <code class="verbatim">1</code> and test them with
+<code class="verbatim">#if</code>, or test existence with <code
+class="verbatim">#ifdef</code>, but be consistent.</li>
+<li>Set macros from the command line: <code
+class="verbatim">-DNAME</code>, <code
+class="verbatim">-DNAME=value</code>, <code
+class="verbatim">-UNAME</code>.</li>
+<li>Keep conditional blocks small and isolate platform differences
+behind one function interface in a platform-specific file; scattered
+<code class="verbatim">#ifdef</code> soup makes code hard to read and
+test.</li>
+</ul>
+<p>Detection helpers (C23 standardizes the first two; GCC and Clang
+support them earlier):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#if __has_include(&lt;threads.h&gt;)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#   include </span><span class="im">&lt;threads.h&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#if defined(__has_c_attribute) &amp;&amp; __has_c_attribute(nodiscard)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#   define NODISCARD </span><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<h3 id="predefined-macros">5. Predefined macros</h3>
+<table>
+<thead>
+<tr>
+<th>Macro</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">__FILE__</code>, <code
+class="verbatim">__LINE__</code></td>
+<td>Current file name and line number</td>
+</tr>
+<tr>
+<td><code class="verbatim">__DATE__</code>, <code
+class="verbatim">__TIME__</code></td>
+<td>Compilation date and time (make builds non-reproducible)</td>
+</tr>
+<tr>
+<td><code class="verbatim">__STDC__</code></td>
+<td>1 for a conforming implementation</td>
+</tr>
+<tr>
+<td><code class="verbatim">__STDC_VERSION__</code></td>
+<td><code class="verbatim">199901L</code>, <code
+class="verbatim">201112L</code>, <code class="verbatim">201710L</code>,
+<code class="verbatim">202311L</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">__STDC_HOSTED__</code></td>
+<td>1 if a full hosted standard library is present</td>
+</tr>
+<tr>
+<td><code class="verbatim">__STDC_NO_THREADS__</code>, <code
+class="verbatim">__STDC_NO_ATOMICS__</code>, <code
+class="verbatim">__STDC_NO_VLA__</code></td>
+<td>1 if that optional feature is missing</td>
+</tr>
+<tr>
+<td><code class="verbatim">__COUNTER__</code></td>
+<td>Non-standard; increases on each use</td>
+</tr>
+<tr>
+<td><code class="verbatim">__func__</code></td>
+<td>Not a macro: an implicit <code
+class="verbatim">static const char[]</code> in each function</td>
+</tr>
+</tbody>
+</table>
+<p>Compiler, OS, and architecture identification (non-standard but
+universal):</p>
+<table>
+<thead>
+<tr>
+<th>Macro</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">__GNUC__</code>, <code
+class="verbatim">__clang__</code>, <code
+class="verbatim">_MSC_VER</code></td>
+<td>Compiler (note: Clang also defines <code
+class="verbatim">__GNUC__</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">__linux__</code>, <code
+class="verbatim">__APPLE__</code>, <code
+class="verbatim">_WIN32</code></td>
+<td>Operating system</td>
+</tr>
+<tr>
+<td><code class="verbatim">__x86_64__</code>, <code
+class="verbatim">__aarch64__</code>, <code
+class="verbatim">__wasm32__</code></td>
+<td>Architecture</td>
+</tr>
+<tr>
+<td><code class="verbatim">__BYTE_ORDER__</code></td>
+<td>Byte order (GCC/Clang)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="feature-test-macros">6. Feature-test macros</h3>
+<p>Strict standard modes hide non-ISO declarations. Define a
+feature-test macro <em>before the first include</em> to request them (on
+glibc and similar):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _POSIX_C_SOURCE </span><span class="dv">200809</span><span class="bu">L</span><span class="pp">    </span><span class="co">/* POSIX.1-2008: getline, strdup, clock_gettime, ... */</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string.h&gt;</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">_POSIX_C_SOURCE</code> requests the named
+POSIX level.</li>
+<li><code class="verbatim">_DEFAULT_SOURCE</code> requests the default
+glibc set (BSD and POSIX).</li>
+<li><code class="verbatim">_GNU_SOURCE</code> requests everything,
+including GNU extensions.</li>
+<li><code class="verbatim">-std=gnu17</code> implies many of these;
+<code class="verbatim">-std=c17</code> implies none, which is why <code
+class="verbatim">strdup</code> or <code class="verbatim">getline</code>
+can "disappear" with a strict standard.</li>
+</ul>
+<p>Put the define at the top of the file or pass it with <code
+class="verbatim">-D</code> for the whole build.</p>
+<h3 id="how-macro-expansion-works">7. How macro expansion works</h3>
+<ol>
+<li>Arguments are identified and, unless they are operands of <code
+class="verbatim">#</code> or <code class="verbatim">##</code>, are fully
+macro-expanded first (<em>argument prescan</em>).</li>
+<li>The argument text replaces the parameters in the replacement list;
+<code class="verbatim">#</code> and <code class="verbatim">##</code> are
+processed.</li>
+<li>The result is rescanned, with the macro's own name excluded, for
+further macros (so a macro cannot expand recursively).</li>
+</ol>
+<p>That explains the "extra level of indirection" idiom:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define STR</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp">  </span><span class="op">#</span><span class="pp">x</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define XSTR</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> STR</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define VERSION </span><span class="dv">3</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>STR<span class="op">(</span>VERSION<span class="op">)</span>     <span class="co">/* &quot;VERSION&quot;: # operand is not expanded */</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>XSTR<span class="op">(</span>VERSION<span class="op">)</span>    <span class="co">/* &quot;3&quot;: the argument is expanded before STR sees it */</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CAT</span><span class="op">(</span><span class="pp">a</span><span class="op">,</span><span class="pp"> b</span><span class="op">)</span><span class="pp">  a</span><span class="op">##</span><span class="pp">b</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define XCAT</span><span class="op">(</span><span class="pp">a</span><span class="op">,</span><span class="pp"> b</span><span class="op">)</span><span class="pp"> CAT</span><span class="op">(</span><span class="pp">a</span><span class="op">,</span><span class="pp"> b</span><span class="op">)</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>CAT<span class="op">(</span>x<span class="op">,</span> __LINE__<span class="op">)</span>     <span class="co">/* x__LINE__ */</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>XCAT<span class="op">(</span>x<span class="op">,</span> __LINE__<span class="op">)</span>    <span class="co">/* x42, for example */</span></span></code></pre></div>
+<p>Other rules:</p>
+<ul>
+<li>A function-like macro name not followed by <code
+class="verbatim">(</code> is left alone.</li>
+<li>Macros are not expanded inside string literals or comments.</li>
+<li>A macro defined twice with different bodies is an error; redefining
+requires <code class="verbatim">#undef</code> first.</li>
+<li><code class="verbatim">defined</code> produced by a macro expansion
+inside <code class="verbatim">#if</code> is undefined behavior; avoid
+it.</li>
+<li>A trailing <code class="verbatim">\</code> continues a directive
+onto the next line; nothing, not even a space, may follow it.</li>
+</ul>
+<h3 id="variadic-macros">8. Variadic macros</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LOG</span><span class="op">(</span><span class="pp">fmt</span><span class="op">,</span><span class="pp"> </span><span class="op">...)</span><span class="pp"> fprintf</span><span class="op">(</span><span class="pp">stderr</span><span class="op">,</span><span class="pp"> fmt __VA_OPT__</span><span class="op">(,)</span><span class="pp"> __VA_ARGS__</span><span class="op">)</span><span class="pp">   </span><span class="co">/* C23 */</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>LOG<span class="op">(</span><span class="st">&quot;start</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>LOG<span class="op">(</span><span class="st">&quot;x = </span><span class="sc">%d\n</span><span class="st">&quot;</span><span class="op">,</span> x<span class="op">);</span></span></code></pre></div>
+<p><code class="verbatim">__VA_OPT__(,)</code> emits a comma only if
+variable arguments exist. Before C23, GCC and Clang accept <code
+class="verbatim">, ##__VA_ARGS__</code> for the same purpose, which is a
+non-standard extension.</p>
+<h3 id="pragma-and-_pragma">9. #pragma and _Pragma</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma once</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma GCC diagnostic push</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma GCC diagnostic ignored &quot;-Wunused-parameter&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* ... code ... */</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma GCC diagnostic pop</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define IGNORE_UNUSED </span><span class="op">\</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="pp">    _Pragma</span><span class="op">(</span><span class="st">&quot;GCC diagnostic ignored </span><span class="sc">\&quot;</span><span class="st">-Wunused-parameter</span><span class="sc">\&quot;</span><span class="st">&quot;</span><span class="op">)</span></span></code></pre></div>
+<p>Unknown pragmas are ignored (with <code
+class="verbatim">-Wunknown-pragmas</code> a warning), so they are not
+portable. <code class="verbatim">_Pragma</code> works inside macros,
+where <code class="verbatim">#pragma</code> cannot.</p>
+<h3 id="embed-c23">10. #embed (C23)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> <span class="dt">unsigned</span> <span class="dt">char</span> logo<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#embed &quot;logo.png&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>Includes the file's bytes as a comma-separated list at compile time.
+Support is recent (Clang 19, GCC 15); on older compilers use <code
+class="verbatim">xxd -i</code> or the linker to embed data.</p>
+<h3 id="build-system-interaction">11. Build-system interaction</h3>
+<ul>
+<li><code class="verbatim">-MMD -MP</code> makes the compiler write
+<code class="verbatim">.d</code> dependency files listing the headers
+each object file includes; include them in your Makefile so edits to
+headers trigger rebuilds (see <code
+class="verbatim">10_toolchain.org</code>).</li>
+<li>Macros defined on the command line (<code
+class="verbatim">-DNAME</code>) are part of the build; changing them
+requires recompiling all affected files.</li>
+<li><code class="verbatim">__DATE__</code> / <code
+class="verbatim">__TIME__</code> make binaries differ on every build;
+avoid them where reproducible builds matter (<code
+class="verbatim">-Wdate-time</code> flags them).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>The preprocessor produces text before the compiler sees code; <code
+class="verbatim">cc -E</code> shows exactly what.</li>
+<li>Include guards in every header; keep definitions out of headers
+except <code class="verbatim">static inline</code>.</li>
+<li><code class="verbatim">#if</code> on an undefined name is false, not
+an error; enable <code class="verbatim">-Wundef</code>.</li>
+<li>Use feature-test macros before the first include to expose POSIX
+functions in strict modes.</li>
+<li>Macro arguments are prescanned, except operands of <code
+class="verbatim">#</code> and <code class="verbatim">##</code>; use two
+layers to expand first.</li>
+<li>Isolate platform differences instead of scattering <code
+class="verbatim">#ifdef</code>.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learn Haskell</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/haskell/learn.html">
+  <meta property="og:title" content="Learn Haskell">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/haskell/learn.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Learn Haskell</h1>
+<h2 id="learn-haskell-1">Learn Haskell</h2>
+<h3 id="ghc-ghci-and-projects">1. GHC, GHCi, and projects</h3>
+<div class="sourceCode" id="cb1" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ghci</span>                     <span class="co"># interactive REPL</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ghc</span> <span class="at">-O2</span> Main.hs          <span class="co"># compile</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">runghc</span> Main.hs           <span class="co"># run without producing a binary</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cabal</span> init <span class="kw">&amp;&amp;</span> <span class="ex">cabal</span> run  <span class="co"># project with dependencies</span></span></code></pre></div>
+<p>Useful GHCi commands:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">:</span>load Main.hs</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">:</span>reload</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">:</span><span class="kw">type</span> <span class="fu">map</span>        <span class="co">-- :t is the short form</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">:</span>info <span class="dt">Maybe</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">:</span>quit</span></code></pre></div>
+<p><code class="verbatim">--</code> starts a line comment; <code
+class="verbatim">{- ... -}</code> is a block comment.</p>
+<h3 id="expressions-and-application">2. Expressions and application</h3>
+<p>Function application is juxtaposition, binds tighter than any
+operator, and associates to the left.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> <span class="dv">3</span>             <span class="co">-- 7</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">max</span> <span class="dv">3</span> <span class="dv">4</span>               <span class="co">-- 4</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">max</span> <span class="dv">3</span> <span class="dv">4</span> <span class="op">+</span> <span class="dv">1</span>           <span class="co">-- 5, parsed as (max 3 4) + 1</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">negate</span> (<span class="fu">abs</span> (<span class="op">-</span><span class="dv">3</span>))     <span class="co">-- parentheses group; they are not call syntax</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">negate</span> <span class="op">$</span> <span class="fu">abs</span> <span class="op">$</span> (<span class="op">-</span><span class="dv">3</span>)   <span class="co">-- $ applies the function on its left to everything on its right</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>(f <span class="op">.</span> g) x             <span class="co">-- composition: f (g x)</span></span></code></pre></div>
+<p>There are no statements: everything is an expression with a value and
+a type.</p>
+<h3 id="types">3. Types</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dv">42</span><span class="ot">        ::</span> <span class="dt">Int</span>        <span class="co">-- fixed-width, machine integer</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dv">42</span><span class="ot">        ::</span> <span class="dt">Integer</span>    <span class="co">-- arbitrary precision</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fl">3.14</span><span class="ot">      ::</span> <span class="dt">Double</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">True</span><span class="ot">      ::</span> <span class="dt">Bool</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ch">&#39;a&#39;</span><span class="ot">       ::</span> <span class="dt">Char</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;hello&quot;</span><span class="ot">   ::</span> <span class="dt">String</span>     <span class="co">-- String is [Char], a linked list</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span>, <span class="st">&quot;a&quot;</span>)<span class="ot">  ::</span> (<span class="dt">Int</span>, <span class="dt">String</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]<span class="ot"> ::</span> [<span class="dt">Int</span>]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="ot">()        ::</span> ()         <span class="co">-- the unit type</span></span></code></pre></div>
+<p>Types are inferred, but top-level definitions should carry a
+signature. Names of types and constructors start with an uppercase
+letter; type variables and values with lowercase.</p>
+<h3 id="functions-and-currying">4. Functions and currying</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">square ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>square x <span class="ot">=</span> x <span class="op">*</span> x</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ot">add ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>add x y <span class="ot">=</span> x <span class="op">+</span> y</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ot">inc ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>inc <span class="ot">=</span> add <span class="dv">1</span>               <span class="co">-- partial application</span></span></code></pre></div>
+<p><code class="verbatim">Int -&gt; Int -&gt; Int</code> means <code
+class="verbatim">Int -&gt; (Int -&gt; Int)</code>: every function takes
+one argument and may return another function. Anonymous functions and
+operator sections:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">\</span>x <span class="ot">-&gt;</span> x <span class="op">*</span> x</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (<span class="op">\</span>x <span class="ot">-&gt;</span> x <span class="op">*</span> x) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]   <span class="co">-- [1,4,9]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (<span class="op">*</span> <span class="dv">2</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]           <span class="co">-- [2,4,6]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span> (<span class="fu">subtract</span> <span class="dv">1</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]    <span class="co">-- [0,1,2]; (- 1) would be the number -1</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>(<span class="ot">`div`</span> <span class="dv">2</span>) <span class="dv">10</span>                  <span class="co">-- 5</span></span></code></pre></div>
+<h3 id="lists">5. Lists</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="op">:</span> [<span class="dv">2</span>, <span class="dv">3</span>]                <span class="co">-- cons</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>, <span class="dv">2</span>] <span class="op">++</span> [<span class="dv">3</span>, <span class="dv">4</span>]          <span class="co">-- append, O(length of the left list)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]            <span class="co">-- 1, partial: crashes on []</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]            <span class="co">-- [2,3]</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span> <span class="op">..</span> <span class="dv">5</span>]                  <span class="co">-- [1,2,3,4,5]</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>[x <span class="op">*</span> x <span class="op">|</span> x <span class="ot">&lt;-</span> [<span class="dv">1</span> <span class="op">..</span> <span class="dv">5</span>], <span class="fu">odd</span> x]   <span class="co">-- [1,9,25]</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">zip</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>] <span class="st">&quot;abc&quot;</span>       <span class="co">-- [(1,&#39;a&#39;),(2,&#39;b&#39;),(3,&#39;c&#39;)]</span></span></code></pre></div>
+<p>Lists are singly linked: access by index (<code
+class="verbatim">!!</code>) is O(n). Prefer <code
+class="verbatim">Data.Vector</code> or <code
+class="verbatim">Data.Array</code> for indexed access.</p>
+<h3 id="pattern-matching-guards-where">6. Pattern matching, guards,
+where</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">sumList ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>sumList []       <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>sumList (x <span class="op">:</span> xs) <span class="ot">=</span> x <span class="op">+</span> sumList xs</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ot">classify ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>classify n</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> n <span class="op">&lt;</span> <span class="dv">0</span>     <span class="ot">=</span> <span class="st">&quot;negative&quot;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> n <span class="op">==</span> <span class="dv">0</span>    <span class="ot">=</span> <span class="st">&quot;zero&quot;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="st">&quot;positive&quot;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="ot">bmi ::</span> <span class="dt">Double</span> <span class="ot">-&gt;</span> <span class="dt">Double</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>bmi w h <span class="ot">=</span> w <span class="op">/</span> h <span class="op">^</span> <span class="dv">2</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="ot">area ::</span> <span class="dt">Double</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>area r <span class="ot">=</span> <span class="fu">pi</span> <span class="op">*</span> sq</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> sq <span class="ot">=</span> r <span class="op">*</span> r</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="ot">describe ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>describe n <span class="ot">=</span> <span class="kw">case</span> n <span class="kw">of</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="dv">0</span> <span class="ot">-&gt;</span> <span class="st">&quot;zero&quot;</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  _ <span class="op">|</span> <span class="fu">even</span> n    <span class="ot">-&gt;</span> <span class="st">&quot;even&quot;</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">-&gt;</span> <span class="st">&quot;odd&quot;</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> y <span class="ot">=</span> <span class="dv">3</span> <span class="kw">in</span> y <span class="op">*</span> y          <span class="co">-- let ... in is an expression</span></span></code></pre></div>
+<p>Clauses are tried top to bottom. A function is <em>total</em> if
+every input matches some clause; GHC can warn about missing cases with
+<code class="verbatim">-Wall</code>.</p>
+<h3 id="laziness">7. Laziness</h3>
+<p>Expressions are evaluated only when their value is needed.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">take</span> <span class="dv">5</span> [<span class="dv">1</span> <span class="op">..</span>]                              <span class="co">-- [1,2,3,4,5]; the list is infinite</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ot">fibs ::</span> [<span class="dt">Integer</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>fibs <span class="ot">=</span> <span class="dv">0</span> <span class="op">:</span> <span class="dv">1</span> <span class="op">:</span> <span class="fu">zipWith</span> (<span class="op">+</span>) fibs (<span class="fu">tail</span> fibs)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fst</span> (<span class="dv">1</span>, <span class="fu">undefined</span>)                         <span class="co">-- 1; undefined is never forced</span></span></code></pre></div>
+<p>Laziness enables infinite structures and compositional pipelines, but
+it can also build up unevaluated thunks and leak memory. Use strict
+folds (<code class="verbatim">foldl'</code>) and strict fields when
+accumulating.</p>
+<h3 id="data-types">8. Data types</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Color</span> <span class="ot">=</span> <span class="dt">Red</span> <span class="op">|</span> <span class="dt">Green</span> <span class="op">|</span> <span class="dt">Blue</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>, <span class="dt">Bounded</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Shape</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=</span> <span class="dt">Circle</span> <span class="dt">Double</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="dt">Rect</span> <span class="dt">Double</span> <span class="dt">Double</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ot">area ::</span> <span class="dt">Shape</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>area (<span class="dt">Circle</span> r) <span class="ot">=</span> <span class="fu">pi</span> <span class="op">*</span> r <span class="op">*</span> r</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>area (<span class="dt">Rect</span> w h) <span class="ot">=</span> w <span class="op">*</span> h</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Point</span> <span class="ot">=</span> <span class="dt">Point</span> {<span class="ot"> px ::</span> <span class="dt">Double</span>,<span class="ot"> py ::</span> <span class="dt">Double</span> }</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>p  <span class="ot">=</span> <span class="dt">Point</span> { px <span class="ot">=</span> <span class="dv">1</span>, py <span class="ot">=</span> <span class="dv">2</span> }</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>p&#39; <span class="ot">=</span> p { px <span class="ot">=</span> <span class="dv">10</span> }               <span class="co">-- record update creates a new value</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">UserId</span> <span class="ot">=</span> <span class="dt">UserId</span> <span class="dt">Int</span>      <span class="co">-- distinct type, no runtime overhead</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Name</span> <span class="ot">=</span> <span class="dt">String</span>               <span class="co">-- alias only</span></span></code></pre></div>
+<p>All values are immutable; "updating" a record builds a new one. A
+<code class="verbatim">data</code> type with several constructors is a
+sum type.</p>
+<h3 id="type-classes">9. Type classes</h3>
+<p>A type class declares an interface; instances provide the
+implementation.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Describable</span> a <span class="kw">where</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  describe ::</span> a <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Describable</span> <span class="dt">Color</span> <span class="kw">where</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  describe <span class="dt">Red</span> <span class="ot">=</span> <span class="st">&quot;warm&quot;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  describe _   <span class="ot">=</span> <span class="st">&quot;cool&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Describable</span> <span class="dt">Bool</span> <span class="kw">where</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  describe <span class="dt">True</span>  <span class="ot">=</span> <span class="st">&quot;yes&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  describe <span class="dt">False</span> <span class="ot">=</span> <span class="st">&quot;no&quot;</span></span></code></pre></div>
+<p>Constraints appear before <code>=&gt;</code> in a signature:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">largest ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> a</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>largest <span class="ot">=</span> <span class="fu">maximum</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ot">showAll ::</span> (<span class="dt">Show</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> [<span class="dt">String</span>]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>showAll <span class="ot">=</span> <span class="fu">map</span> <span class="fu">show</span></span></code></pre></div>
+<p>Common classes: <code class="verbatim">Eq</code>, <code
+class="verbatim">Ord</code>, <code class="verbatim">Show</code>, <code
+class="verbatim">Read</code>, <code class="verbatim">Enum</code>, <code
+class="verbatim">Bounded</code>, <code class="verbatim">Num</code>,
+<code class="verbatim">Functor</code>, <code
+class="verbatim">Applicative</code>, <code
+class="verbatim">Monad</code>, <code class="verbatim">Semigroup</code>,
+<code class="verbatim">Monoid</code>, <code
+class="verbatim">Foldable</code>, <code
+class="verbatim">Traversable</code>.</p>
+<h3 id="maybe-and-either">10. Maybe and Either</h3>
+<p>There is no null and no exceptions in ordinary pure code.</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Maybe</span> a      <span class="ot">=</span> <span class="dt">Nothing</span> <span class="op">|</span> <span class="dt">Just</span> a</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Either</span> e a   <span class="ot">=</span> <span class="dt">Left</span> e  <span class="op">|</span> <span class="dt">Right</span> a</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">safeDiv ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>safeDiv _ <span class="dv">0</span> <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>safeDiv a b <span class="ot">=</span> <span class="dt">Just</span> (a <span class="ot">`div`</span> b)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ot">parseAge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> <span class="dt">Int</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>parseAge n</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> n <span class="op">&lt;</span> <span class="dv">0</span>     <span class="ot">=</span> <span class="dt">Left</span> <span class="st">&quot;negative age&quot;</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Right</span> n</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="kw">case</span> safeDiv <span class="dv">10</span> <span class="dv">2</span> <span class="kw">of</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="st">&quot;undefined&quot;</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Just</span> q  <span class="ot">-&gt;</span> <span class="fu">show</span> q</span></code></pre></div>
+<p>By convention <code class="verbatim">Left</code> carries the error
+and <code class="verbatim">Right</code> the success. Helpers: <code
+class="verbatim">maybe</code>, <code class="verbatim">fromMaybe</code>
+(<code class="verbatim">Data.Maybe</code>), <code
+class="verbatim">either</code>.</p>
+<h3 id="higher-order-functions-and-folds">11. Higher-order functions and
+folds</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span>    (<span class="op">+</span> <span class="dv">1</span>) [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]            <span class="co">-- [2,3,4]</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">filter</span> <span class="fu">even</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>]          <span class="co">-- [2,4]</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">foldr</span>  (<span class="op">+</span>) <span class="dv">0</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]            <span class="co">-- 6</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>    [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]                  <span class="co">-- 6</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span>    <span class="fu">even</span> [<span class="dv">2</span>, <span class="dv">4</span>]                <span class="co">-- True</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span>    <span class="fu">odd</span>  [<span class="dv">2</span>, <span class="dv">4</span>]                <span class="co">-- False</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (foldl&#39;)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>foldl&#39; (<span class="op">+</span>) <span class="dv">0</span> [<span class="dv">1</span> <span class="op">..</span> <span class="dv">1000000</span>]       <span class="co">-- strict left fold</span></span></code></pre></div>
+<p><code class="verbatim">foldr f z [a,b,c]</code> is <code
+class="verbatim">f a (f b (f c z))</code>. <code
+class="verbatim">foldl'</code> accumulates from the left and forces the
+accumulator at each step. Plain <code class="verbatim">foldl</code>
+builds thunks. Recent GHC versions also export <code
+class="verbatim">foldl'</code> from the Prelude.</p>
+<h3 id="functor-applicative-monad">12. Functor, Applicative, Monad</h3>
+<p>These classes describe computations in a context (<code
+class="verbatim">Maybe</code>, lists, <code class="verbatim">IO</code>,
+…).</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fmap</span> (<span class="op">+</span> <span class="dv">1</span>) (<span class="dt">Just</span> <span class="dv">2</span>)               <span class="co">-- Just 3</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>(<span class="op">+</span> <span class="dv">1</span>) <span class="op">&lt;$&gt;</span> <span class="dt">Just</span> <span class="dv">2</span>                  <span class="co">-- same, infix</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>(<span class="op">+</span>) <span class="op">&lt;$&gt;</span> <span class="dt">Just</span> <span class="dv">1</span> <span class="op">&lt;*&gt;</span> <span class="dt">Just</span> <span class="dv">2</span>         <span class="co">-- Just 3: Applicative applies a function in a context</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span> <span class="dv">3</span> <span class="op">&gt;&gt;=</span> <span class="op">\</span>x <span class="ot">-&gt;</span> safeDiv <span class="dv">12</span> x     <span class="co">-- Just 4: Monad chains dependent steps</span></span></code></pre></div>
+<p><code class="verbatim">do</code> notation is syntax for <code
+class="verbatim">&gt;&gt;=</code> chains:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ot">calc ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>calc a b c <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> safeDiv a b      <span class="co">-- if Nothing, the whole block is Nothing</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> safeDiv x c</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (x <span class="op">+</span> y)</span></code></pre></div>
+<p>The same <code class="verbatim">do</code> block works for lists,
+<code class="verbatim">Either e</code>, parsers, state, and <code
+class="verbatim">IO</code>. Each monad defines what "chaining"
+means.</p>
+<h3 id="io">13. IO</h3>
+<p>Pure functions cannot perform effects. Effects are values of type
+<code class="verbatim">IO a</code>, and they run only when reached from
+<code class="verbatim">main</code>.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">putStrLn</span> <span class="st">&quot;Name?&quot;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  name <span class="ot">&lt;-</span> <span class="fu">getLine</span>               <span class="co">-- &lt;- extracts a result from an IO action</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> greeting <span class="ot">=</span> <span class="st">&quot;Hello, &quot;</span> <span class="op">++</span> name</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">putStrLn</span> greeting</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mapM_</span> <span class="fu">print</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]</span></code></pre></div>
+<p><code class="verbatim">&lt;-</code> is for actions, <code
+class="verbatim">let</code> is for pure values. There is no way to "run"
+an <code class="verbatim">IO</code> value inside a pure function; this
+is what keeps the purity guarantee.</p>
+<h3 id="modules-and-imports">14. Modules and imports</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Main</span> (main) <span class="kw">where</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sort, nub)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Maybe</span> (fromMaybe)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Map.Strict</span> <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="ot">ages ::</span> <span class="dt">Map.Map</span> <span class="dt">String</span> <span class="dt">Int</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>ages <span class="ot">=</span> Map.fromList [(<span class="st">&quot;ada&quot;</span>, <span class="dv">36</span>), (<span class="st">&quot;alan&quot;</span>, <span class="dv">41</span>)]</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>Map.lookup <span class="st">&quot;ada&quot;</span> ages            <span class="co">-- Just 36</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>Map.insertWith (<span class="op">+</span>) <span class="st">&quot;ada&quot;</span> <span class="dv">1</span> ages  <span class="co">-- returns a new map</span></span></code></pre></div>
+<p>Import containers qualified to avoid clashes with Prelude names
+(<code class="verbatim">lookup</code>, <code
+class="verbatim">filter</code>, <code class="verbatim">map</code>).
+<code class="verbatim">Data.Map</code> is a persistent balanced tree:
+updates return new maps and share structure with the old one.</p>
+<h3 id="common-pitfalls">15. Common pitfalls</h3>
+<ul>
+<li><strong>Partial functions</strong>: <code
+class="verbatim">head</code>, <code class="verbatim">tail</code>, <code
+class="verbatim">fromJust</code>, <code class="verbatim">!!</code>, and
+incomplete patterns crash at run time. Pattern match, or use <code
+class="verbatim">Maybe</code>.</li>
+<li><strong>Space leaks</strong>: lazy accumulators (<code
+class="verbatim">foldl</code>, repeated <code
+class="verbatim">modifyIORef</code>) build thunks. Use <code
+class="verbatim">foldl'</code>, bang patterns, or strict fields.</li>
+<li><strong>Indentation is syntax</strong>: <code
+class="verbatim">do</code>, <code class="verbatim">where</code>, <code
+class="verbatim">let</code>, <code class="verbatim">of</code> use
+layout. Align items in a block consistently and use spaces, not
+tabs.</li>
+<li><strong>Negative literals</strong>: write <code
+class="verbatim">f (-1)</code>, not <code
+class="verbatim">f -1</code>.</li>
+<li><strong>String is a list</strong>: for real text use <code
+class="verbatim">Data.Text</code>; for bytes use <code
+class="verbatim">Data.ByteString</code>.</li>
+<li><strong>Type defaulting</strong>: <code
+class="verbatim">show (2 ^ 64)</code> defaults to <code
+class="verbatim">Integer</code>; add annotations when you need <code
+class="verbatim">Int</code>.</li>
+<li><strong>Error messages</strong>: read the types in them; they are
+the fastest feedback loop.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Everything is an expression; functions are curried and applied by
+juxtaposition.</li>
+<li>Data is immutable; "change" means build a new value.</li>
+<li>Pattern matching on algebraic data types is the main control
+structure.</li>
+<li>Type classes give ad hoc polymorphism; constraints go before
+<code>=&gt;</code>.</li>
+<li><code class="verbatim">Maybe</code> and <code
+class="verbatim">Either</code> replace null and exceptions in pure
+code.</li>
+<li>Effects live in <code class="verbatim">IO</code> (or other monads)
+and are sequenced with <code class="verbatim">do</code>.</li>
+<li>Evaluation is lazy: powerful, but watch accumulators.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

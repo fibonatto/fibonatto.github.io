@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture Decisions in Web3</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/18-architecture-decisions.html">
+  <meta property="og:title" content="Architecture Decisions in Web3">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/18-architecture-decisions.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Architecture Decisions in Web3</h1>
+<h2 id="architecture-decisions-in-web3-1">Architecture Decisions in
+Web3</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Web3 decisions have two unusual properties: many are effectively
+irreversible once value is at stake, and many bind you to trust
+assumptions you do not control (chains, bridges, oracles, upstream
+protocols). At Staff and Principal scope you are expected to:</p>
+<ul>
+<li>recognize which decisions are one-way doors, slow down for those,
+and speed up for reversible ones;</li>
+<li>make trust assumptions, dependency risks, and exit strategies
+explicit in every significant decision;</li>
+<li>apply a consistent decision process (context, options, criteria,
+evidence, record, review triggers) across engineering, security, and
+business stakeholders;</li>
+<li>gate launches with staged exposure and explicit risk acceptance by
+named owners.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">05_web3-architecture.org</code>, <code
+class="verbatim">11_layer-2-and-cross-chain.org</code>, <code
+class="verbatim">14_protocol-design.org</code>, <code
+class="verbatim">15_deployment-and-upgrades.org</code>, <code
+class="verbatim">19_technical-leadership.org</code>. Software
+Architecture notes (in this repository): architecture decision records,
+evolutionary architecture, technical debt, and architecture review; they
+supply the general method that this file specializes.</p>
+<h3 id="which-decisions-are-architecturally-significant-here">1. Which
+decisions are architecturally significant here</h3>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Typical decisions</th>
+<th>Reversibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chain and deployment</td>
+<td>L1 versus L2 versus appchain; which L2; multi-chain strategy; data
+availability</td>
+<td>Low to medium (migration is costly)</td>
+</tr>
+<tr>
+<td>Contract architecture</td>
+<td>Immutable versus upgradeable; proxy pattern; modularity; role and
+permission model</td>
+<td>Low (code on-chain)</td>
+</tr>
+<tr>
+<td>Asset and token</td>
+<td>Token standards, supply policy, native versus bridged assets,
+stablecoin choices</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Trust and dependencies</td>
+<td>Oracle provider and design; bridge and messaging provider;
+integrated protocols; custody model</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Security model</td>
+<td>Audit program, bug bounty, formal verification scope, pause and
+guardian design</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Data and infrastructure</td>
+<td>RPC strategy, indexing approach, off-chain storage, relaying</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Governance</td>
+<td>Governance mechanism, powers, delays, decentralization roadmap</td>
+<td>Low to medium (social and legal)</td>
+</tr>
+<tr>
+<td>Product and compliance</td>
+<td>Permissioning, allowlists, geographic restrictions, KYC
+integration</td>
+<td>Medium</td>
+</tr>
+</tbody>
+</table>
+<p>Record decisions in the first four rows with the most care; they bind
+users' funds and trust.</p>
+<h3 id="a-decision-framework-tailored-to-web3">2. A decision framework
+tailored to Web3</h3>
+<p>For each significant decision, document:</p>
+<ol>
+<li><strong>Context and forces</strong>: requirements, constraints,
+quality attribute scenarios, regulatory and market context, timeline,
+team capability.</li>
+<li><strong>Reversibility classification</strong>: one-way door
+(irreversible after launch or with large migration cost), two-way door
+(cheap to change), or staged (reversible until a defined point).</li>
+<li><strong>Trust assumptions introduced</strong>: who or what must be
+trusted, for what, and what happens if that trust is violated.</li>
+<li><strong>Dependency risks</strong>: for each external dependency, its
+admin powers, upgrade rights, audit status, history of incidents,
+governance, concentration, and substitutes.</li>
+<li><strong>Options</strong>, including the do-nothing and the minimal
+option, with trade-offs against criteria.</li>
+<li><strong>Quantified comparisons</strong> where possible: expected
+fees per action, latency and finality, TVL caps, attack-cost estimates,
+capacity, operational cost.</li>
+<li><strong>Failure analysis</strong>: how does each option fail, how
+would we detect it, how much can we lose, and how fast can we
+respond?</li>
+<li><strong>Exit strategy</strong>: how to leave or replace the choice
+(migrate chains, swap oracles, replace a bridge, sunset a
+contract).</li>
+<li><strong>Decision, deciders, and risk acceptance</strong>: who
+decides, who accepts residual risk, and the conditions of
+acceptance.</li>
+<li><strong>Validation plan and review triggers</strong>: tests, pilots,
+metrics; events that reopen the decision (a chain's stage change, a
+provider incident, a regulatory change, a price of failure
+threshold).</li>
+</ol>
+<p>Use the ADR format of the Software Architecture notes; add fields for
+reversibility, trust assumptions, dependencies, and exit.</p>
+<h3 id="worked-examples">3. Worked examples</h3>
+<p>Short, illustrative records show the level of detail that works.</p>
+<pre class="text"><code># ADR-0003: Deploy the protocol on Ethereum L1 and one rollup, with the core on L1
+
+- Status: accepted     Date: 2026-02-10     Deciders: protocol lead; Consulted: security, finance
+## Context
+Value is custody-heavy (target TVL 200 M USD within a year); users are institutional and retail; gas fees at
+current levels would make small deposits uneconomic on L1; rollup security stages vary widely.
+## Reversibility
+Core contracts: one-way door (immutable vault logic). Rollup deployment: two-way door (a thin adapter).
+## Options
+A. L1 only. B. L1 core + one rollup deployment via canonical bridge. C. Multiple rollups from day one.
+## Decision
+B, with the rollup limited to deposits up to 5% of TVL until the rollup reaches a defined maturity level
+(proof system live, upgrade exit window of at least N days). Review trigger: rollup stage change, any
+security-council incident, or fee changes that alter the economics.
+## Consequences
++ Security of L1 for the core; low fees for small users.  - Two deployments to monitor; bridge dependency;
+  withdrawal delays on the rollup.
+## Exit
+Disable the rollup adapter by governance; users withdraw through the canonical bridge.
+</code></pre>
+<pre class="text"><code># ADR-0007: Make the vault upgradeable behind a timelock for the first 12 months, then freeze
+
+- Status: accepted     Date: 2026-03-04
+## Context
+New protocol, evolving integrations; two audits scheduled; a single upgrade key is unacceptable.
+## Decision
+UUPS proxies; upgrade authority = timelock (72 h) controlled by a 4-of-7 multisig of separate organizations;
+a guardian can pause but not upgrade; commitment to renounce upgradeability after a defined review.
+## Consequences
++ Ability to patch and migrate.  - Users must trust the multisig and timelock; integrators see upgrade risk;
+  ongoing monitoring of upgrade events; the freeze commitment needs a published criteria and date.
+## Review triggers
+Two clean audits and six months without critical findings; governance proposal to freeze.
+</code></pre>
+<pre class="text"><code># ADR-0011: Use a primary decentralized price feed with a TWAP fallback and deviation circuit breaker
+
+- Status: accepted     Date: 2026-04-02
+## Context
+Lending markets require robust prices; assets include a liquid staking token with thin DEX liquidity.
+## Decision
+Primary: decentralized oracle network feed with per-asset max staleness. Secondary: 30-minute TWAP from the
+deepest pool. If the sources deviate by more than 2%, new borrows are paused; liquidations use the more
+conservative price within bounds. A sequencer-uptime check applies on rollups.
+## Consequences
++ Resilience to single-source failure.  - Complexity; configuration risk; fallback paths need tests.
+## Review triggers
+Liquidity in the TWAP pool falls below a threshold; oracle provider incident; new asset onboarding.
+</code></pre>
+<h3 id="evaluating-chains-l2s-and-providers">4. Evaluating chains, L2s,
+and providers</h3>
+<ul>
+<li><strong>Criteria table</strong>: security and decentralization
+(consensus, stage, upgrade control, exit windows, DA), liquidity and
+users, tooling and infrastructure, fees and predictability, latency and
+finality, EVM compatibility and opcode differences, ecosystem partners,
+regulatory posture, operational track record, roadmap risk, team and
+governance, and exit options. Weigh by the protocol's risk profile;
+custody-heavy systems weight security and exit; consumer apps weight
+fees and UX.</li>
+<li><strong>Evidence</strong>: independent risk analyses (such as
+L2BEAT), incident histories, audit reports, client diversity, testnet
+and mainnet track record, and your own benchmarks and pilots.</li>
+<li><strong>Process</strong>: shortlist, deep-dive on top candidates,
+small pilot deployments with caps, decision record with review
+triggers.</li>
+<li><strong>Vendor selection</strong> (RPC, custody, indexing,
+monitoring, audit): evaluate reliability, security posture, data
+portability, pricing, support, and concentration risk; prefer designs
+where each vendor can be replaced.</li>
+</ul>
+<h3 id="build-buy-integrate-or-fork">5. Build, buy, integrate, or
+fork</h3>
+<ul>
+<li><strong>Integrate an existing protocol</strong> (a DEX, lending
+market, oracle): fast and liquid, but you inherit its risk, governance,
+and upgrades; add a dependency register entry, caps, monitoring, and an
+exit.</li>
+<li><strong>Fork</strong> code (with license compliance): you get proven
+logic but own the maintenance and the security; forks often miss subtle
+changes and context; re-audit.</li>
+<li><strong>Build</strong>: control and differentiation at the cost of
+security risk; build only what is core to the product, and reuse
+standard components elsewhere.</li>
+<li><strong>Buy services</strong> for infrastructure that is not a
+differentiator.</li>
+<li><strong>Licenses and legal</strong>: check open-source licenses and
+token and service agreements; involve counsel.</li>
+</ul>
+<h3 id="launch-gating-and-staged-exposure">6. Launch gating and staged
+exposure</h3>
+<p>Because mistakes are irreversible, reduce exposure before
+certainty:</p>
+<ul>
+<li><strong>Gating checklist</strong> (go or no-go): specification and
+threat model complete; audits finished and findings resolved or accepted
+by owners; tests and invariants green; monitoring and alerts configured
+and tested; incident runbooks rehearsed; keys, roles, and timelocks
+verified on-chain; bug bounty live; documentation and risk disclosures
+published; legal and compliance reviews complete; support and
+communication plan ready.</li>
+<li><strong>Staged rollout</strong>: private or allowlisted beta, low
+deposit caps, per-user and per-transaction limits, gradual cap increases
+tied to time and incident-free operation, and an explicit "maximum
+acceptable loss" for each stage.</li>
+<li><strong>Kill criteria</strong>: predefined conditions under which
+you pause or wind down (an invariant breach, an unresolved critical
+finding, a dependency failure).</li>
+<li><strong>Expansion decisions</strong> (new assets, chains, features)
+go through the same record and gating with updated risk analysis; avoid
+adding many risks at once.</li>
+<li><strong>Post-launch reviews</strong>: compare predicted versus
+actual usage, fees, latency, and incidents; update the decision
+records.</li>
+</ul>
+<h3 id="dependency-register">7. Dependency register</h3>
+<p>Maintain a living register for every external dependency (contracts,
+protocols, vendors, chains):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dependency and version/address</td>
+<td>What it is and exactly where</td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>What we use it for</td>
+</tr>
+<tr>
+<td>Trust assumption</td>
+<td>What can go wrong if it fails or turns hostile</td>
+</tr>
+<tr>
+<td>Admin and upgrade powers</td>
+<td>Who can change it, with what delay</td>
+</tr>
+<tr>
+<td>Audit and incident history</td>
+<td>Reports, known issues, past incidents</td>
+</tr>
+<tr>
+<td>Monitoring</td>
+<td>Alerts on upgrades, pauses, parameter changes, health</td>
+</tr>
+<tr>
+<td>Exposure limits</td>
+<td>Caps and circuit breakers on our side</td>
+</tr>
+<tr>
+<td>Exit plan</td>
+<td>How to replace or unwind</td>
+</tr>
+<tr>
+<td>Owner and review date</td>
+<td>Responsible person and next review</td>
+</tr>
+</tbody>
+</table>
+<p>Review it quarterly and after any incident in the ecosystem.</p>
+<h3 id="anti-patterns">8. Anti-patterns</h3>
+<ul>
+<li><strong>Decisions by hype</strong>: choosing a chain, L2, or stack
+because it is trending, without a trust and exit analysis.</li>
+<li><strong>Irreversibility without ceremony</strong>: deploying
+immutable code or unbounded permissions without a launch gate.</li>
+<li><strong>Unexamined admin keys</strong>: an upgrade or pause role
+held by one person or one device.</li>
+<li><strong>Hidden dependencies</strong>: reliance on a protocol or
+oracle whose governance and failure modes nobody tracks.</li>
+<li><strong>Security theater</strong>: an audit used as marketing while
+known risks are accepted without owners or caps.</li>
+<li><strong>Decision records after the fact</strong> that justify
+instead of document.</li>
+<li><strong>Over-expansion</strong>: launching on many chains and
+features before the first deployment is stable.</li>
+<li><strong>No exit</strong>: designs that cannot migrate away from a
+failing chain, oracle, or bridge.</li>
+</ul>
+<h3 id="self-check">9. Self-check</h3>
+<ol>
+<li>Classify five decisions of a protocol you know by reversibility, and
+say what additional process each deserves.</li>
+<li>Write the trust-assumption statement for choosing a particular L2
+for a custody-heavy product.</li>
+<li>List the entries you would put in a dependency register for a vault
+integrating two lending markets and one DEX.</li>
+<li>Define staged exposure for the first 90 days of a new protocol:
+caps, conditions for increases, and kill criteria.</li>
+<li>When is forking a protocol a good decision, and what are the hidden
+costs?</li>
+<li>How would you decide between an immutable and an upgradeable design
+for a stablecoin vault?</li>
+</ol>
+<h3 id="exercises">10. Exercises</h3>
+<ul>
+<li>Warm-up: write an ADR for the choice of RPC strategy for a service,
+including failure analysis and an exit plan.</li>
+<li>Core: write an ADR comparing three chains or L2s for a new product
+with weighted criteria, pilot results, and review triggers.</li>
+<li>Core: build the dependency register for a protocol, filling every
+field from public data (contracts, governance, audits, incidents).</li>
+<li>Core: write a launch gating checklist with owners, evidence
+required, and sign-off, and run a mock review.</li>
+<li>Stretch: write a progressive decentralization plan with milestones,
+measurable criteria, and the ADRs required for each power removed.</li>
+<li>Stretch: run a pre-mortem on a planned launch and convert the top
+failure modes into gating items and monitors.</li>
+</ul>
+<h3 id="resources">11. Resources</h3>
+<ul>
+<li>Software Architecture notes in this repository: <code
+class="verbatim">07_architecture-decision-records.org</code>, <code
+class="verbatim">08_evolutionary-architecture.org</code>, <code
+class="verbatim">09_technical-debt.org</code>, <code
+class="verbatim">10_architecture-review.org</code> (in the Software
+Architecture folder).</li>
+<li>Nygard, <em>Documenting Architecture Decisions</em>: <a
+href="https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions">https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions</a>
+; ADR community resources: <a
+href="https://adr.github.io">https://adr.github.io</a></li>
+<li>L2BEAT for chain and bridge risk: <a
+href="https://l2beat.com">https://l2beat.com</a> ; Ethereum Foundation
+blog for protocol changes: <a
+href="https://blog.ethereum.org/">https://blog.ethereum.org/</a></li>
+<li>Public governance forums and post-mortems of the protocols you
+depend on.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Classify decisions by reversibility; apply ceremony where mistakes
+are permanent.</li>
+<li>Every decision states its trust assumptions, dependency risks,
+failure analysis, and exit.</li>
+<li>Stage exposure with caps, gates, and kill criteria; expand only with
+evidence.</li>
+<li>Keep a living dependency register and review triggers.</li>
+<li>Record decisions honestly, with owners who accept the residual
+risk.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

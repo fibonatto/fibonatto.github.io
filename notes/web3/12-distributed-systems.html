@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distributed Systems in Web3</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/12-distributed-systems.html">
+  <meta property="og:title" content="Distributed Systems in Web3">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/12-distributed-systems.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Distributed Systems in Web3</h1>
+<h2 id="distributed-systems-in-web3-1">Distributed Systems in Web3</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Web3 systems are distributed systems with unusual properties: open
+membership, adversarial participants, probabilistic or economic
+finality, public state, and strongly constrained global execution.
+Application backends that interact with chains inherit all the problems
+of distributed systems and add chain-specific ones (reorgs, inconsistent
+RPC views, nonce ordering, fee volatility). At Staff and Principal scope
+you are expected to:</p>
+<ul>
+<li>map blockchain concepts onto distributed-systems theory (consensus,
+failure models, consistency) and use that theory to reason about real
+incidents;</li>
+<li>design off-chain services that stay correct under reorgs, provider
+failures, duplicate and delayed events, and chain halts;</li>
+<li>choose consistency and finality policies explicitly for each
+interaction;</li>
+<li>apply standard reliability patterns (idempotency, outbox, quorum
+reads, circuit breakers) to chain interaction.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">01_blockchain-fundamentals.org</code>, <code
+class="verbatim">06_transactions-and-gas.org</code>, <code
+class="verbatim">13_indexing-and-data-access.org</code>, <code
+class="verbatim">17_reliability-and-monitoring.org</code>. The
+Foundations concurrency and distributed-systems file is the theoretical
+companion (consensus, consistency models, quorums, queueing).</p>
+<h3 id="blockchains-through-the-distributed-systems-lens">1. Blockchains
+through the distributed-systems lens</h3>
+<ul>
+<li><strong>State machine replication</strong>: every validator applies
+the same ordered transactions to the same initial state; determinism is
+mandatory (hence no randomness, clocks, or I/O in the VM).</li>
+<li><strong>Failure models</strong>: crash faults (a node stops),
+omission faults (messages lost), and Byzantine faults (arbitrary or
+malicious behavior); permissionless chains must assume Byzantine
+participants and Sybil identities, and use economic stake or work to
+bound them.</li>
+<li><strong>Timing models</strong>: synchronous (bounded delay),
+asynchronous (no bound), and partially synchronous (bounded after an
+unknown time, the realistic model). Nakamoto consensus relies on network
+delay being small relative to block time; BFT protocols rely on partial
+synchrony for liveness.</li>
+<li><strong>Impossibility and trade-offs</strong>: FLP (no deterministic
+consensus is guaranteed in a fully asynchronous system with even one
+crash), CAP (under partition, choose consistency or availability), and
+the safety-liveness tension. Ethereum's design favors liveness (the
+chain continues, though finality can stall under heavy faults), with an
+inactivity mechanism that restores finality by penalizing
+non-participants; classic BFT chains favor safety (they halt without a
+quorum).</li>
+<li><strong>Fault thresholds</strong>: BFT protocols tolerate less than
+one third Byzantine stake; Nakamoto consensus tolerates less than half
+of the work or stake under synchrony assumptions; economic penalties
+(slashing) raise the cost of violating safety.</li>
+<li><strong>Finality</strong>: probabilistic (PoW, confirmations),
+economic (slashable checkpoints), or immediate (BFT). Application
+correctness must be defined against a finality level.</li>
+<li><strong>Fork choice and reorgs</strong>: reorganizations are normal
+behavior; their depth depends on the protocol and conditions;
+applications that assume no reorgs are incorrect.</li>
+</ul>
+<h3 id="the-anatomy-of-inconsistency-that-applications-see">2. The
+anatomy of inconsistency that applications see</h3>
+<ul>
+<li><strong>Multiple views of the chain</strong>: each node has its own
+head, mempool, and peers; two RPC calls to different providers may
+return different heads, or different results for <code>eth_call</code>.
+Load balancers across providers can produce non-monotonic reads (a block
+appears, then disappears, then reappears).</li>
+<li><strong>Block tags</strong>: <code>latest</code> (possibly reorged),
+<code>safe</code> (justified, unlikely to reorg), <code>finalized</code>
+(economically final). Reads for decisions that cause irreversible
+actions should use <code>safe</code> or <code>finalized</code>.</li>
+<li><strong>Eventual consistency of indexers and caches</strong>:
+derived stores lag the chain and may be inconsistent with each
+other.</li>
+<li><strong>Event delivery</strong>: logs may be delivered more than
+once, out of order across reconnects, or retroactively removed (a log
+with a <code>removed</code> flag after a reorg); subscriptions drop
+silently.</li>
+<li><strong>Transaction outcomes</strong>: a transaction can be dropped,
+replaced, reverted, or reorged; "sent" does not mean "will happen".</li>
+<li><strong>Time</strong>: block timestamps are set by producers within
+bounds; they are not wall-clock accurate and can be manipulated
+slightly; do not use them for fine-grained logic. Off-chain clocks
+drift; use block numbers for ordering and timestamps for coarse
+expiry.</li>
+</ul>
+<h3 id="patterns-for-reliable-chain-interaction">3. Patterns for
+reliable chain interaction</h3>
+<ul>
+<li><strong>Idempotent operations and idempotency keys</strong>: design
+each off-chain action so that retries cannot double-execute. Where the
+contract is not naturally idempotent, record the intent and the nonce,
+and check on-chain state before retrying.</li>
+<li><strong>Transactional outbox for transaction submission</strong>:
+persist the intent (and the intended nonce) in a database transaction
+with the business state change; a worker submits and tracks; the outcome
+is recorded when finality is reached (see <code
+class="verbatim">06_transactions-and-gas.org</code>).</li>
+<li><strong>Single-writer nonce management</strong> per account (a queue
+or lease), or separate sender accounts, to avoid nonce races.</li>
+<li><strong>Event cursors and exactly-once-effect processing</strong>:
+process events with a stable key (chain id, block hash, log index),
+store a cursor, and make handlers idempotent; on restart, reprocess from
+the last committed block minus a safety margin.</li>
+<li><strong>Reorg-aware ingestion</strong>: store block hash and parent
+hash per processed block; when the parent hash of a new block does not
+match the stored head, find the common ancestor, roll back derived state
+above it, and replay; keep a buffer of unfinalized blocks (see <code
+class="verbatim">13_indexing-and-data-access.org</code>).</li>
+<li><strong>Quorum and redundancy for reads</strong>: query several
+providers for critical reads and compare (for example head block,
+balance, or price); alert on disagreement; prefer a self-hosted node as
+a tie-breaker.</li>
+<li><strong>Provider failover and hedging</strong>: health checks,
+timeouts, retries with backoff and jitter, hedged requests for
+latency-sensitive reads, and circuit breakers per provider;
+stale-provider detection by comparing head height.</li>
+<li><strong>Backpressure and rate limits</strong>: RPC providers enforce
+quotas; queue and prioritize requests; protect critical paths from batch
+jobs.</li>
+<li><strong>Sagas for multi-step and multi-chain workflows</strong>:
+represent each step as a local transaction with a compensating action or
+a defined recovery; persist workflow state; handle partial completion
+(funds moved on one chain but not the other).</li>
+<li><strong>Confirmation and finality policies as
+configuration</strong>: per action type and value; changes reviewed like
+code.</li>
+<li><strong>Monotonic reads for clients</strong>: remember the highest
+block seen and reject responses from nodes behind it.</li>
+<li><strong>Graceful degradation modes</strong>: read-only mode when
+submissions fail, queue-and-retry when providers are down, explicit
+"chain halted" state.</li>
+</ul>
+<h3 id="failure-scenarios-and-responses">4. Failure scenarios and
+responses</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Symptoms</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reorg of recent blocks</td>
+<td>Transactions disappear; events removed; balances change</td>
+<td>Roll back derived state; resubmit or re-evaluate; confirmation
+policy prevents crediting too early</td>
+</tr>
+<tr>
+<td>RPC provider outage or lag</td>
+<td>Timeouts, stale heads, inconsistent reads</td>
+<td>Failover; quorum reads; alert on head divergence</td>
+</tr>
+<tr>
+<td>Transaction stuck (low fee, nonce gap)</td>
+<td>Pending for long; later nonces blocked</td>
+<td>Replace with higher fee; fill the nonce gap; investigate fee
+policy</td>
+</tr>
+<tr>
+<td>Chain halt or finality stall</td>
+<td>No new blocks or no finality</td>
+<td>Pause sensitive actions; communicate; resume after verification</td>
+</tr>
+<tr>
+<td>Mempool congestion and fee spike</td>
+<td>Failed or delayed submissions; budget exhaustion</td>
+<td>Fee caps and escalation; defer non-urgent work; autoscale gas
+funds</td>
+</tr>
+<tr>
+<td>Client bug or consensus split</td>
+<td>Nodes on different forks</td>
+<td>Compare against multiple providers and client types; follow incident
+channels; halt irreversible actions</td>
+</tr>
+<tr>
+<td>Event stream gap</td>
+<td>Missing events after reconnect</td>
+<td>Backfill from logs by block range; reconcile with on-chain
+state</td>
+</tr>
+<tr>
+<td>Duplicate or reordered cross-chain message</td>
+<td>Double execution or stale state</td>
+<td>Nonces, idempotent handlers, expiry, ordering checks</td>
+</tr>
+<tr>
+<td>Sequencer downtime on L2</td>
+<td>Transactions stall; stale oracles</td>
+<td>Use forced inclusion if available; pause risky functions; grace
+periods</td>
+</tr>
+</tbody>
+</table>
+<h3 id="concurrency-and-ordering-on-chain">5. Concurrency and ordering
+on-chain</h3>
+<ul>
+<li><strong>Transactions are totally ordered within a block</strong>,
+but the order is chosen by builders (see <code
+class="verbatim">10_oracles-and-mev.org</code>); never assume the order
+in which concurrent users' transactions execute, and never assume state
+read earlier is unchanged at inclusion.</li>
+<li><strong>Check-then-act races</strong>: reads in simulation can be
+invalidated by earlier transactions in the same block; contracts must
+re-check conditions atomically and fail safely (slippage bounds,
+deadlines, expected-state checks).</li>
+<li><strong>Atomicity as a tool</strong>: a single transaction is
+atomic; multi-call batches can implement all-or-nothing flows, flash
+loans, and safe composition. Cross-transaction workflows are not atomic
+and need explicit state machines.</li>
+<li><strong>Isolation</strong>: other contracts can call yours in the
+middle of your execution (reentrancy); there is no isolation between
+contracts in one transaction.</li>
+<li><strong>Global contention</strong>: hot contracts and storage slots
+create contention (gas wars, failed transactions); design to reduce
+shared mutable state or shard it.</li>
+<li><strong>Parallelism</strong>: Ethereum executes sequentially today;
+upgrades (such as block-level access lists) aim to enable parallel
+execution later; other chains parallelize by declaring state
+access.</li>
+</ul>
+<h3 id="testing-distributed-behavior">6. Testing distributed
+behavior</h3>
+<ul>
+<li><strong>Reorg simulation</strong>: use local nodes with snapshot and
+revert to simulate reorgs and verify that indexers and services roll
+back correctly.</li>
+<li><strong>Fault injection</strong>: simulate RPC failures, delays, and
+malformed responses; drop and duplicate events; skip blocks; stall
+finality.</li>
+<li><strong>Deterministic simulation</strong>: run services against a
+simulated chain and network with a seeded scheduler so that failures are
+reproducible.</li>
+<li><strong>Property checks</strong>: no lost or duplicate payments;
+derived balances equal on-chain balances at finality; a cursor never
+moves backward past unfinalized data.</li>
+<li><strong>Chaos and game days</strong> in staging, including provider
+outages and fee spikes (see <code
+class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+<li><strong>Model checking</strong> of critical protocols (for example a
+custom bridge message protocol or a settlement workflow) with TLA+ or
+similar tools.</li>
+</ul>
+<h3 id="self-check">7. Self-check</h3>
+<ol>
+<li>A service credits a deposit after one confirmation and a reorg
+removes the transaction. What went wrong in design, and how do you fix
+it?</li>
+<li>Explain why two RPC providers can return different answers and how
+you design reads for decisions that cause irreversible actions.</li>
+<li>Describe the exactly-once-effect design for processing chain events
+into a database.</li>
+<li>Compare liveness and safety behavior of an Ethereum-style chain and
+a Tendermint-style chain during a large network partition.</li>
+<li>How do you prevent a nonce gap from blocking a payment service, and
+how do you recover when one occurs?</li>
+<li>What properties would you check with a model checker for a
+cross-chain withdrawal workflow?</li>
+</ol>
+<h3 id="exercises">8. Exercises</h3>
+<ul>
+<li>Warm-up: write a script that polls two RPC endpoints and reports
+head height, hash, and latency; log divergence.</li>
+<li>Core: build a reorg-aware event ingester with a cursor and an
+unfinalized buffer; test it by forcing a reorg on a local node and
+verifying rollback and replay.</li>
+<li>Core: implement a transaction outbox with idempotency keys and a
+state machine; inject failures (crash after send, crash after confirm)
+and verify no duplicate effects.</li>
+<li>Core: implement quorum reads across three providers with majority
+voting and disagreement alerts.</li>
+<li>Stretch: write a TLA+ (or Python state-exploration) model of a
+deposit-credit workflow with reorgs and show the safety property "no
+credit without finalized deposit".</li>
+<li>Stretch: run a game day: kill the primary RPC, inject a reorg, and
+spike gas; measure recovery and update the runbook.</li>
+</ul>
+<h3 id="resources">9. Resources</h3>
+<ul>
+<li>Foundations notes in this repository: concurrency and distributed
+systems (failure models, consensus, consistency, queueing, testing),
+logic and proofs (invariants, model checking).</li>
+<li>ethereum.org documentation on consensus mechanisms, nodes, and the
+JSON-RPC API: <a
+href="https://ethereum.org/en/developers/docs/">https://ethereum.org/en/developers/docs/</a></li>
+<li>Buterin and Griffith, <em>Casper the Friendly Finality Gadget</em>;
+Castro and Liskov, <em>Practical Byzantine Fault Tolerance</em>;
+Fischer, Lynch, Paterson (FLP); Lamport, <em>The Part-Time
+Parliament</em> and <em>Paxos Made Simple</em>; Kleppmann, <em>Designing
+Data-Intensive Applications</em>.</li>
+<li>Jepsen consistency models for vocabulary: <a
+href="https://jepsen.io/consistency/models">https://jepsen.io/consistency/models</a></li>
+<li>Client documentation and issue trackers for reorg, finality, and
+sync behavior (execution and consensus clients).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Chains are distributed systems with adversaries; finality is a
+policy choice for every action.</li>
+<li>Reads are inconsistent across nodes and time; use block tags,
+monotonic reads, and quorum for critical decisions.</li>
+<li>Make every off-chain action idempotent, persist intents, and manage
+nonces with a single writer.</li>
+<li>Ingest events with cursors and reorg rollback; reconcile with
+on-chain truth.</li>
+<li>Test with injected reorgs, faults, and fee spikes; model critical
+workflows formally.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

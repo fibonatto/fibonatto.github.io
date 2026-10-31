@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Iterators</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/07-iterators.html">
+  <meta property="og:title" content="Rust Iterators">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/07-iterators.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Iterators</h1>
+<h2 id="rust-iterators-1">Rust Iterators</h2>
+<p>Iterators are Rust's idiom for loops over data. They are lazy,
+composable, and compile to the same machine code as hand-written
+loops.</p>
+<h3 id="the-iterator-trait">1. The Iterator trait</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> <span class="bu">Iterator</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Item<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> next(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="pp">Self::</span>Item<span class="op">&gt;;</span>       <span class="co">// everything else builds on this</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... dozens of provided methods</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>An iterator yields <code class="verbatim">Some(item)</code> until it
+is exhausted, then <code class="verbatim">None</code>. A <code
+class="verbatim">for</code> loop is sugar over <code
+class="verbatim">IntoIterator</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> collection <span class="op">{</span> body <span class="op">}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// is roughly</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> it <span class="op">=</span> <span class="pp">IntoIterator::</span>into_iter(collection)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">let</span> <span class="cn">Some</span>(x) <span class="op">=</span> it<span class="op">.</span>next() <span class="op">{</span> body <span class="op">}</span></span></code></pre></div>
+<h3 id="three-ways-to-iterate-a-collection">2. Three ways to iterate a
+collection</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> v<span class="op">.</span>iter()      <span class="op">{</span> <span class="op">}</span>    <span class="co">// x: &amp;i32       shared references; v remains usable</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> v<span class="op">.</span>iter_mut()  <span class="op">{</span> <span class="op">*</span>x <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span>   <span class="co">// x: &amp;mut i32   exclusive references</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> v<span class="op">.</span>into_iter() <span class="op">{</span> <span class="op">}</span>    <span class="co">// x: i32        takes ownership; v is moved</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> <span class="op">&amp;</span>v     <span class="op">{</span> <span class="op">}</span>           <span class="co">// same as v.iter()</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> <span class="op">&amp;</span><span class="kw">mut</span> v <span class="op">{</span> <span class="op">}</span>           <span class="co">// same as v.iter_mut()</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> v      <span class="op">{</span> <span class="op">}</span>           <span class="co">// same as v.into_iter()</span></span></code></pre></div>
+<p>Know which one you have: <code class="verbatim">iter()</code> on a
+<code class="verbatim">Vec&lt;String&gt;</code> yields <code
+class="verbatim">&amp;String</code>, so closures receive references, and
+you may need <code class="verbatim">cloned()</code>, <code
+class="verbatim">copied()</code>, or a dereference.</p>
+<h3 id="adaptors-lazy">3. Adaptors (lazy)</h3>
+<p>Adaptors return a new iterator and do no work until consumed.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">6</span>]<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>x<span class="op">|</span> x <span class="op">*</span> <span class="dv">2</span>)<span class="op">;</span>                    <span class="co">// transform</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>filter(<span class="op">|</span>x<span class="op">|</span> <span class="op">**</span>x <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>)<span class="op">;</span>          <span class="co">// keep matching (x: &amp;&amp;i32 here)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>enumerate()<span class="op">;</span>                       <span class="co">// (index, item)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>zip(w<span class="op">.</span>iter())<span class="op">;</span>                     <span class="co">// pairs, stops at the shorter</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>skip(<span class="dv">2</span>)<span class="op">.</span>take(<span class="dv">3</span>)<span class="op">;</span>                   <span class="co">// slice of the stream</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>rev()<span class="op">;</span>                             <span class="co">// reverse (double-ended)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>chain(w<span class="op">.</span>iter())<span class="op">;</span>                   <span class="co">// concatenate</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>step_by(<span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>take_while(<span class="op">|</span>x<span class="op">|</span> <span class="op">**</span>x <span class="op">&lt;</span> <span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>skip_while(<span class="op">|</span>x<span class="op">|</span> <span class="op">**</span>x <span class="op">&lt;</span> <span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>copied()<span class="op">;</span>                          <span class="co">// &amp;i32 -&gt; i32 (Copy types)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>cloned()<span class="op">;</span>                          <span class="co">// &amp;T -&gt; T (Clone types)</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>peekable()<span class="op">;</span>                        <span class="co">// look at the next item without consuming it</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>flat_map(<span class="op">|</span>x<span class="op">|</span> <span class="pp">vec!</span>[<span class="op">*</span>x<span class="op">;</span> <span class="dv">2</span>])<span class="op">;</span>         <span class="co">// map then flatten</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>nested<span class="op">.</span>iter()<span class="op">.</span>flatten()<span class="op">;</span>                    <span class="co">// one level of nesting</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>scan(<span class="dv">0</span><span class="op">,</span> <span class="op">|</span>acc<span class="op">,</span> x<span class="op">|</span> <span class="op">{</span> <span class="op">*</span>acc <span class="op">+=</span> x<span class="op">;</span> <span class="cn">Some</span>(<span class="op">*</span>acc) <span class="op">}</span>)<span class="op">;</span>   <span class="co">// running state</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>inspect(<span class="op">|</span>x<span class="op">|</span> <span class="pp">println!</span>(<span class="st">&quot;{x}&quot;</span>))<span class="op">;</span>      <span class="co">// debug without changing the stream</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>windows(<span class="dv">2</span>)<span class="op">;</span>                               <span class="co">// slice method: overlapping windows</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>chunks(<span class="dv">3</span>)<span class="op">;</span>                                <span class="co">// slice method: non-overlapping chunks</span></span></code></pre></div>
+<p>Nothing above has run yet: an unused adaptor chain triggers a <code
+class="verbatim">#[must_use]</code> warning.</p>
+<h3 id="consumers">4. Consumers</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">3</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">5</span>]<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span><span class="pp">sum::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>()<span class="op">;</span>                      <span class="co">// 14</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span><span class="pp">product::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>count()<span class="op">;</span>                           <span class="co">// 5</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>min()<span class="op">;</span>   v<span class="op">.</span>iter()<span class="op">.</span>max()<span class="op">;</span>           <span class="co">// Option&lt;&amp;i32&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>min_by_key(<span class="op">|</span>x<span class="op">|</span> (<span class="op">**</span>x <span class="op">-</span> <span class="dv">3</span>)<span class="op">.</span>abs())<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>max_by(<span class="op">|</span>a<span class="op">,</span> b<span class="op">|</span> a<span class="op">.</span>cmp(b))<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>any(<span class="op">|&amp;</span>x<span class="op">|</span> x <span class="op">&gt;</span> <span class="dv">4</span>)<span class="op">;</span>                   <span class="co">// true</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>all(<span class="op">|&amp;</span>x<span class="op">|</span> x <span class="op">&gt;</span> <span class="dv">0</span>)<span class="op">;</span>                   <span class="co">// true</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>find(<span class="op">|&amp;&amp;</span>x<span class="op">|</span> x <span class="op">&gt;</span> <span class="dv">3</span>)<span class="op">;</span>                 <span class="co">// Some(&amp;4)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>position(<span class="op">|&amp;</span>x<span class="op">|</span> x <span class="op">==</span> <span class="dv">4</span>)<span class="op">;</span>             <span class="co">// Some(2)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>fold(<span class="dv">0</span><span class="op">,</span> <span class="op">|</span>acc<span class="op">,</span> x<span class="op">|</span> acc <span class="op">+</span> x)<span class="op">;</span>         <span class="co">// 14</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>copied()<span class="op">.</span>reduce(<span class="op">|</span>a<span class="op">,</span> b<span class="op">|</span> a<span class="op">.</span>max(b))<span class="op">;</span>  <span class="co">// Some(5): no initial value</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>last()<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>nth(<span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>iter()<span class="op">.</span>for_each(<span class="op">|</span>x<span class="op">|</span> <span class="pp">println!</span>(<span class="st">&quot;{x}&quot;</span>))<span class="op">;</span></span></code></pre></div>
+<p>Floats have no <code class="verbatim">Ord</code>, so use <code
+class="verbatim">max_by(|a, b| a.partial_cmp(b).unwrap())</code> or
+<code class="verbatim">max_by(f64::total_cmp)</code> (with <code
+class="verbatim">copied()</code> or a dereference as needed).</p>
+<h3 id="collect">5. collect</h3>
+<p><code class="verbatim">collect</code> builds a collection from an
+iterator; the target type is chosen by annotation.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::collections::</span><span class="op">{</span>HashMap<span class="op">,</span> HashSet<span class="op">};</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> doubled<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>x<span class="op">|</span> x <span class="op">*</span> <span class="dv">2</span>)<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> set<span class="op">:</span> HashSet<span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>copied()<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> text<span class="op">:</span> <span class="dt">String</span> <span class="op">=</span> <span class="pp">vec!</span>[<span class="st">&quot;a&quot;</span><span class="op">,</span> <span class="st">&quot;b&quot;</span>]<span class="op">.</span>into_iter()<span class="op">.</span>collect()<span class="op">;</span>           <span class="co">// &quot;ab&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> map<span class="op">:</span> HashMap<span class="op">&lt;</span>_<span class="op">,</span> _<span class="op">&gt;</span> <span class="op">=</span> names<span class="op">.</span>iter()<span class="op">.</span>zip(ages<span class="op">.</span>iter())<span class="op">.</span>collect()<span class="op">;</span>  <span class="co">// from (key, value) pairs</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> squares <span class="op">=</span> (<span class="dv">1</span><span class="op">..=</span><span class="dv">3</span>)<span class="op">.</span>map(<span class="op">|</span>x<span class="op">|</span> x <span class="op">*</span> x)<span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;&gt;</span>()<span class="op">;</span>         <span class="co">// turbofish instead</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> parsed<span class="op">:</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;,</span> _<span class="op">&gt;</span> <span class="op">=</span> <span class="st">&quot;1 2 x&quot;</span><span class="op">.</span>split(<span class="ch">&#39; &#39;</span>)<span class="op">.</span>map(<span class="pp">str::parse::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>)<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Err at the first failure; Ok(vec) only if every item parses</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> all<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">vec!</span>[<span class="cn">Some</span>(<span class="dv">1</span>)<span class="op">,</span> <span class="cn">Some</span>(<span class="dv">2</span>)]<span class="op">.</span>into_iter()<span class="op">.</span>collect()<span class="op">;</span>   <span class="co">// Some([1, 2])</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (evens<span class="op">,</span> odds)<span class="op">:</span> (<span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;,</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>) <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>partition(<span class="op">|</span>x<span class="op">|</span> <span class="op">**</span>x <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (a<span class="op">,</span> b)<span class="op">:</span> (<span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;,</span> <span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;</span>) <span class="op">=</span> pairs<span class="op">.</span>into_iter()<span class="op">.</span>unzip()<span class="op">;</span></span></code></pre></div>
+<p>Collecting into <code
+class="verbatim">Result&lt;Vec&lt;_&gt;, E&gt;</code> or <code
+class="verbatim">Option&lt;Vec&lt;_&gt;&gt;</code> is the idiomatic way
+to stop at the first error.</p>
+<h3 id="writing-your-own-iterator">6. Writing your own iterator</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Countdown(<span class="dt">u32</span>)<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Iterator</span> <span class="cf">for</span> Countdown <span class="op">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span> Item <span class="op">=</span> <span class="dt">u32</span><span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> next(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> <span class="cn">None</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span> <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span> <span class="cn">Some</span>(<span class="kw">self</span><span class="op">.</span><span class="dv">0</span> <span class="op">+</span> <span class="dv">1</span>) <span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span> <span class="op">=</span> Countdown(<span class="dv">3</span>)<span class="op">.</span>collect()<span class="op">;</span>            <span class="co">// [3, 2, 1]</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> Countdown(<span class="dv">4</span>)<span class="op">.</span>filter(<span class="op">|</span>n<span class="op">|</span> n <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>)<span class="op">.</span>sum()<span class="op">;</span></span></code></pre></div>
+<p>Implement <code class="verbatim">Iterator</code> and you get every
+adaptor and consumer for free. To make <code
+class="verbatim">for x in &amp;my_collection</code> work, implement
+<code class="verbatim">IntoIterator</code> for <code
+class="verbatim">&amp;MyCollection</code>. Return an iterator without
+naming its type:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> evens(limit<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> <span class="kw">impl</span> <span class="bu">Iterator</span><span class="op">&lt;</span>Item <span class="op">=</span> <span class="dt">u32</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">0</span><span class="op">..</span>limit)<span class="op">.</span>filter(<span class="op">|</span>n<span class="op">|</span> n <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> lines_of<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span>(text<span class="op">:</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span>) <span class="op">-&gt;</span> <span class="kw">impl</span> <span class="bu">Iterator</span><span class="op">&lt;</span>Item <span class="op">=</span> <span class="op">&amp;</span><span class="ot">&#39;a</span> <span class="dt">str</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ot">&#39;a</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    text<span class="op">.</span>lines()<span class="op">.</span>map(<span class="op">|</span>l<span class="op">|</span> l<span class="op">.</span>trim())</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Sources of iterators without a collection: <code
+class="verbatim">std::iter::repeat(x)</code>, <code
+class="verbatim">repeat_with</code>, <code class="verbatim">once</code>,
+<code class="verbatim">empty</code>, <code
+class="verbatim">from_fn(|| ...)</code>, <code
+class="verbatim">successors(first, |prev| ...)</code>.</p>
+<h3 id="laziness-and-performance">7. Laziness and performance</h3>
+<ul>
+<li>Adaptors do nothing until a consumer pulls items; a chain runs
+element by element with no intermediate collections.</li>
+<li>The optimizer inlines the closures and typically removes bounds
+checks, so an iterator chain is as fast as a manual loop (and often
+faster).</li>
+<li>Do not <code class="verbatim">collect()</code> in the middle of a
+chain unless you need the collection; collecting to a <code
+class="verbatim">Vec</code> to call <code class="verbatim">.len()</code>
+or iterate again wastes allocation.</li>
+<li>Iterators can be infinite; pair them with <code
+class="verbatim">take</code>, <code class="verbatim">take_while</code>,
+or <code class="verbatim">find</code>.</li>
+<li>Side effects inside <code class="verbatim">map</code> happen only
+when consumed; use <code class="verbatim">for</code> or <code
+class="verbatim">for_each</code> for effects.</li>
+<li>For CPU-bound work on large data, the <code
+class="verbatim">rayon</code> crate turns <code
+class="verbatim">.iter()</code> into <code
+class="verbatim">.par_iter()</code> with the same adaptors.</li>
+</ul>
+<h3 id="borrowing-and-reference-pitfalls">8. Borrowing and reference
+pitfalls</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> v <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> big<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>filter(<span class="op">|</span>x<span class="op">|</span> <span class="op">**</span>x <span class="op">&gt;</span> <span class="dv">1</span>)<span class="op">.</span>collect()<span class="op">;</span>     <span class="co">// closure gets &amp;&amp;i32</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> big<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>  <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>copied()<span class="op">.</span>filter(<span class="op">|</span>x<span class="op">|</span> <span class="op">*</span>x <span class="op">&gt;</span> <span class="dv">1</span>)<span class="op">.</span>collect()<span class="op">;</span>   <span class="co">// simpler after copied()</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> big<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>  <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>filter(<span class="op">|&amp;&amp;</span>x<span class="op">|</span> x <span class="op">&gt;</span> <span class="dv">1</span>)<span class="op">.</span>copied()<span class="op">.</span>collect()<span class="op">;</span>  <span class="co">// pattern in the closure</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> v<span class="op">.</span>iter() <span class="op">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// v.push(*x);        // error: v is borrowed by the iterator</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>retain(<span class="op">|</span>x<span class="op">|</span> <span class="op">*</span>x <span class="op">!=</span> <span class="dv">2</span>)<span class="op">;</span>          <span class="co">// remove in place (on a mutable vec)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> drained<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> v<span class="op">.</span>drain(<span class="op">..</span>)<span class="op">.</span>collect()<span class="op">;</span>      <span class="co">// take all items out, leaving v empty</span></span></code></pre></div>
+<p>The borrow checker forbids mutating a collection while an iterator
+over it is alive (C's iterator invalidation). Use <code
+class="verbatim">retain</code>, <code class="verbatim">drain</code>,
+indices, or collect the changes first and apply them afterwards.</p>
+<h3 id="recipes">9. Recipes</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// word frequencies</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> freq<span class="op">:</span> HashMap<span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">,</span> <span class="dt">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">HashMap::</span>new()<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> w <span class="kw">in</span> text<span class="op">.</span>split_whitespace() <span class="op">{</span> <span class="op">*</span>freq<span class="op">.</span>entry(w)<span class="op">.</span>or_insert(<span class="dv">0</span>) <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">// top 3 by count</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> pairs<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;</span> <span class="op">=</span> freq<span class="op">.</span>into_iter()<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>pairs<span class="op">.</span>sort_by(<span class="op">|</span>a<span class="op">,</span> b<span class="op">|</span> b<span class="op">.</span><span class="dv">1</span><span class="op">.</span>cmp(<span class="op">&amp;</span>a<span class="op">.</span><span class="dv">1</span>)<span class="op">.</span>then(a<span class="op">.</span><span class="dv">0</span><span class="op">.</span>cmp(b<span class="op">.</span><span class="dv">0</span>)))<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> top<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;</span> <span class="op">=</span> pairs<span class="op">.</span>into_iter()<span class="op">.</span>take(<span class="dv">3</span>)<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">// sort by a key; remove duplicates</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>sort_by_key(<span class="op">|</span>x<span class="op">|</span> <span class="pp">std::cmp::</span>Reverse(<span class="op">*</span>x))<span class="op">;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>v<span class="op">.</span>sort()<span class="op">;</span> v<span class="op">.</span>dedup()<span class="op">;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">// adjacent pairs</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> diffs<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> v<span class="op">.</span>windows(<span class="dv">2</span>)<span class="op">.</span>map(<span class="op">|</span>w<span class="op">|</span> w[<span class="dv">1</span>] <span class="op">-</span> w[<span class="dv">0</span>])<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co">// parse lines of numbers, propagating errors</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nums<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> input<span class="op">.</span>lines()<span class="op">.</span>map(<span class="op">|</span>l<span class="op">|</span> l<span class="op">.</span>trim()<span class="op">.</span>parse())<span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Result</span><span class="op">&lt;</span>_<span class="op">,</span> _<span class="op">&gt;&gt;</span>()<span class="op">?;</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co">// index and value</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i<span class="op">,</span> ch) <span class="kw">in</span> <span class="st">&quot;héllo&quot;</span><span class="op">.</span>chars()<span class="op">.</span>enumerate() <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="co">// min and max in one pass</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (lo<span class="op">,</span> hi) <span class="op">=</span> v<span class="op">.</span>iter()<span class="op">.</span>fold((<span class="pp">i32::</span><span class="cn">MAX</span><span class="op">,</span> <span class="pp">i32::</span><span class="cn">MIN</span>)<span class="op">,</span> <span class="op">|</span>(lo<span class="op">,</span> hi)<span class="op">,</span> <span class="op">&amp;</span>x<span class="op">|</span> (lo<span class="op">.</span>min(x)<span class="op">,</span> hi<span class="op">.</span>max(x)))<span class="op">;</span></span></code></pre></div>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li><code class="verbatim">iter()</code>, <code
+class="verbatim">iter_mut()</code>, <code
+class="verbatim">into_iter()</code> yield references, mutable
+references, and owned values.</li>
+<li>Adaptors are lazy; consumers (<code class="verbatim">collect</code>,
+<code class="verbatim">sum</code>, <code class="verbatim">for</code>)
+run the chain.</li>
+<li><code class="verbatim">collect</code> needs a target type; <code
+class="verbatim">Result&lt;Vec&lt;_&gt;, E&gt;</code> stops at the first
+error.</li>
+<li>Implement <code class="verbatim">next</code> and the whole adaptor
+library is yours.</li>
+<li>Closures over <code class="verbatim">iter()</code> receive
+references (<code class="verbatim">&amp;&amp;T</code> for <code
+class="verbatim">filter</code>); use <code
+class="verbatim">copied()</code> or patterns.</li>
+<li>Chains compile to tight loops; do not collect needlessly.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

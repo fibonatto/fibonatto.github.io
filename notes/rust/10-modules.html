@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Modules, Crates, and Conditional Compilation</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/10-modules.html">
+  <meta property="og:title" content="Rust Modules, Crates, and Conditional Compilation">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/10-modules.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Modules, Crates, and Conditional Compilation</h1>
+<h2 id="rust-modules-crates-and-conditional-compilation-1">Rust Modules,
+Crates, and Conditional Compilation</h2>
+<p>Where C has header files and the preprocessor, Rust has a module
+tree, visibility rules, and attribute-based conditional compilation.</p>
+<h3 id="packages-crates-and-modules">1. Packages, crates, and
+modules</h3>
+<ul>
+<li>A <strong>package</strong> is what <code
+class="verbatim">Cargo.toml</code> describes. It holds one or more
+crates.</li>
+<li>A <strong>crate</strong> is one compilation unit: a library (<code
+class="verbatim">src/lib.rs</code>) or a binary (<code
+class="verbatim">src/main.rs</code>, or files in <code
+class="verbatim">src/bin/</code>).</li>
+<li>A <strong>module</strong> is a namespace inside a crate; modules
+form a tree rooted at the crate root.</li>
+</ul>
+<pre class="text"><code>demo/
+├── Cargo.toml
+└── src/
+    ├── main.rs          # binary crate root
+    ├── lib.rs           # library crate root (optional; shares the package)
+    ├── config.rs        # mod config;
+    ├── net/
+    │   ├── mod.rs       # mod net;   (or net.rs next to a net/ directory)
+    │   └── tcp.rs       # mod tcp; declared inside net
+    └── bin/
+        └── tool.rs      # an extra binary
+</code></pre>
+<h3 id="declaring-modules">2. Declaring modules</h3>
+<p>A file is part of the crate only if some <code
+class="verbatim">mod</code> declaration names it. Writing a file does
+not include it.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/main.rs or src/lib.rs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> config<span class="op">;</span>              <span class="co">// loads src/config.rs (or src/config/mod.rs)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> net<span class="op">;</span>                 <span class="co">// loads src/net.rs or src/net/mod.rs</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> util <span class="op">{</span>               <span class="co">// an inline module</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">fn</span> double(x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> x <span class="op">*</span> <span class="dv">2</span> <span class="op">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// src/net.rs (or src/net/mod.rs)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">mod</span> tcp<span class="op">;</span>             <span class="co">// loads src/net/tcp.rs</span></span></code></pre></div>
+<p>Since the 2018 edition, <code class="verbatim">src/net.rs</code>
+together with a <code class="verbatim">src/net/</code> directory is the
+preferred layout; the older <code class="verbatim">net/mod.rs</code>
+still works. A forgotten <code class="verbatim">mod</code> line is the
+most common reason for "unresolved import" or for a file that seems to
+be ignored.</p>
+<h3 id="paths-and-use">3. Paths and use</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">crate::config::</span>load()<span class="op">;</span>           <span class="co">// absolute path from the crate root</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">self</span><span class="pp">::</span>helper()<span class="op">;</span>                  <span class="co">// relative to the current module</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="pp">super::</span>shared()<span class="op">;</span>                 <span class="co">// the parent module</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="pp">std::collections::HashMap::</span>new()<span class="op">;</span><span class="co">// path into the standard library</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::collections::</span><span class="op">{</span>HashMap<span class="op">,</span> HashSet<span class="op">};</span>     <span class="co">// bring names into scope</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::io::</span><span class="op">{</span><span class="kw">self</span><span class="op">,</span> <span class="bu">Read</span><span class="op">};</span>                    <span class="co">// self: the module itself plus Read</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::fmt::</span><span class="dt">Result</span> <span class="kw">as</span> FmtResult<span class="op">;</span>            <span class="co">// rename</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">crate::net::tcp::</span><span class="op">*;</span>                       <span class="co">// glob: avoid except in preludes and tests</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">use</span> <span class="pp">crate::net::tcp::</span>Connection<span class="op">;</span>          <span class="co">// re-export: make it part of this module&#39;s API</span></span></code></pre></div>
+<p><code class="verbatim">use</code> creates a name alias in the current
+scope; it does not load or run anything. Import types and traits by
+name, but call functions through their module (<code
+class="verbatim">config::load()</code> reads better than <code
+class="verbatim">load()</code>). Names from outside the crate begin with
+the crate name (<code class="verbatim">serde::Serialize</code>); add the
+crate in <code class="verbatim">Cargo.toml</code> first.</p>
+<h3 id="visibility">4. Visibility</h3>
+<p>Everything is private to its module by default. Privacy is by module,
+not by type:</p>
+<table>
+<thead>
+<tr>
+<th>Modifier</th>
+<th>Visible to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(none)</td>
+<td>The current module and its descendants</td>
+</tr>
+<tr>
+<td><code class="verbatim">pub</code></td>
+<td>Everyone who can reach the module</td>
+</tr>
+<tr>
+<td><code class="verbatim">pub(crate)</code></td>
+<td>The whole crate</td>
+</tr>
+<tr>
+<td><code class="verbatim">pub(super)</code></td>
+<td>The parent module</td>
+</tr>
+<tr>
+<td><code class="verbatim">pub(in path)</code></td>
+<td>A specific ancestor module</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> bank <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">struct</span> Account <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">pub</span> owner<span class="op">:</span> <span class="dt">String</span><span class="op">,</span>          <span class="co">// fields are private unless marked pub</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        balance<span class="op">:</span> <span class="dt">i64</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">impl</span> Account <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">pub</span> <span class="kw">fn</span> new(owner<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span> Account <span class="op">{</span> owner<span class="op">:</span> owner<span class="op">.</span>into()<span class="op">,</span> balance<span class="op">:</span> <span class="dv">0</span> <span class="op">}</span> <span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">pub</span> <span class="kw">fn</span> balance(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">i64</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>balance <span class="op">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">enum</span> Kind <span class="op">{</span> Checking<span class="op">,</span> Savings <span class="op">}</span>    <span class="co">// all variants of a pub enum are public</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A struct with a private field cannot be built with a struct literal
+outside its module, so constructors (<code class="verbatim">new</code>)
+enforce invariants. A child module can see its parent's private items; a
+parent cannot see its child's private items.</p>
+<h3 id="designing-a-public-api">5. Designing a public API</h3>
+<ul>
+<li>Expose a small surface from the crate root with <code
+class="verbatim">pub use</code>, hiding the internal module layout so
+you can reorganize without breaking users.</li>
+<li>Mark enums and structs that may grow with <code
+class="verbatim">#[non_exhaustive]</code>; downstream crates must then
+handle unknown variants or fields.</li>
+<li>Keep helper modules private, or <code
+class="verbatim">pub(crate)</code>.</li>
+<li>Document every public item (<code class="verbatim">///</code>) and
+add examples as doc tests.</li>
+<li>Follow semver: removing or changing public items needs a major
+version bump (<code class="verbatim">0.x</code> releases treat minor
+bumps as breaking).</li>
+</ul>
+<h3 id="conditional-compilation">6. Conditional compilation</h3>
+<p><code class="verbatim">#[cfg(...)]</code> includes or removes an item
+at compile time, replacing <code class="verbatim">#ifdef</code>. <code
+class="verbatim">cfg!(...)</code> yields a boolean constant.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;linux&quot;</span><span class="at">)]</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> platform() <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;linux&quot;</span> <span class="op">}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>not<span class="at">(</span>target_os <span class="op">=</span> <span class="st">&quot;linux&quot;</span><span class="at">))]</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> platform() <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">&#39;static</span> <span class="dt">str</span> <span class="op">{</span> <span class="st">&quot;other&quot;</span> <span class="op">}</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>all<span class="at">(</span>unix<span class="op">,</span> target_pointer_width <span class="op">=</span> <span class="st">&quot;64&quot;</span><span class="at">))]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> fast_path <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>debug_assertions<span class="at">)]</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> trace(msg<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">{</span> <span class="pp">eprintln!</span>(<span class="st">&quot;{msg}&quot;</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>not<span class="at">(</span>debug_assertions<span class="at">))]</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> trace(_<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">{}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="pp">cfg!</span>(windows) <span class="op">{</span> <span class="co">/* both branches are type-checked */</span> <span class="op">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg_attr<span class="at">(</span>feature <span class="op">=</span> <span class="st">&quot;serde&quot;</span><span class="op">,</span> derive<span class="at">(</span><span class="pp">serde::</span>Serialize<span class="at">))]</span>   <span class="co">// apply an attribute conditionally</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Config <span class="op">{</span> port<span class="op">:</span> <span class="dt">u16</span> <span class="op">}</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> tests <span class="op">{</span> <span class="co">/* compiled only for cargo test */</span> <span class="op">}</span></span></code></pre></div>
+<p>Common predicates: <code class="verbatim">unix</code>, <code
+class="verbatim">windows</code>, <code
+class="verbatim">target_os</code>, <code
+class="verbatim">target_arch</code>, <code
+class="verbatim">target_pointer_width</code>, <code
+class="verbatim">target_endian</code>, <code
+class="verbatim">debug_assertions</code>, <code
+class="verbatim">test</code>, <code
+class="verbatim">feature = "name"</code>, combined with <code
+class="verbatim">all()</code>, <code class="verbatim">any()</code>,
+<code class="verbatim">not()</code>. A <code
+class="verbatim">#[cfg]</code> item is removed before type checking, so
+it need not compile on other platforms, while code in an <code
+class="verbatim">if cfg!(...)</code> branch must compile everywhere.</p>
+<table>
+<thead>
+<tr>
+<th>C preprocessor</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">#ifdef __linux__</code></td>
+<td><code class="verbatim">#[cfg(target_os = "linux")]</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">#ifdef NDEBUG</code></td>
+<td><code class="verbatim">#[cfg(debug_assertions)]</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">-DFEATURE</code></td>
+<td><code class="verbatim">--features feature</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">#define MAX 100</code></td>
+<td><code class="verbatim">const MAX: u32 = 100;</code></td>
+</tr>
+<tr>
+<td>function-like macro</td>
+<td>Generic function, or <code class="verbatim">macro_rules!</code> (see
+<code class="verbatim">11_macros.org</code>)</td>
+</tr>
+<tr>
+<td><code class="verbatim">#include "x.h"</code></td>
+<td><code class="verbatim">mod x;</code> plus <code
+class="verbatim">use</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="cargo-features">7. Cargo features</h3>
+<p>Features are named, additive switches for optional code and
+dependencies.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[features]</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">default</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;json&quot;</span><span class="op">]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dt">json</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;dep:serde_json&quot;</span><span class="op">]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">tls</span> <span class="op">=</span> <span class="op">[]</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dt">serde_json</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">&quot;1&quot;</span><span class="op">, </span><span class="dt">optional</span><span class="op"> =</span> <span class="cn">true</span><span class="op"> }</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>feature <span class="op">=</span> <span class="st">&quot;json&quot;</span><span class="at">)]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">mod</span> json<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb8" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--features</span> tls</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--no-default-features</span> <span class="at">--features</span> json</span></code></pre></div>
+<p>Features must be <em>additive</em>: enabling one must never break
+code that works without it, since Cargo unifies the features requested
+by every crate in the dependency graph.</p>
+<h3 id="dependencies-and-workspaces">8. Dependencies and workspaces</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="dt">serde</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">&quot;1&quot;</span><span class="op">, </span><span class="dt">features</span><span class="op"> =</span> <span class="op">[</span><span class="st">&quot;derive&quot;</span><span class="op">] }</span>   <span class="co"># semver-compatible: ^1</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="dt">rand</span> <span class="op">=</span> <span class="st">&quot;0.8&quot;</span>                                       <span class="co"># shorthand for ^0.8</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="dt">mylib</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">path</span><span class="op"> =</span> <span class="st">&quot;../mylib&quot;</span><span class="op"> }</span>                      <span class="co"># local crate</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="dt">other</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">git</span><span class="op"> =</span> <span class="st">&quot;https://example.com/other.git&quot;</span><span class="op"> }</span>  <span class="co"># git dependency</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[dev-dependencies]</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="dt">criterion</span> <span class="op">=</span> <span class="st">&quot;0.5&quot;</span>                                  <span class="co"># only for tests, examples, benches</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">[build-dependencies]</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="dt">cc</span> <span class="op">=</span> <span class="st">&quot;1&quot;</span>                                           <span class="co"># used by build.rs</span></span></code></pre></div>
+<ul>
+<li><code class="verbatim">Cargo.lock</code> pins exact versions: commit
+it for binaries (and for reproducible CI); libraries commonly leave it
+out of version control.</li>
+<li><code class="verbatim">cargo add serde</code>, <code
+class="verbatim">cargo update</code>, and <code
+class="verbatim">cargo tree</code> (shows the dependency graph, <code
+class="verbatim">-d</code> shows duplicates) manage dependencies.</li>
+<li>A <strong>workspace</strong> shares one lock file and one <code
+class="verbatim">target/</code> directory among several crates:</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargo.toml at the root</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[workspace]</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">members</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;app&quot;</span><span class="op">,</span> <span class="st">&quot;core&quot;</span><span class="op">,</span> <span class="st">&quot;tools/*&quot;</span><span class="op">]</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="dt">resolver</span> <span class="op">=</span> <span class="st">&quot;2&quot;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[workspace.dependencies]</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="dt">serde</span> <span class="op">=</span> <span class="st">&quot;1&quot;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co"># member&#39;s Cargo.toml</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="dt">serde</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">workspace</span><span class="op"> =</span> <span class="cn">true</span><span class="op"> }</span></span></code></pre></div>
+<ul>
+<li>A <strong>build script</strong> <code
+class="verbatim">build.rs</code> runs before compilation and can compile
+C code (with the <code class="verbatim">cc</code> crate), generate
+files, or emit <code class="verbatim">cargo:rustc-cfg</code>…= lines
+(see <code class="verbatim">13_unsafe-and-ffi.org</code>).</li>
+</ul>
+<h3 id="constants-statics-and-const-fn">9. Constants, statics, and const
+fn</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">const</span> MAX_CONN<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">128</span><span class="op">;</span>          <span class="co">// inlined at each use</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">static</span> VERSION<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;1.0&quot;</span><span class="op">;</span>         <span class="co">// one memory location</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="kw">fn</span> square(n<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span> n <span class="op">*</span> n <span class="op">}</span>  <span class="co">// callable in constant contexts</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> SQ<span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> square(<span class="dv">12</span>)<span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> COUNTER<span class="op">:</span> <span class="pp">std::sync::atomic::</span>AtomicUsize <span class="op">=</span> <span class="pp">std::sync::atomic::AtomicUsize::</span>new(<span class="dv">0</span>)<span class="op">;</span></span></code></pre></div>
+<p>Use <code class="verbatim">const</code> for values, <code
+class="verbatim">static</code> for a single shared location. A <code
+class="verbatim">static</code> must be <code
+class="verbatim">Sync</code>; mutable global state goes through atomics,
+<code class="verbatim">Mutex</code>, or <code
+class="verbatim">OnceLock</code>. Avoid <code
+class="verbatim">static mut</code>, which is <code
+class="verbatim">unsafe</code> to touch.</p>
+<h3 id="troubleshooting">10. Troubleshooting</h3>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"unresolved import" / "file not found for module"</td>
+<td>Missing <code class="verbatim">mod</code> declaration or wrong file
+path</td>
+</tr>
+<tr>
+<td>"function is private"</td>
+<td>Missing <code class="verbatim">pub</code> (or <code
+class="verbatim">pub(crate)</code>) on the item or its module</td>
+</tr>
+<tr>
+<td>"cannot find crate"</td>
+<td>Dependency not in <code class="verbatim">Cargo.toml</code></td>
+</tr>
+<tr>
+<td>Unexpected extra features enabled</td>
+<td>Another crate in the graph enabled them (<code
+class="verbatim">cargo tree -e features</code>)</td>
+</tr>
+<tr>
+<td>A <code class="verbatim">#[cfg]</code> block never compiles</td>
+<td>Feature or target name misspelled; check <code
+class="verbatim">cargo build -v</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>A file joins the crate only through a <code
+class="verbatim">mod</code> declaration; <code
+class="verbatim">use</code> only creates names.</li>
+<li>Privacy is per module; <code class="verbatim">pub(crate)</code> is
+the middle ground; re-export with <code class="verbatim">pub use</code>
+to shape the API.</li>
+<li><code class="verbatim">#[cfg]</code> removes code before type
+checking; <code class="verbatim">cfg!</code> is a constant boolean and
+both branches compile.</li>
+<li>Features are additive; <code class="verbatim">Cargo.lock</code> pins
+versions; workspaces share builds.</li>
+<li>Use <code class="verbatim">const</code> for values and <code
+class="verbatim">OnceLock</code> / atomics / <code
+class="verbatim">Mutex</code> for globals.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homotopy Type Theory</title>
+  <meta name="description" content="Study notes on homotopy type theory covering identity types, types as homotopy spaces, equivalences and univalence, homotopy levels, higher inductive types, synthetic homotopy theory, constructive foundations, cubical type theory, and formalization in Agda.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/homotopy-type-theory/homotopy-type-theory.html">
+  <meta property="og:title" content="Homotopy Type Theory">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/homotopy-type-theory/homotopy-type-theory.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Homotopy Type Theory</h1>
+<h2 id="foundations">Foundations</h2>
+<p>Notation used in these notes (HoTT book conventions):
+<code>A : U</code> means A is a type in a universe U; <code>a : A</code>
+means a is an element of A; <code>a =_A b</code> is the identity (path)
+type, written <code>a = b</code> when A is clear; <code>a ≡ b</code> is
+judgmental (definitional) equality; <code>A ≃ B</code> is the type of
+equivalences; Σ and Π are dependent pair and dependent function types.
+The symbol ∼ denotes pointwise equality (a homotopy) of functions.</p>
+<h3 id="propositions-as-types">Propositions as Types</h3>
+<p>The Curry-Howard correspondence reads logic into type theory: a
+proposition is a type and a proof of it is an element (term) of that
+type.</p>
+<table>
+<thead>
+<tr>
+<th>Logic</th>
+<th>Type theory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>implication A ⇒ B</td>
+<td>function type <code>A → B</code></td>
+</tr>
+<tr>
+<td>conjunction A ∧ B</td>
+<td>product <code>A × B</code></td>
+</tr>
+<tr>
+<td>disjunction A ∨ B</td>
+<td>coproduct <code>A + B</code></td>
+</tr>
+<tr>
+<td>truth, falsity</td>
+<td>unit type 1, empty type 0</td>
+</tr>
+<tr>
+<td>∀ x:A. P(x)</td>
+<td>dependent function <code>Π_{x:A} P(x)</code></td>
+</tr>
+<tr>
+<td>∃ x:A. P(x)</td>
+<td>dependent pair <code>Σ_{x:A} P(x)</code></td>
+</tr>
+</tbody>
+</table>
+<p>In homotopy type theory the correspondence is refined. A type can
+carry more than one distinct element, so "proof" in the sense of a
+witness and "proof" in the sense of a mere truth value separate. Types
+with at most one element up to equality are called <em>mere
+propositions</em> (see Homotopy Levels), and logic proper is done with
+those, while general types also record the data of how something is
+true.</p>
+<h3 id="types-as-spaces">Types as Spaces</h3>
+<p>The central reading of the theory: a type is a space (more precisely
+an ∞-groupoid), an element <code>a : A</code> is a point, and a function
+<code>f : A → B</code> is a map that is automatically continuous,
+because it respects paths (see Action of Functions on Paths). The
+identity type <code>a = b</code> is the space of paths from a to b. This
+is not only an analogy: type theory has models in homotopy theory,
+notably Kan simplicial sets (Voevodsky) and the work of Awodey and
+Warren relating identity types to weak factorization systems. The payoff
+is that statements of homotopy theory can be expressed and proved
+directly, "synthetically", in type theory.</p>
+<h3 id="identity-types-as-paths">Identity Types as Paths</h3>
+<p>The identity type has a formation rule (<code>a = b</code> for
+<code>a, b : A</code>), an introduction rule
+(<code>refl_a : a = a</code>), and an elimination rule, path induction
+(see Identity Types). In Martin-Löf's intensional type theory, one
+cannot prove that any two proofs of <code>a = b</code> are equal
+(uniqueness of identity proofs): the groupoid model of Hofmann and
+Streicher shows this principle is independent. HoTT embraces this:
+elements of <code>a = b</code> are paths, paths between paths are
+2-paths, and so on, so every type has the structure of an ∞-groupoid,
+with composition, inverses, and coherence laws holding up to higher
+paths.</p>
+<h3 id="dependent-types-and-fibrations">Dependent Types and
+Fibrations</h3>
+<p>A dependent type, or type family, <code>P : A → U</code> assigns to
+each <code>x : A</code> a type <code>P(x)</code>. Homotopically, P is a
+fibration over A and <code>P(x)</code> is the fiber over x. Two basic
+constructions:</p>
+<ul>
+<li>the total space <code>Σ_{x:A} P(x)</code>, with projection
+<code>pr₁ : Σ_{x:A} P(x) → A</code>;</li>
+<li>the type of sections <code>Π_{x:A} P(x)</code>, a choice of a point
+in each fiber.</li>
+</ul>
+<p>Every function between types has a homotopy fiber
+<code>fib_f(b) :≡ Σ_{a:A} (f(a) = b)</code>, and every type family
+arises (up to equivalence) from a function this way. Transport (see
+Identity Types) plays the role of path lifting: a path in the base moves
+a point of one fiber to a point of another.</p>
+<h3 id="the-univalent-foundations-program">The Univalent Foundations
+Program</h3>
+<p>Univalent foundations is the program, started by Vladimir Voevodsky
+around 2009, of using type theory with the univalence axiom and higher
+inductive types as a foundation of mathematics that is well suited to
+computer formalization. A special year at the Institute for Advanced
+Study (2012-13) produced the book <em>Homotopy Type Theory: Univalent
+Foundations of Mathematics</em> (2013), the main reference listed below.
+The goals: a language in which mathematical objects are structured as
+types up to equivalence, proofs are checked by a computer, and
+isomorphic structures are interchangeable by construction.
+Implementations and libraries include Coq/Rocq-based work (the HoTT
+library and UniMath), Agda, and cubical systems (see Formalization).</p>
+<h2 id="identity-types">Identity Types</h2>
+<h3 id="path-induction">Path Induction</h3>
+<p>Path induction is the elimination rule for identity types. For
+<code>a : A</code> and a family <code>C : Π_{x:A} (a = x) → U</code>,
+given <code>c : C(a, refl_a)</code> there is a function
+<code>f : Π_{x:A} Π_{p : a = x} C(x, p)</code> with
+<code>f(a, refl_a) ≡ c</code>. Informally: to prove something about
+every path, it suffices to prove it for the constant path at the
+starting point, with the other endpoint free. This is called
+<em>based</em> path induction; the unbased form, with both endpoints
+free, is equivalent. Most basic facts are proved this way: composition,
+inversion, transport, ap, and their laws. The common failure is trying
+to apply it when an endpoint is fixed (for example a loop
+<code>p : a = a</code>); one must first generalize the endpoint.</p>
+<h3 id="path-composition-and-inversion">Path Composition and
+Inversion</h3>
+<p>Given <code>p : x = y</code> and <code>q : y = z</code> there are a
+concatenation <code>p · q : x = z</code> and an inverse
+<code>p⁻¹ : y = x</code>, both defined by path induction. They satisfy
+the groupoid laws, but only up to higher paths:
+<code>refl · p = p</code>, <code>p · refl = p</code>,
+<code>p · p⁻¹ = refl</code>, <code>(p⁻¹)⁻¹ = p</code>, and associativity
+<code>(p · q) · r = p · (q · r)</code>, where each "=" is itself an
+identity type. For loops at a point (<code>Ω²</code> and higher),
+composition is commutative (the Eckmann-Hilton argument), which is why
+higher homotopy groups are abelian. A sketch in Agda, with K disabled so
+that identity types are not collapsed:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode agda"><code class="sourceCode agda"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">{-# OPTIONS --without-K #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="ot">_</span>≡<span class="ot">_</span> <span class="ot">{</span>A <span class="ot">:</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">(</span>x <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  refl <span class="ot">:</span> x ≡ x</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>∙<span class="ot">_</span> <span class="ot">:</span> <span class="ot">{</span>A <span class="ot">:</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>x y z <span class="ot">:</span> A<span class="ot">}</span> <span class="ot">→</span> x ≡ y <span class="ot">→</span> y ≡ z <span class="ot">→</span> x ≡ z</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>Refl ∙ Q <span class="ot">=</span> q</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>⁻¹ <span class="ot">:</span> <span class="ot">{</span>A <span class="ot">:</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>x y <span class="ot">:</span> A<span class="ot">}</span> <span class="ot">→</span> x ≡ y <span class="ot">→</span> y ≡ x</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>refl ⁻¹ <span class="ot">=</span> refl</span></code></pre></div>
+<h3 id="transport">Transport</h3>
+<p>Given a family <code>P : A → U</code> and a path
+<code>p : x = y</code>, transport is a function
+<code>transport^P(p, -) : P(x) → P(y)</code>, defined by path induction
+as the identity when <code>p</code> is <code>refl</code>. It is a
+fibration's path lifting: for <code>u : P(x)</code> there is a path in
+the total space from <code>(x, u)</code> to
+<code>(y, transport^P(p, u))</code>. Useful computations: in the
+constant family, transport is the identity (up to a path); in the family
+<code>x ↦ (a = x)</code> it is post-composition,
+<code>transport(p, q) = q · p</code>; in <code>x ↦ (x = a)</code> it is
+<code>p⁻¹ · q</code>. Transport is the way "equal things have the same
+properties" is expressed: if <code>x = y</code> and <code>P(x)</code>
+holds, then <code>P(y)</code> holds, and the proof is a transport.</p>
+<h3 id="action-of-functions-on-paths">Action of Functions on Paths</h3>
+<p>Every function <code>f : A → B</code> acts on paths:
+<code>ap_f : (x = y) → (f(x) = f(y))</code>, defined by path induction
+with <code>ap_f(refl) ≡ refl</code>. It is functorial:
+<code>ap_f(p · q) = ap_f(p) · ap_f(q)</code>,
+<code>ap_f(p⁻¹) = ap_f(p)⁻¹</code>,
+<code>ap_g(ap_f(p)) = ap_{g∘f}(p)</code>, and
+<code>ap_{id}(p) = p</code>. This is the formal sense in which functions
+are continuous: nothing definable can distinguish equal inputs. For a
+dependent function <code>f : Π_{x:A} P(x)</code> there is a dependent
+version <code>apd_f(p) : transport^P(p, f(x)) = f(y)</code>, which
+compares values in different fibers by transporting.</p>
+<h3 id="function-extensionality">Function Extensionality</h3>
+<p>There is a canonical map
+<code>happly : (f = g) → Π_{x:A} (f(x) = g(x))</code> from equality of
+functions to pointwise equality. <em>Function extensionality</em> says
+<code>happly</code> is an equivalence, so two functions that agree
+pointwise are equal (and the converse direction is the easy one). It
+does not follow from the basic rules of Martin-Löf type theory, but it
+is a consequence of the univalence axiom (a result of Voevodsky), and in
+cubical type theory it holds by construction, since a path in a function
+type is literally a family of paths. Without it, reasoning about
+functions as values is painful: even proving that two definitions of the
+same function are equal needs it.</p>
+<h2 id="equivalences-and-univalence">Equivalences and Univalence</h2>
+<h3 id="equivalences-of-types">Equivalences of Types</h3>
+<p>A function <code>f : A → B</code> is an equivalence when it has an
+inverse in a suitable sense. The naive condition "there exists
+<code>g</code> with <code>g∘f ∼ id</code> and <code>f∘g ∼ id</code>" (a
+quasi-inverse) is logically fine but is not a mere proposition: the type
+of such data can carry extra structure, which breaks the intuition that
+being an equivalence is a property. Standard well-behaved definitions
+are all logically equivalent to each other and are mere
+propositions:</p>
+<ul>
+<li>bi-invertibility: <code>f</code> has a left inverse and a right
+inverse (separately);</li>
+<li>half-adjoint equivalence: a quasi-inverse together with a coherence
+between the two homotopies;</li>
+<li>contractible fibers: every homotopy fiber of <code>f</code> is
+contractible (see next section).</li>
+</ul>
+<p>Write <code>isEquiv(f)</code> for any of these and
+<code>A ≃ B :≡ Σ_{f : A → B} isEquiv(f)</code>. Equivalences contain
+identities, compose, and can be inverted, so ≃ is an equivalence
+relation on types.</p>
+<h3 id="contractible-types-and-fibers">Contractible Types and
+Fibers</h3>
+<p>A type is <em>contractible</em> if it has a center to which every
+element is connected by a path:
+<code>isContr(A) :≡ Σ_{a : A} Π_{x : A} (a = x)</code>. Contractible
+types are the types equivalent to 1: homotopically trivial spaces. An
+example proved by based path induction: for any <code>a : A</code>, the
+type <code>Σ_{x:A} (a = x)</code> of paths starting at a is
+contractible. The homotopy fiber of <code>f : A → B</code> over
+<code>b : B</code> is <code>fib_f(b) :≡ Σ_{a : A} (f(a) = b)</code>. A
+function is an equivalence exactly when all its homotopy fibers are
+contractible: <code>isEquiv(f) ⇔ Π_{b : B} isContr(fib_f(b))</code>, the
+type-theoretic form of "bijection": each output has exactly one
+preimage, in the homotopical sense.</p>
+<h3 id="the-univalence-axiom">The Univalence Axiom</h3>
+<p>For types <code>A, B : U</code> in a universe, transport along paths
+in the universe gives a map <code>idtoeqv : (A = B) → (A ≃ B)</code>.
+The <em>univalence axiom</em> states that this map is itself an
+equivalence: <code>(A = B) ≃ (A ≃ B)</code>. Its inverse is written
+<code>ua : (A ≃ B) → (A = B)</code>, and the computation behavior is
+<code>transport^{X ↦ X}(ua(e), a) = e(a)</code>: transporting along the
+path induced by an equivalence applies the equivalence. Consequences:
+equivalent types are equal, so any construction on types is invariant
+under equivalence; the universe has non-trivial paths (for example, the
+swap equivalence of <code>Bool</code> gives a path
+<code>Bool = Bool</code> different from <code>refl</code>, so
+<code>U</code> is not a set and uniqueness of identity proofs fails).
+Univalence is consistent relative to standard set theory with
+inaccessible cardinals (Voevodsky's simplicial-set model; Kapulkin,
+Lumsdaine, Voevodsky), and it is a theorem, not an axiom, in cubical
+type theory.</p>
+<h3 id="invariance-under-equivalence">Invariance Under Equivalence</h3>
+<p>Because identifications of types are equivalences, every property and
+every structure expressible in type theory is automatically invariant
+under equivalence: if <code>A ≃ B</code> and <code>P(A)</code> holds
+then <code>P(B)</code> holds, by transport along <code>ua</code>. This
+formalizes the mathematical habit of treating isomorphic objects as "the
+same" without risk of an argument that quietly distinguishes them. In
+practice it also lets one transfer theorems and constructions along an
+equivalence instead of reproving them, for example moving results
+between two presentations of the natural numbers or between a
+data-structure encoding and its abstract specification.</p>
+<h3 id="the-structure-identity-principle">The Structure Identity
+Principle</h3>
+<p>The structure identity principle says that isomorphic mathematical
+structures of the same kind are identical: for a standard notion of
+structure (a magma, a group, a poset, a category, and so on, defined as
+a type with structure and axioms), an identification between two
+structures amounts to an isomorphism of structures:
+<code>((A, s) = (B, t)) ≃ (structure isomorphisms between them)</code>.
+For structures on sets this recovers the usual notion of isomorphism;
+for structures on higher types it yields the correct higher notion. It
+follows from univalence (it is section 9.8 of the HoTT book, in the
+chapter on category theory, and related earlier work is due to Aczel and
+to Coquand and Danielsson), and it is the reason "isomorphic groups are
+equal" is not a slogan but a provable statement, at least for the
+structures defined in the standard way.</p>
+<h2 id="homotopy-levels">Homotopy Levels</h2>
+<h3 id="contractible-types">Contractible Types</h3>
+<p>The hierarchy of homotopy levels (h-levels) classifies how much
+higher structure a type has, counting from -2: contractible types are
+the (-2)-types, with a single point up to homotopy. The levels are
+defined by recursion: a type is an (n+1)-type if all its identity types
+are n-types. Every (-2)-type is a (-1)-type, and so on upward: being an
+n-type implies being an (n+1)-type. The levels are closed under Σ and Π
+(for families of n-types), and the identity types of an n-type are
+(n-1)-types. Each level condition is itself a mere proposition (this
+uses function extensionality).</p>
+<h3 id="propositions-and-sets">Propositions and Sets</h3>
+<ul>
+<li>A <em>mere proposition</em> is a (-1)-type: any two elements are
+equal. <code>isProp(A) :≡ Π_{x, y : A} (x = y)</code>. It is a type with
+at most one element up to equality, so only its inhabitedness matters.
+Logic in HoTT is naturally carried out with these: conjunction,
+implication, and universal quantification of propositions are
+propositions, but ∨ and ∃ need truncation (see Inductive Types).</li>
+<li>A <em>set</em> is a 0-type:
+<code>isSet(A) :≡ Π_{x, y : A} isProp(x = y)</code>. Equality of
+elements is a proposition, as in ordinary mathematics. The natural
+numbers and <code>Bool</code> are sets, and more generally any type with
+decidable equality is a set (Hedberg's theorem). The universe
+<code>U</code> is not a set, as noted above.</li>
+</ul>
+<p>Working with sets recovers classical-style mathematics inside the
+framework; propositions and sets are the part of the hierarchy that
+behaves like set-based foundations.</p>
+<h3 id="groupoids-and-higher-groupoids">Groupoids and Higher
+Groupoids</h3>
+<p>A 1-type, or <em>groupoid</em>, is a type whose identity types are
+sets: elements may be identified in more than one way, but the
+identifications themselves are unique. Examples include the type of sets
+in a universe <code>Σ_{A : U} isSet(A)</code>, where automorphisms are
+non-trivial, and the classifying types of groups. Continuing, 2-types,
+3-types, and so on are higher groupoids, and a general type with no
+truncation level is a full ∞-groupoid. The levels give a stratification
+of mathematics: sets and propositions at the bottom (ordinary
+mathematics), groupoids and categories above, and the general homotopy
+types above them.</p>
+<h3 id="truncation-and-connectedness">Truncation and Connectedness</h3>
+<p>For each n there is an <em>n-truncation</em> <code>‖A‖ₙ</code>, the
+universal way of turning a type into an n-type by identifying away all
+structure above level n. It is a higher inductive type with a universal
+property: maps from <code>A</code> into any n-type factor uniquely
+through <code>‖A‖ₙ</code>. Two cases are used constantly: the
+propositional truncation <code>‖A‖₋₁</code> (see Inductive Types) and
+the set truncation <code>‖A‖₀</code>, which gives the set of path
+components. A type is <em>n-connected</em> if its n-truncation is
+contractible; (-1)-connected means inhabited, and 0-connected means any
+two points are merely connected by a path. A function is n-connected
+(respectively n-truncated) if all its homotopy fibers are, and these two
+classes form a factorization system on functions: every function factors
+as an n-connected map followed by an n-truncated one. Connectedness is
+the main tool for statements like the Freudenthal suspension
+theorem.</p>
+<h2 id="inductive-types">Inductive Types</h2>
+<h3 id="induction-and-recursion">Induction and Recursion</h3>
+<p>An inductive type is specified by its constructors. It comes with a
+<em>recursion</em> principle, which defines functions out of the type
+into any type by giving the result for each constructor (non-dependent
+elimination), and an <em>induction</em> principle, its dependent
+version, for proving statements about every element. Standard examples:
+the natural numbers (zero and successor), coproducts, Σ-types, the empty
+type 0 (its recursion principle is ex falso) and unit type 1, and
+W-types for well-founded trees. For the natural numbers:
+<code>rec_ℕ : C → (ℕ → C → C) → ℕ → C</code>, with computation rules
+<code>rec_ℕ(c₀, cₛ, 0) ≡ c₀</code> and
+<code>rec_ℕ(c₀, cₛ, succ(n)) ≡ cₛ(n, rec_ℕ(c₀, cₛ, n))</code>.</p>
+<h3 id="dependent-induction">Dependent Induction</h3>
+<p>The dependent eliminator lets the target family vary over the
+inductive type. For the natural numbers: given <code>P : ℕ → U</code>, a
+base case <code>P(0)</code>, and a step
+<code>Π_{n : ℕ} P(n) → P(succ(n))</code>, we obtain
+<code>ind_ℕ : Π_{n : ℕ} P(n)</code>, with the corresponding computation
+rules. Path induction is the dependent eliminator of the identity type
+viewed as an inductive family indexed by its endpoint. Induction
+principles express that the type is generated by its constructors and
+nothing more; in a homotopical setting they also determine the type up
+to equivalence (an initial algebra), and, in the book's setup, the
+computation rules for point constructors hold judgmentally while those
+for path constructors hold only propositionally; in cubical type theory
+they hold judgmentally.</p>
+<h3 id="higher-inductive-types">Higher Inductive Types</h3>
+<p>Higher inductive types (HITs) generalize inductive types by allowing
+constructors that produce <em>paths</em> (and higher paths) in the type
+itself, not only points. Examples:</p>
+<ul>
+<li>the circle <code>S¹</code> with <code>base : S¹</code> and
+<code>loop : base = base</code>;</li>
+<li>the interval with endpoints <code>0, 1</code> and a path
+<code>seg : 0 = 1</code> (contractible);</li>
+<li>suspensions and spheres, <code>S^{n+1}</code> as the suspension of
+<code>Sⁿ</code>;</li>
+<li>pushouts (see Synthetic Homotopy Theory), truncations, and
+quotients.</li>
+</ul>
+<p>The recursion principle for <code>S¹</code>: to define a map
+<code>S¹ → X</code>, give a point <code>x : X</code> and a loop
+<code>l : x = x</code>. The induction principle for a family
+<code>P : S¹ → U</code> needs a point <code>b : P(base)</code> and a
+path <code>transport^P(loop, b) = b</code> lying over the loop. HITs
+make the point-set and homotopical constructions of topology available
+in type theory, and are how free constructions, quotients, and
+truncations are obtained.</p>
+<h3 id="quotient-types">Quotient Types</h3>
+<p>For a type <code>A</code> and a relation <code>R : A → A → U</code>,
+the quotient <code>A/R</code> is a higher inductive type: a constructor
+<code>[_] : A → A/R</code>, a path constructor
+<code>q : R(a, b) → [a] = [b]</code> for all related elements, and a
+truncation constructor making <code>A/R</code> a set. Its recursion
+principle says a function out of <code>A/R</code> into a set is the same
+as a function out of <code>A</code> that respects <code>R</code>. When
+<code>R</code> is a prop-valued equivalence relation the quotient is
+effective (<code>[a] = [b]</code> exactly when <code>R(a, b)</code>).
+Standard uses: the integers as a quotient of pairs of naturals, the
+rationals, and any construction by "identify elements by a relation".
+Set-quotients give back the familiar behavior of quotients in set
+theory.</p>
+<h3 id="propositional-truncation">Propositional Truncation</h3>
+<p>The propositional truncation <code>‖A‖</code> is the higher inductive
+type with a constructor <code>|_| : A → ‖A‖</code> and a constructor
+forcing any two elements of <code>‖A‖</code> to be equal. Its
+elimination rule is restricted: a function out of <code>‖A‖</code> can
+be defined only into a mere proposition (given a map <code>A → B</code>
+with <code>B</code> a proposition, get <code>‖A‖ → B</code>). This
+captures "merely inhabited": we know an element exists but cannot
+extract a specific one unless the goal is itself a proposition. It is
+used to define the logical connectives that need it:
+<code>P ∨ Q :≡ ‖P + Q‖</code> and
+<code>∃ x : A. P(x) :≡ ‖Σ_{x : A} P(x)‖</code>, to distinguish "there
+merely exists" from the data-carrying Σ, and to state surjectivity and
+choice principles faithfully.</p>
+<h2 id="synthetic-homotopy-theory">Synthetic Homotopy Theory</h2>
+<h3 id="loop-spaces-and-fundamental-groups">Loop Spaces and Fundamental
+Groups</h3>
+<p>For a pointed type <code>(A, a)</code> the loop space is
+<code>Ω(A, a) :≡ (a = a)</code>, pointed by <code>refl_a</code>, and
+<code>Ωⁿ</code> is its n-fold iteration. The fundamental group is
+<code>π₁(A, a) :≡ ‖Ω(A, a)‖₀</code>, the set of loops up to homotopy
+with group structure from path composition. This is the usual
+definition, stated type-theoretically. The first major synthetic
+computation was <code>π₁(S¹) ≃ ℤ</code> (Licata and Shulman), proved
+without any topological model, by the encode-decode method below.</p>
+<h3 id="higher-homotopy-groups">Higher Homotopy Groups</h3>
+<p>The higher homotopy groups are <code>πₙ(A, a) :≡ ‖Ωⁿ(A, a)‖₀</code>
+for <code>n ≥ 1</code>; for <code>n ≥ 2</code> they are abelian
+(Eckmann-Hilton). Results proved synthetically in the HoTT setting
+include <code>πₖ(Sⁿ)</code> trivial for <code>k &lt; n</code> and
+<code>πₙ(Sⁿ) ≃ ℤ</code>, the Hopf fibration and <code>π₃(S²) ≃ ℤ</code>,
+and the Freudenthal suspension theorem, which explains how homotopy
+groups of spheres stabilize. Computing further groups (for example
+<code>π₄(S³)</code>) required substantial additional work and computer
+assistance. Classical results become theorems that are checkable in a
+proof assistant, and the proofs often look different from textbook ones
+because they avoid point-set machinery.</p>
+<h3 id="the-encode-decode-method">The Encode-Decode Method</h3>
+<p>The main technique for computing path spaces of higher inductive
+types:</p>
+<ol>
+<li>Define a family <code>code : X → U</code> by the recursion principle
+of <code>X</code>, intended to describe the identity types
+<code>x₀ = x</code> concretely.</li>
+<li>Define <code>encode : Π_{x : X} (x₀ = x) → code(x)</code> by
+transporting a base element along the path (using path induction).</li>
+<li>Define <code>decode : Π_{x : X} code(x) → (x₀ = x)</code> by
+induction on <code>X</code>.</li>
+<li>Prove <code>encode</code> and <code>decode</code> are inverse
+equivalences: one composite by path induction, the other by induction on
+<code>X</code>.</li>
+</ol>
+<p>For the circle, <code>code(base) :≡ ℤ</code> and the action of
+<code>loop</code> on <code>code</code> is defined through univalence as
+the path <code>ua(succ)</code> for the successor equivalence of
+<code>ℤ</code>; the method then gives <code>(base = base) ≃ ℤ</code>.
+The same pattern characterizes equality in coproducts, in the natural
+numbers, in pushouts (the van Kampen theorem), and in many other
+types.</p>
+<h3 id="homotopy-fibers-and-pushouts">Homotopy Fibers and Pushouts</h3>
+<p>For a map <code>f : A → B</code> and <code>b : B</code>, the homotopy
+fiber <code>fib_f(b)</code> (defined earlier) gives, for a pointed
+fibration <code>F → E → B</code>, the long exact sequence of homotopy
+groups, which relates the groups of the fiber, the total space, and the
+base. A <em>pushout</em> of a span <code>A ← C → B</code> (with maps
+<code>f</code> and <code>g</code>) is the higher inductive type with
+constructors <code>inl : A → P</code>, <code>inr : B → P</code>, and
+<code>glue : Π_{c : C} inl(f(c)) = inr(g(c))</code>. Special cases are
+the suspension (pushout of <code>1 ← A → 1</code>), joins, wedge sums,
+mapping cones (cofibers), and spheres built by iterated suspension.
+Pushouts are the basic gluing construction of homotopy theory and the
+main source of examples for the techniques above.</p>
+<h2 id="type-theoretic-foundations">Type-Theoretic Foundations</h2>
+<h3 id="universes">Universes</h3>
+<p>To avoid paradoxes, types are organized in a hierarchy of universes
+<code>U₀ : U₁ : U₂ : ...</code>, with each universe containing the types
+formed by Σ, Π, identity types, and the inductive types below it. A
+universe may be presented à la Russell (types are elements of the
+universe) or à la Tarski (an explicit decoding function). Univalent
+universes are not sets: the universe has non-trivial identifications
+between types. Typical ambiguity lets one omit level indices, and
+implementations offer universe polymorphism. <em>Propositional
+resizing</em>, the assumption that propositions in a larger universe
+have equivalents in the smallest, is an optional axiom related to
+impredicativity.</p>
+<h3 id="judgmental-and-propositional-equality">Judgmental and
+Propositional Equality</h3>
+<p>Two different notions of equality are at work. <em>Judgmental</em>
+(definitional) equality, written <code>a ≡ b</code>, is a relation of
+the theory itself: the type checker decides it by computation
+(β-reduction, unfolding definitions) and it is not something one can
+state or hypothesize inside the theory. <em>Propositional</em> equality,
+written <code>a = b</code>, is the identity type, a type whose elements
+are proofs. Judgmentally equal terms are propositionally equal (by
+<code>refl</code>) but not conversely. Example: if addition on
+<code>ℕ</code> is defined by recursion on the first argument, then
+<code>0 + n ≡ n</code> holds by computation, but <code>n + 0 = n</code>
+needs a proof by induction. Many practical difficulties in formalization
+are a matter of which equalities hold judgmentally, since those are free
+to use.</p>
+<h3 id="constructive-logic">Constructive Logic</h3>
+<p>Reasoning in HoTT is constructive by default: a proof of an existence
+statement carries a witness, and the law of excluded middle and the
+axiom of choice are not provable. They can be added for mere
+propositions (giving classical mathematics on sets) and remain
+consistent that way. The version quantified over all types is different:
+the law of excluded middle for arbitrary types,
+<code>Π_{A : U} (A + ¬A)</code>, is inconsistent with univalence: it
+would yield a uniform choice of elements that had to be invariant under
+every equivalence, but the swap automorphism of <code>Bool</code> has no
+invariant choice. So classical principles must be stated for
+propositions, using truncation to express "merely".</p>
+<h3 id="axioms-and-consistency">Axioms and Consistency</h3>
+<p>Candidate axioms and their status:</p>
+<ul>
+<li><em>Univalence</em> (and function extensionality, which follows from
+it): the characteristic axiom; consistent relative to ZFC with
+inaccessible cardinals (Kan simplicial sets), and more generally holds
+in suitable model categories and ∞-toposes (Shulman).</li>
+<li><em>Uniqueness of identity proofs</em> and Axiom K: inconsistent
+with univalence, so disabled in HoTT-style systems (for instance by the
+<code>--without-K</code> flag in Agda).</li>
+<li><em>Higher inductive types</em>: provided as primitives or as
+axioms; their consistency and computational behavior depend on the
+system.</li>
+<li><em>Propositional resizing</em>, <em>excluded middle for
+propositions</em>, and <em>choice for sets</em>: optional, with the
+usual meaning.</li>
+</ul>
+<p>Consistency is shown by constructing models. The relative consistency
+of intensional type theory with univalence rests on the simplicial
+model; constructive models in cubical sets give both consistency and
+computational content (next sections).</p>
+<h3 id="cubical-type-theory">Cubical Type Theory</h3>
+<p>Cubical type theory gives univalence computational meaning by
+changing the primitive notion of path. Paths are defined using an
+abstract interval <code>I</code> with endpoints <code>i0</code> and
+<code>i1</code>: a path <code>a = b</code> in <code>A</code> is a
+function from the interval into <code>A</code> whose endpoints are
+<code>a</code> and <code>b</code>. Types are equipped with Kan
+operations (composition and filling, <code>hcomp</code> and
+<code>transp</code> in Cubical Agda) that say how to complete partial
+cubes. Consequences: function extensionality is immediate (swap the
+interval variable with the function argument); path induction becomes a
+definable operation; univalence is provable via Glue types; higher
+inductive types get computation rules. Variants include the De Morgan
+cubical theory (Cohen, Coquand, Huber, Mörtberg) and cartesian cubical
+theories, and implementations include Cubical Agda, cubicaltt, redtt,
+and cooltt.</p>
+<h3 id="computational-univalence">Computational Univalence</h3>
+<p>In ordinary Martin-Löf type theory with the univalence axiom
+postulated, the axiom has no computational rule, so programs that use it
+can get stuck: <code>transport(ua(e), a)</code> does not reduce. Cubical
+type theory removes this: <code>ua(e)</code> is a path built from Glue
+types, transport along it reduces to applying <code>e</code>, and
+canonicity-style results (closed terms of a natural-number type evaluate
+to numerals) have been proved for cubical systems. This makes univalence
+and higher inductive types usable in programs, for example to run a
+computation on a convenient representation and transport the result back
+across an equivalence. For the axiomatic presentation the corresponding
+canonicity question is subtle, and results exist for restricted forms;
+see the literature for the current status.</p>
+<h2 id="formalization">Formalization</h2>
+<h3 id="formalizing-equivalences-and-paths">Formalizing Equivalences and
+Paths</h3>
+<p>Practical choices when formalizing:</p>
+<ul>
+<li>Pick one definition of <code>isEquiv</code> (bi-invertible maps,
+half-adjoint equivalences, or contractible fibers) and prove that it is
+a mere proposition (this needs function extensionality).</li>
+<li>Characterize paths in each type former once and reuse the
+characterizations: paths in Σ-types are pairs of a path in the base and
+a path between a transported element and the second component,
+<code>((x, u) = (y, v)) ≃ Σ_{p : x = y} (transport(p, u) = v)</code>;
+paths in function types are pointwise paths (function extensionality);
+paths in products are pairs of paths; paths in a universe are
+equivalences (univalence).</li>
+<li>Use transport and <code>ap</code> systematically and name the
+coherence lemmas (naturality, functoriality) that keep recurring.</li>
+<li>Track which equalities hold judgmentally, and define functions so
+that useful equations hold by computation.</li>
+<li>Prove statements about equivalences by <em>equivalence
+induction</em> (see Common Proof Techniques) instead of manipulating
+inverses by hand.</li>
+</ul>
+<h3 id="agda-and-cubical-agda">Agda and Cubical Agda</h3>
+<p>Agda supports HoTT-style development in two ways. With
+<code>--without-K</code> (as in the sketch above), pattern matching does
+not assume uniqueness of identity proofs; univalence must then be
+postulated and cannot compute. With <code>--cubical</code> (Cubical
+Agda), paths are functions from an interval type, <code>hcomp</code> and
+<code>transp</code> are primitives, univalence <code>ua</code> is a
+theorem that computes, and higher inductive types can be declared
+directly. A sketch of the circle in Cubical Agda:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode agda"><code class="sourceCode agda"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">{-# OPTIONS --cubical #-}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Cubical<span class="ot">.</span>Foundations<span class="ot">.</span>Prelude</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> S¹ <span class="ot">:</span> Type₀ <span class="kw">where</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  base <span class="ot">:</span> S¹</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  loop <span class="ot">:</span> base ≡ base</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- recursion principle: a point and a loop in the target</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>S¹-rec <span class="ot">:</span> <span class="ot">{</span>A <span class="ot">:</span> Type₀<span class="ot">}</span> <span class="ot">(</span>a <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">(</span>l <span class="ot">:</span> a ≡ a<span class="ot">)</span> <span class="ot">→</span> S¹ <span class="ot">→</span> A</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>S¹-rec a l base     <span class="ot">=</span> a</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>S¹-rec a l <span class="ot">(</span>loop i<span class="ot">)</span> <span class="ot">=</span> l i</span></code></pre></div>
+<p>(This is a sketch; check imports and names against the version of the
+cubical library you use.) A note for Lean users: Lean 4's built-in
+equality lives in <code>Prop</code> and is proof-irrelevant, which is
+incompatible with univalence, so HoTT-style work is not done directly on
+top of Lean 4's <code>Eq</code>; Lean 2 had a separate HoTT mode that
+was not carried forward.</p>
+<h3 id="hott-libraries">HoTT Libraries</h3>
+<p>Maintained libraries for univalent mathematics include: the HoTT
+library for Coq/Rocq (the one associated with the book), UniMath (Coq,
+Voevodsky and collaborators), the agda-unimath library (Agda, without K,
+with univalence as an axiom), the Cubical Agda library, 1Lab (a Cubical
+Agda-based development), and Arend (a proof assistant with a HoTT-style
+foundation). They contain the basics (paths, equivalences, truncation
+levels, higher inductive types such as spheres and quotients), category
+theory, and homotopy-theoretic results. Reading the basic files of a
+library is a good way to learn the conventions for naming and organizing
+lemmas.</p>
+<h3 id="common-proof-techniques">Common Proof Techniques</h3>
+<ul>
+<li><em>Path induction</em> (based and unbased): reduce a statement
+about all paths to the reflexivity case, generalizing endpoints
+first.</li>
+<li><em>Transport</em> and <em>ap</em>: move proofs and values along
+paths, and compute how they act.</li>
+<li><em>Function extensionality</em>: reduce equalities of functions to
+pointwise equalities.</li>
+<li><em>Univalence and equivalence induction</em>: to prove
+<code>P(B, e)</code> for all types <code>B</code> and equivalences
+<code>e : A ≃ B</code>, it suffices to prove <code>P(A, id)</code>; it
+is path induction transported through <code>ua</code>.</li>
+<li><em>Contractibility of singletons</em> and <em>based path
+spaces</em>: replace a sum over paths by a single point.</li>
+<li><em>Structure of Σ-types</em>: characterize paths in Σ by pairs, as
+above; to show a total-space map is an equivalence, show it fiberwise (a
+fiberwise map is an equivalence exactly when the induced map on total
+spaces is).</li>
+<li><em>Proving mere propositions</em>: show <code>isProp</code> and use
+truncation elimination into propositions to use "mere existence"
+hypotheses.</li>
+<li><em>h-level reasoning</em>: prove that a type is an n-type by
+induction on n using identity types, and use closure of levels under
+type formers.</li>
+<li><em>Encode-decode</em> for characterizing path spaces of higher
+inductive types.</li>
+<li><em>Hedberg's theorem</em>: decidable equality implies set, a common
+way to show a type is a set.</li>
+<li><em>The Yoneda lemma</em> and <em>universal properties</em>:
+characterize objects by maps in or out.</li>
+</ul>
+<h2 id="references">References</h2>
+<h3
+id="homotopy-type-theory-univalent-foundations-of-mathematics">Homotopy
+Type Theory: Univalent Foundations of Mathematics</h3>
+<p><a
+href="https://homotopytypetheory.org/book/">https://homotopytypetheory.org/book/</a></p>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deployment and Upgrades</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/15-deployment-and-upgrades.html">
+  <meta property="og:title" content="Deployment and Upgrades">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/15-deployment-and-upgrades.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Deployment and Upgrades</h1>
+<h2 id="deployment-and-upgrades-1">Deployment and Upgrades</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Deployment is the moment a design becomes irreversible, and
+upgradeability is a deliberate hole in that irreversibility. Both are
+security and governance decisions as much as engineering tasks. At Staff
+and Principal scope you are expected to:</p>
+<ul>
+<li>build deployment pipelines that are reproducible, reviewed,
+rehearsed, and verifiable, with keys and roles set up safely;</li>
+<li>decide between immutable and upgradeable designs, and define the
+upgrade governance that makes the choice trustworthy;</li>
+<li>understand proxy patterns and storage layout well enough to prevent
+corruption and to review upgrades;</li>
+<li>plan migrations, rollbacks, and incident-driven upgrades before they
+are needed.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">02_evm-and-solidity.org</code>, <code
+class="verbatim">03_smart-contract-security.org</code>, <code
+class="verbatim">04_smart-contract-testing.org</code>, <code
+class="verbatim">08_wallets-and-cryptography.org</code>, <code
+class="verbatim">17_reliability-and-monitoring.org</code>, <code
+class="verbatim">18_architecture-decisions.org</code>, <code
+class="verbatim">20_tooling-and-development-workflow.org</code>.
+Software Architecture notes: evolutionary architecture and review.</p>
+<h3 id="deployment-as-a-controlled-release">1. Deployment as a
+controlled release</h3>
+<p>A deployment pipeline for contracts should be as rigorous as for any
+critical production system, and more, because there is no rollback of
+state.</p>
+<ul>
+<li><strong>Reproducible builds</strong>: pinned compiler version,
+optimizer settings, EVM version, library versions (lock files or
+vendored submodules), and a build output that can be re-created bit for
+bit; record the metadata hash, which makes verification possible.</li>
+<li><strong>Scripted deployments</strong>: use scripts (Foundry scripts,
+Hardhat Ignition or deploy scripts) instead of manual steps;
+parameterize by network; keep the scripts reviewed and versioned;
+simulate on a fork first; produce a manifest of deployed addresses,
+constructor arguments, and transaction hashes.</li>
+<li><strong>Environments</strong>: local, testnet (check which testnets
+are currently maintained; they are retired periodically), staging on a
+fork or dedicated deployment, and mainnet; use the same scripts across
+them.</li>
+<li><strong>Deterministic deployment</strong>: CREATE2 (salt and init
+code hash) or CREATE3 factories give predictable addresses across
+chains, which simplifies multi-chain configuration; be aware that the
+init code and constructor arguments affect CREATE2 addresses and that
+CREATE3 decouples them.</li>
+<li><strong>Verification</strong>: publish verified source on block
+explorers (Etherscan-style and Sourcify, which matches by metadata) so
+anyone can read and check the code; verify proxies and implementations;
+keep flattened or standard-JSON inputs.</li>
+<li><strong>Role and ownership setup</strong>: after deployment,
+configure roles, transfer ownership from the deployer to the multisig or
+timelock, renounce unneeded deployer powers, set initial parameters and
+caps, and verify each step on-chain with a post-deployment script that
+fails if anything differs from the specification.</li>
+<li><strong>Post-deploy smoke tests</strong>: call view functions, check
+roles, simulate small transactions, and run the invariant checks against
+the live deployment on a fork of the final state.</li>
+<li><strong>Gating</strong>: deployment to mainnet requires a checklist
+(audits done, findings resolved, tests green, monitoring and alerts
+configured, runbooks ready, keys and signers confirmed, caps set,
+announcements prepared) and sign-off by named owners.</li>
+<li><strong>Key handling</strong>: deploy from hardware wallets or
+KMS-backed signers, not from environment-variable private keys; use
+throwaway deployer accounts with no residual privileges.</li>
+</ul>
+<pre class="solidity"><code>// script/Deploy.s.sol: Foundry deployment script (sketch).
+// Run: forge script script/Deploy.s.sol --rpc-url $RPC_URL --account deployer --broadcast --verify
+import {Script, console2} from &quot;forge-std/Script.sol&quot;;
+import {Vault} from &quot;../src/Vault.sol&quot;;
+
+contract Deploy is Script {
+    function run() external returns (Vault vault) {
+        vm.startBroadcast();            // signer comes from --account (keystore) or --ledger, not a plaintext key
+        vault = new Vault();
+        vm.stopBroadcast();
+        console2.log(&quot;Vault deployed at&quot;, address(vault));
+    }
+}
+</code></pre>
+<h3 id="immutable-versus-upgradeable">2. Immutable versus
+upgradeable</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Immutable contracts</th>
+<th>Upgradeable contracts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trust</td>
+<td>Users trust only the code</td>
+<td>Users also trust whoever controls upgrades</td>
+</tr>
+<tr>
+<td>Bug response</td>
+<td>Migrate to a new deployment; funds at risk until then</td>
+<td>Patch in place, possibly quickly</td>
+</tr>
+<tr>
+<td>Composability</td>
+<td>Stable addresses and behavior for integrators</td>
+<td>Behavior can change under integrators</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>Simpler</td>
+<td>Proxy, storage layout, and initializer hazards</td>
+</tr>
+<tr>
+<td>Governance burden</td>
+<td>Low</td>
+<td>Requires multisig, timelock, monitoring, processes</td>
+</tr>
+<tr>
+<td>Regulatory and legal</td>
+<td>Fewer admin levers</td>
+<td>Admin control can bring obligations</td>
+</tr>
+</tbody>
+</table>
+<p>Guidance: use immutability where the logic is small, stable, and
+heavily verified (token cores, simple primitives). Use upgradeability
+where requirements will evolve and the operator is accountable, but make
+upgrades slow, observable, and constrained. Mixed designs (an immutable
+core with upgradeable periphery or parameters in bounded registries)
+often work best. Treat "upgradeable" as a trust assumption and state it
+publicly.</p>
+<h3 id="proxy-patterns">3. Proxy patterns</h3>
+<ul>
+<li><strong>Mechanism</strong>: a proxy contract holds state and
+delegates calls to an implementation contract via DELEGATECALL;
+upgrading changes the implementation address; storage stays in the
+proxy.</li>
+<li><strong>Transparent proxy</strong>: the proxy has an admin that can
+upgrade but cannot call the implementation; non-admins are forwarded;
+avoids selector clashes between the proxy admin functions and
+implementation functions.</li>
+<li><strong>UUPS (ERC-1822 with ERC-1967 slots)</strong>: the upgrade
+logic lives in the implementation; the proxy is lighter (cheaper calls);
+the risk is that an implementation without upgrade logic (or with broken
+authorization) bricks upgradability or lets anyone upgrade.</li>
+<li><strong>Beacon proxies</strong>: many proxies read their
+implementation from a shared beacon; upgrading the beacon upgrades all
+instances at once; suited to factories of similar contracts.</li>
+<li><strong>Minimal proxies (EIP-1167 clones)</strong>: cheap clones
+that delegate to a fixed implementation; not upgradeable by
+themselves.</li>
+<li><strong>Diamond (EIP-2535)</strong>: a proxy routes selectors to
+multiple facets; flexible and large-contract friendly; complex to reason
+about and audit.</li>
+<li><strong>Non-proxy upgrade paths</strong>: deploy a new contract and
+migrate state and users (clean but disruptive); registries and routers
+that point to current modules; parameter-only upgradeability through
+bounded setters.</li>
+<li><strong>Standard storage slots</strong>: ERC-1967 defines slots for
+the implementation, admin, and beacon so that they cannot collide with
+ordinary variables.</li>
+<li><strong>Metamorphic contracts</strong> (CREATE2 plus SELFDESTRUCT)
+no longer work as before after the Cancun change to SELFDESTRUCT; do not
+rely on them.</li>
+</ul>
+<h3 id="storage-layout-and-initialization-safety">4. Storage layout and
+initialization safety</h3>
+<ul>
+<li><strong>Rules</strong>: in an upgradeable contract, never reorder,
+remove, or change the type of existing state variables; only append new
+ones; be careful with inheritance changes (the linearized order
+matters); keep storage gaps (the older convention) or, better, use
+namespaced storage (ERC-7201), which places each module's variables in a
+struct at a slot derived from a namespace hash, so modules cannot
+collide and ordering matters less. Recent OpenZeppelin upgradeable
+contracts use namespaced storage.</li>
+<li><strong>Initializers replace constructors</strong>: the proxy's
+storage is initialized by calling an <code>initialize</code> function
+once; protect it with <code>initializer</code> and
+<code>reinitializer</code> modifiers; call
+<code>_disableInitializers()</code> in the implementation's constructor
+so nobody can initialize the implementation directly; initialize every
+inherited module; never leave a proxy uninitialized between deployment
+and initialization (deploy and initialize atomically).</li>
+<li><strong>Constructors and immutables</strong> in the implementation
+affect only the implementation's code, not the proxy's storage: values
+set there are shared by all proxies; do not use constructor logic
+expecting per-proxy state.</li>
+<li><strong>DELEGATECALL hazards</strong>: an implementation that makes
+DELEGATECALL to attacker-controlled targets can be hijacked; an
+implementation that can self-destruct (before Cancun) could be
+destroyed; function selector collisions between proxy and implementation
+functions.</li>
+<li><strong>Tooling</strong>: upgrade plugins validate storage layout
+compatibility and detect unsafe patterns; run them in CI and before
+every upgrade; add tests that perform the upgrade on a fork and compare
+state before and after.</li>
+</ul>
+<pre class="solidity"><code>// UUPS upgradeable contract (OpenZeppelin v5 style sketch).
+import {Initializable} from &quot;@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol&quot;;
+import {UUPSUpgradeable} from &quot;@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol&quot;;
+import {OwnableUpgradeable} from &quot;@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol&quot;;
+
+contract VaultV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+    uint256 public fee;
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() { _disableInitializers(); }
+
+    function initialize(address owner_, uint256 fee_) public initializer {
+        __Ownable_init(owner_);
+        fee = fee_;
+    }
+
+    // Upgrade authorization: in production, restrict to a timelock controlled by a multisig.
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+}
+</code></pre>
+<h3 id="governing-upgrades">5. Governing upgrades</h3>
+<ul>
+<li><strong>Who can upgrade</strong>: ideally a timelock whose proposer
+is a multisig or governance contract; never a single EOA.</li>
+<li><strong>Delay</strong>: a public delay (commonly at least two days
+for serious protocols; longer where users need exit time) between
+announcing and executing an upgrade, so users can exit and monitors can
+review.</li>
+<li><strong>Transparency</strong>: publish the new implementation
+address, source, diff, audit report, and migration steps before the
+delay ends; verify the code on explorers; provide a simulation of the
+upgrade transaction.</li>
+<li><strong>Emergency paths</strong>: a narrowly scoped pause (and
+unpause) role for incidents, held by a guardian set with fast response;
+avoid giving emergency roles the ability to upgrade arbitrarily; decide
+who may bypass the delay and under what conditions, and publish that
+policy.</li>
+<li><strong>Review of upgrades</strong>: treat each upgrade as a new
+release: diff review, storage layout check, tests on a fork with
+migrated state, audit of the changes, and a rollout plan.</li>
+<li><strong>Rollback</strong>: you cannot undo state changes, but you
+can upgrade back to the previous implementation if storage remains
+compatible; plan for data migrations that are reversible, and test the
+rollback path.</li>
+<li><strong>Scoping upgrade power</strong>: limit what upgrades can
+change (for example forbid changing token balances logic without a
+longer delay), use modular designs where only parameters or non-critical
+modules are upgradeable, and consider sunsetting upgradeability once the
+code is mature.</li>
+<li><strong>Monitoring</strong>: alerts on upgrade events, admin role
+changes, implementation slot changes, and timelock queue entries (see
+<code class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+</ul>
+<h3 id="migrations">6. Migrations</h3>
+<ul>
+<li><strong>Contract migrations</strong> (new deployment): users move
+funds voluntarily (with incentives), or an owner-driven migration with
+user consent and a deadline; handle approvals (users must re-approve),
+integrations, oracles, and indexers; keep the old contract alive in a
+wind-down mode.</li>
+<li><strong>State migrations during upgrades</strong>: a one-time
+migration function (reinitializer) with bounded gas, or lazy migration
+on first touch; test with realistic state at scale.</li>
+<li><strong>Token and liquidity migrations</strong>: coordinate with
+exchanges, bridges, and wallets; use snapshot-based claims for large
+populations (Merkle claims).</li>
+<li><strong>Chain migrations</strong>: moving to another chain or L2
+involves bridging assets, redeploying, and retiring the old deployment;
+communicate timelines and risks.</li>
+<li><strong>Deprecation</strong>: define end-of-life, final withdrawal
+windows, and what happens to unclaimed funds.</li>
+</ul>
+<h3 id="incident-driven-changes">7. Incident-driven changes</h3>
+<ul>
+<li>Prepare <strong>runbooks</strong> for pause, upgrade, key rotation,
+and communication; practice them.</li>
+<li><strong>Hotfix path</strong>: a fast, tightly controlled process
+(small reviewed patch, dedicated multisig, shortened timelock only if
+the governance allows and is disclosed), balanced against the risk of
+rushing code to production.</li>
+<li><strong>Post-incident</strong>: public post-mortem, regression
+tests, process changes (see <code
+class="verbatim">16_security-auditing.org</code>).</li>
+</ul>
+<h3 id="self-check">8. Self-check</h3>
+<ol>
+<li>Write the deployment checklist you would require before a mainnet
+launch of a vault protocol.</li>
+<li>Why must the implementation constructor call
+<code>_disableInitializers()</code>, and what attack does that
+prevent?</li>
+<li>Compare transparent and UUPS proxies: failure modes, costs, and who
+can upgrade.</li>
+<li>What does ERC-7201 solve compared with storage gaps, and what must
+still be reviewed in an upgrade?</li>
+<li>Design the governance of upgrades for a lending protocol: roles,
+delays, emergency powers, and transparency.</li>
+<li>A critical bug is found while an upgrade is queued in the timelock.
+What do you do?</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: write a deployment script, run it on a local fork, and
+produce a manifest; verify the contract source on a testnet
+explorer.</li>
+<li>Core: implement a UUPS proxy upgrade from V1 to V2 with a new
+storage variable; use an upgrade-safety plugin; write fork tests
+comparing state before and after.</li>
+<li>Core: demonstrate a storage collision from reordering variables and
+fix it with append-only changes and namespaced storage.</li>
+<li>Core: build a post-deployment verification script that reads roles,
+owners, parameters, and implementation slots and fails on any deviation
+from a specification file.</li>
+<li>Stretch: deploy a timelock and multisig, queue an upgrade, monitor
+it with an alert, and execute after the delay; document the
+runbook.</li>
+<li>Stretch: plan and rehearse a contract migration with a deadline,
+incentives, and a Merkle claim for remaining users.</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>OpenZeppelin Upgrades documentation (proxy patterns, writing
+upgradeable contracts, upgrade plugins): <a
+href="https://docs.openzeppelin.com/upgrades-plugins/">https://docs.openzeppelin.com/upgrades-plugins/</a>
+and <a
+href="https://docs.openzeppelin.com/contracts">https://docs.openzeppelin.com/contracts</a></li>
+<li>EIPs and ERCs: ERC-1967, ERC-1822, EIP-1167, EIP-2535, ERC-7201,
+EIP-6780 (SELFDESTRUCT change): <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a></li>
+<li>Foundry Book (scripting, verification) and Hardhat documentation
+(Ignition deployments): <a
+href="https://book.getfoundry.sh">https://book.getfoundry.sh</a> and <a
+href="https://hardhat.org">https://hardhat.org</a></li>
+<li>Sourcify (metadata-based verification) and explorer documentation;
+Safe documentation for multisig and module patterns.</li>
+<li>Software Architecture notes: evolutionary architecture (migrations,
+fitness functions) and architecture review.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Deployment is an irreversible release: reproducible builds, scripted
+and rehearsed steps, verified sources, and post-deploy checks.</li>
+<li>Upgradeability is a trust assumption; govern it with timelocks,
+multisigs, transparency, and narrow emergency powers.</li>
+<li>Storage layout and initializer mistakes silently corrupt state; use
+standard patterns and tools.</li>
+<li>Plan migrations, rollbacks, and hotfix procedures before
+launch.</li>
+<li>Record the immutability decision and review triggers.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

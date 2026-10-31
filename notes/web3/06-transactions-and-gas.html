@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transactions and Gas</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/06-transactions-and-gas.html">
+  <meta property="og:title" content="Transactions and Gas">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/06-transactions-and-gas.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Transactions and Gas</h1>
+<h2 id="transactions-and-gas-1">Transactions and Gas</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Transactions are how everything happens on a chain, and gas is both
+the unit of cost and the unit of denial-of-service defense. Most
+"mysterious" production problems (stuck transactions, nonce gaps, failed
+submissions, surprising costs, reorg-induced inconsistencies) are
+transaction-lifecycle problems. At Staff and Principal scope you are
+expected to:</p>
+<ul>
+<li>model the full lifecycle of a transaction and design services that
+submit, track, and reconcile transactions correctly;</li>
+<li>understand the fee market and the cost model well enough to estimate
+and bound costs and to optimize where it matters;</li>
+<li>set confirmation and retry policies appropriate to the value at
+stake;</li>
+<li>explain trade-offs between gas optimization, readability, and
+security.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">01_blockchain-fundamentals.org</code>, <code
+class="verbatim">02_evm-and-solidity.org</code>, <code
+class="verbatim">12_distributed-systems.org</code>, <code
+class="verbatim">17_reliability-and-monitoring.org</code>. In the
+Foundations notes: queueing and overload (fee dynamics as a congestion
+price).</p>
+<h3 id="anatomy-of-a-transaction">1. Anatomy of a transaction</h3>
+<ul>
+<li><strong>Fields</strong>: chain id, nonce, gas limit, fee parameters
+(<code>maxFeePerGas</code> and <code>maxPriorityFeePerGas</code> for
+current types), <code>to</code> (empty for contract creation),
+<code>value</code>, <code>data</code> (calldata or init code), an
+optional access list, and a signature from which the sender is
+recovered.</li>
+<li><strong>Types</strong>: type 0 (legacy), type 1 (EIP-2930, access
+lists), type 2 (EIP-1559, the default fee model), type 3 (EIP-4844,
+blob-carrying, with blob fee fields and blob hashes), and type 4
+(EIP-7702, with an authorization list that lets an EOA delegate to
+contract code).</li>
+<li><strong>Nonce</strong>: a per-account counter. Transactions from one
+account execute in strict nonce order; a gap blocks all later nonces
+until filled.</li>
+<li><strong>Gas limit versus gas used</strong>: the limit is a cap you
+set (unused gas is refunded); the used gas is what execution consumed. A
+transaction that runs out of gas still pays for the gas used. A
+per-transaction gas cap exists in recent protocol versions (about 16.8
+million gas since the Fusaka upgrade; check the current rules) in
+addition to the block gas limit.</li>
+<li><strong>Receipts</strong>: status (success or revert), gas used,
+effective gas price, logs, and for blob transactions the blob fee data.
+Reverted transactions still consume gas and are included in the
+block.</li>
+</ul>
+<h3 id="lifecycle">2. Lifecycle</h3>
+<ol>
+<li><strong>Construct and sign</strong> locally (see <code
+class="verbatim">08_wallets-and-cryptography.org</code>); simulate first
+(<code>eth_call</code> or a simulator) to catch reverts.</li>
+<li><strong>Broadcast</strong> to a node (or relay/builder endpoint).
+The node validates (signature, nonce, balance for max cost, fee floor)
+and gossips through the mempool.</li>
+<li><strong>Pending</strong>: waiting in mempools; builders pick
+transactions by fee and bundle value. Nodes drop transactions after
+their own limits (size, age, underpriced). The mempool is not a global
+queue: each node has its own view.</li>
+<li><strong>Included</strong> in a block (a proposer's block). Execution
+succeeded or reverted; logs emitted.</li>
+<li><strong>Confirmed</strong>: subsequent blocks build on it. Each
+confirmation reduces the chance of a reorg.</li>
+<li><strong>Safe and finalized</strong>: Ethereum exposes block tags;
+<code>safe</code> (a justified checkpoint, roughly one epoch) and
+<code>finalized</code> (two epochs, roughly 13 minutes) carry stronger
+guarantees than <code>latest</code>.</li>
+<li><strong>Replaced or dropped</strong>: a transaction with the same
+nonce and higher fees (clients require a minimum bump, commonly 10
+percent) replaces the pending one; otherwise it may linger or be
+evicted.</li>
+<li><strong>Reorged</strong>: included transactions may disappear and
+return to the mempool; their effects vanish with the block.</li>
+</ol>
+<p>Design consequences: sending a transaction is <em>at-least-once and
+unordered</em> from the application's perspective; the only truth is the
+chain state at a chosen finality level (see <code
+class="verbatim">12_distributed-systems.org</code>).</p>
+<h3 id="the-fee-market-and-gas-accounting">3. The fee market and gas
+accounting</h3>
+<ul>
+<li><strong>EIP-1559</strong>: each block has a <strong>base
+fee</strong> per gas, determined by the protocol; every transaction pays
+at least the base fee (burned) plus a <strong>priority fee</strong> to
+the proposer, up to <code>maxFeePerGas</code> in total. The base fee
+moves toward a target of half the block gas limit: if the previous block
+was full it rises by up to 12.5 percent, if empty it falls by up to 12.5
+percent. Next base fee is approximately the current one times (1 + (used
+- target) / target / 8).</li>
+<li><strong>Effective price</strong> = min(maxFeePerGas, baseFee +
+maxPriorityFeePerGas). Setting a high <code>maxFeePerGas</code> is safe
+because you pay only the effective price; setting a
+<code>maxPriorityFeePerGas</code> high pays more for faster
+inclusion.</li>
+<li><strong>Block gas limit</strong> is set by validators' voting within
+bounds; it has been raised several times since 2025 and continues to be
+adjusted (check the current value and the protocol's default target).
+Higher limits raise throughput and node burden.</li>
+<li><strong>Gas schedule highlights</strong> (verify against the current
+fork; values change through repricing EIPs):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Approximate cost (gas)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base transaction cost</td>
+<td>21,000</td>
+</tr>
+<tr>
+<td>Calldata, per zero / non-zero byte</td>
+<td>4 / 16 (with a higher floor for data-heavy transactions since
+EIP-7623)</td>
+</tr>
+<tr>
+<td>Contract creation</td>
+<td>32,000 plus init code and code deposit (200 gas per byte of runtime
+code)</td>
+</tr>
+<tr>
+<td>SLOAD, cold / warm (EIP-2929)</td>
+<td>2,100 / 100</td>
+</tr>
+<tr>
+<td>SSTORE, zero to non-zero (new slot)</td>
+<td>about 20,000 (plus cold access surcharge)</td>
+</tr>
+<tr>
+<td>SSTORE, non-zero to non-zero (warm)</td>
+<td>about 2,900</td>
+</tr>
+<tr>
+<td>Clearing a slot (refund, capped at one fifth of gas used)</td>
+<td>4,800 refund (EIP-3529)</td>
+</tr>
+<tr>
+<td>TLOAD / TSTORE (transient storage)</td>
+<td>100 / 100</td>
+</tr>
+<tr>
+<td>Cold account access (CALL, BALANCE, EXTCODESIZE)</td>
+<td>2,600 (warm: 100)</td>
+</tr>
+<tr>
+<td>LOG with 2 topics and 32 bytes of data</td>
+<td>roughly 375 + 2 x 375 + 8 x 32 = 1,381</td>
+</tr>
+<tr>
+<td>KECCAK256 of one word</td>
+<td>36</td>
+</tr>
+<tr>
+<td>Memory expansion</td>
+<td>3 per word plus a quadratic term</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Intrinsic gas</strong> is charged before execution; if the
+gas limit is below it, the transaction is invalid. Access lists
+pre-declare accessed addresses and slots at a fixed discount and are
+rarely worth the effort now except in specific cases.</li>
+<li><strong>Refunds</strong> are limited and no longer encourage gas
+tokens.</li>
+<li><strong>Blobs (EIP-4844)</strong>: 128 KiB per blob, priced in a
+separate blob fee market and retained only for a limited period by the
+network (weeks). Target and maximum blobs per block have been increased
+through Pectra and the blob-parameter-only forks after Fusaka. Rollups
+use blobs to post data cheaply (see <code
+class="verbatim">11_layer-2-and-cross-chain.org</code>). Contracts
+cannot read blob contents, only commitments.</li>
+<li><strong>L2 fees</strong>: an L2 transaction pays for L2 execution
+plus the cost of posting its data to L1 (blobs or calldata). Both
+components vary; when blob prices are low, L2 fees are dominated by
+execution and sequencer margin. Fee behavior and APIs differ per L2;
+read each one's documentation.</li>
+</ul>
+<h3 id="estimating-bounding-and-managing-cost">4. Estimating, bounding,
+and managing cost</h3>
+<ul>
+<li><strong>Estimate</strong>: <code>eth_estimateGas</code> simulates
+the call at the current state; add a safety margin because state may
+change before inclusion; for contracts with data-dependent paths,
+estimate on the worst-case path.</li>
+<li><strong>Fee estimation</strong>: use the node's fee history or a
+library estimator to pick a priority fee and a max fee; set
+<code>maxFeePerGas</code> with headroom (for example two times the base
+fee) so that the transaction remains valid through a few blocks of
+base-fee growth.</li>
+<li><strong>Bound the worst case</strong>: compute maximum cost as
+<code>gasLimit * maxFeePerGas</code> (plus value); that is the balance a
+sender needs and the most it can spend.</li>
+<li><strong>Budgeting for services</strong>: relayers, keepers, and bots
+need gas funds, automated top-ups, and alerts for low balance; they need
+caps on per-action gas price to avoid being drained during spikes.</li>
+<li><strong>Gas as a security feature</strong>: user-controlled loops
+must be bounded because attackers can make operations exceed the block
+gas limit; gas griefing (forcing out-of-gas in a callee) must be
+considered when forwarding gas.</li>
+<li><strong>Cost modeling</strong>: estimate cost per user action at
+median and at 10x gas prices, on each chain; include deployment,
+approvals (often two transactions: approve then act), and
+failed-transaction costs.</li>
+</ul>
+<h3 id="optimizing-gas-without-paying-for-it-in-security">5. Optimizing
+gas without paying for it in security</h3>
+<p>Gas optimization has real value for high-volume code and little value
+elsewhere; every optimization is a risk to readability and audit.</p>
+<ul>
+<li><strong>Measure first</strong>: gas reports and snapshots
+(<code>forge test --gas-report</code>, <code>forge snapshot</code>),
+tracing opcodes of hot paths; optimize what is called frequently.</li>
+<li><strong>High-yield techniques</strong>: minimize storage writes (the
+dominant cost); pack variables that are read and written together; cache
+storage reads in memory; use <code>immutable</code> and
+<code>constant</code>; prefer <code>calldata</code> for read-only
+external arrays; use custom errors; batch operations to amortize the
+base cost and cold accesses; use events instead of storage for data that
+only off-chain systems need; use bitmaps and Merkle proofs instead of
+per-user storage (airdrops, allowlists); use minimal proxies for many
+instances; use transient storage for per-transaction locks and
+accounting.</li>
+<li><strong>Lower-yield or risky techniques</strong>: inline assembly,
+unchecked arithmetic without proofs, unusual bit packing, unrolled
+loops, and hand-written storage layouts. Use only in hot paths, with
+tests, comments, and review. Gas-optimized libraries trade safety checks
+for speed; read what they do not check.</li>
+<li><strong>Compiler settings</strong>: the optimizer runs parameter and
+the IR pipeline affect both size and cost; benchmark with realistic call
+patterns, not a single function.</li>
+<li><strong>Know the trade-off</strong>: contract size limits (24,576
+bytes) constrain inlining; splitting into libraries or modules adds call
+overhead.</li>
+<li><strong>Re-measure after repricing forks</strong>: gas costs change
+with protocol upgrades; an optimization that once mattered may
+disappear, and vice versa.</li>
+</ul>
+<h3 id="building-a-reliable-transaction-submitting-service">6. Building
+a reliable transaction-submitting service</h3>
+<p>Services that send transactions (relayers, keepers, payment
+processors, bots, back-office tools) need engineering equal to any other
+distributed system. A robust design:</p>
+<ul>
+<li><strong>Persist intents before sending</strong> (an outbox): record
+the intended action with an idempotency key, the account, and the
+target; a worker turns intents into transactions.</li>
+<li><strong>Single-writer nonce management per account</strong>: one
+component owns the account's nonce sequence (a queue per account); gaps
+stall all later transactions. Use multiple sender accounts for
+parallelism instead of racing on one nonce.</li>
+<li><strong>Track state machine per transaction</strong>: created,
+signed, broadcast, pending, included, confirmed at N, safe, finalized,
+failed, replaced, dropped, reorged. Store transaction hashes, nonce, fee
+parameters, and block data.</li>
+<li><strong>Replace stuck transactions deliberately</strong>: resend
+with the same nonce and bumped fees (at least the client minimum), or
+send a zero-value self-transfer with the same nonce to cancel; never let
+two logical actions share a nonce accidentally.</li>
+<li><strong>Idempotency</strong>: before resending an intent, check
+chain state (did the effect already happen?) rather than assuming the
+previous attempt failed; make contract calls idempotent where
+possible.</li>
+<li><strong>Confirmation policy by value</strong>: define tiers (for
+example, small amounts accepted after a few confirmations, large amounts
+after the <code>safe</code> or <code>finalized</code> tag), and
+communicate provisional states in the product.</li>
+<li><strong>Reorg handling</strong>: if a transaction's block is
+reorged, move it back to pending; derived state (balances, credits) must
+be reversible until the chosen finality level.</li>
+<li><strong>Simulation before send</strong>: dry-run with
+<code>eth_call</code> at the pending or latest state to avoid sending
+doomed transactions; handle simulations that pass but fail on-chain
+(state changed).</li>
+<li><strong>Fee policy</strong>: dynamic fees with caps; escalate
+priority fee over time; emergency mode for urgent actions
+(liquidations).</li>
+<li><strong>Multi-provider submission</strong>: send through several RPC
+endpoints or builders to avoid a single point of failure; dedupe by
+hash.</li>
+<li><strong>Private submission</strong> for MEV-sensitive actions (see
+<code class="verbatim">10_oracles-and-mev.org</code>).</li>
+<li><strong>Observability</strong>: metrics for pending age, nonce gaps,
+replacement rate, failure reasons, fee paid, confirmation latency
+percentiles; alerts on stuck nonces and low balances (see <code
+class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+<li><strong>Key security</strong>: signing keys in KMS, MPC, or HSM with
+spend policies; separate hot wallets with small balances from
+treasury.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Sketch with viem: estimate fees, send with caps, wait for a confirmation level.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { createPublicClient<span class="op">,</span> createWalletClient<span class="op">,</span> http<span class="op">,</span> parseEther } <span class="im">from</span> <span class="st">&#39;viem&#39;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { privateKeyToAccount } <span class="im">from</span> <span class="st">&#39;viem/accounts&#39;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { mainnet } <span class="im">from</span> <span class="st">&#39;viem/chains&#39;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> account <span class="op">=</span> <span class="fu">privateKeyToAccount</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">SIGNER_KEY</span> <span class="im">as</span> <span class="vs">`0x</span><span class="sc">${</span>string<span class="sc">}</span><span class="vs">`</span>) <span class="co">// use KMS/HSM in production</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> publicClient <span class="op">=</span> <span class="fu">createPublicClient</span>({ chain<span class="op">:</span> mainnet<span class="op">,</span> transport<span class="op">:</span> <span class="fu">http</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">RPC_URL</span>) })</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> walletClient <span class="op">=</span> <span class="fu">createWalletClient</span>({ account<span class="op">,</span> chain<span class="op">:</span> mainnet<span class="op">,</span> transport<span class="op">:</span> <span class="fu">http</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">RPC_URL</span>) })</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> { maxFeePerGas<span class="op">,</span> maxPriorityFeePerGas } <span class="op">=</span> <span class="cf">await</span> publicClient<span class="op">.</span><span class="fu">estimateFeesPerGas</span>()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> hash <span class="op">=</span> <span class="cf">await</span> walletClient<span class="op">.</span><span class="fu">sendTransaction</span>({</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  to<span class="op">:</span> <span class="st">&#39;0x0000000000000000000000000000000000000001&#39;</span><span class="op">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  value<span class="op">:</span> <span class="fu">parseEther</span>(<span class="st">&#39;0.01&#39;</span>)<span class="op">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  maxFeePerGas<span class="op">:</span> (maxFeePerGas<span class="op">!</span> <span class="op">*</span> <span class="dv">12</span>n) <span class="op">/</span> <span class="dv">10</span>n<span class="op">,</span>       <span class="co">// headroom, still bounded by policy</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  maxPriorityFeePerGas<span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> receipt <span class="op">=</span> <span class="cf">await</span> publicClient<span class="op">.</span><span class="fu">waitForTransactionReceipt</span>({ hash<span class="op">,</span> confirmations<span class="op">:</span> <span class="dv">2</span> })</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (receipt<span class="op">.</span><span class="at">status</span> <span class="op">!==</span> <span class="st">&#39;success&#39;</span>) <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&#39;reverted&#39;</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">// For high-value flows, check the block against the &#39;finalized&#39; tag before crediting.</span></span></code></pre></div>
+<p>(Illustrative; not run here. Handle errors, persistence, and
+replacement logic in production code.)</p>
+<h3 id="special-topics">7. Special topics</h3>
+<ul>
+<li><strong>Account abstraction</strong>: smart accounts (ERC-4337)
+submit user operations to a separate mempool via bundlers; an EntryPoint
+contract validates and executes; paymasters can sponsor gas. EIP-7702
+lets an EOA delegate to contract code for batching and sponsorship. Both
+change the transaction model your backend sees (user operations versus
+transactions) and the fee flow (see <code
+class="verbatim">08_wallets-and-cryptography.org</code>).</li>
+<li><strong>Batching and multicall</strong>: a multicall contract
+aggregates reads and writes; for writes, atomic batches reduce partial
+failure risk and cost; check that <code>msg.sender</code> semantics
+fit.</li>
+<li><strong>Revert reasons and error decoding</strong>: decode custom
+errors with the ABI; log raw revert data; surface actionable
+messages.</li>
+<li><strong>Time-sensitive transactions</strong>: deadlines in calldata
+protect against late inclusion; use short deadlines for swaps and
+signatures.</li>
+<li><strong>Mempool privacy</strong>: private relays reduce
+front-running exposure at the cost of trust in the relay and possible
+slower inclusion (see file 10).</li>
+<li><strong>Chain differences</strong>: finality, fee models, nonce and
+mempool semantics differ across L2s and alt L1s; do not copy L1
+assumptions.</li>
+</ul>
+<h3 id="self-check">8. Self-check</h3>
+<ol>
+<li>A transaction has been "pending" for an hour. List the possible
+causes and how you diagnose each.</li>
+<li>Explain how base fee and priority fee interact, and why setting a
+high maxFeePerGas does not mean paying it.</li>
+<li>Why is a nonce gap harmful, and how does a service avoid creating
+one?</li>
+<li>Design the confirmation policy for a deposit-crediting service with
+three value tiers.</li>
+<li>Which three changes reduce the gas cost of an airdrop to 100,000
+users, and what do they cost in complexity?</li>
+<li>How would you cancel a stuck transaction, and when does that
+fail?</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: send transactions on a local node; observe nonce handling,
+replacement with a higher fee, and a reverted transaction's
+receipt.</li>
+<li>Core: implement a nonce-managed sender with persistent intents and a
+state machine for transaction status, including replacement and reorg
+handling (simulate reorgs with a local node's snapshot and revert).</li>
+<li>Core: write a gas report for the vault contract; reduce the cost of
+a hot path by two techniques; document gas, readability, and risk
+trade-offs.</li>
+<li>Core: build a fee estimator that picks priority fees from recent
+blocks and caps total cost per action.</li>
+<li>Stretch: implement a Merkle-proof airdrop and compare its gas with a
+per-user storage mapping.</li>
+<li>Stretch: build a simulation harness that replays your service
+against injected failures (dropped transactions, RPC errors, reorgs) and
+asserts that no intent is lost or duplicated.</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>ethereum.org documentation on transactions, gas, and blocks: <a
+href="https://ethereum.org/en/developers/docs/">https://ethereum.org/en/developers/docs/</a></li>
+<li>EIPs: 1559 (fee market), 2718 (typed transactions), 2929 and 3529
+(access costs and refunds), 4844 (blobs), 7623 (calldata floor), 7702
+(set-code transactions), and the Fusaka meta-EIP listing gas-related
+changes: <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a> and <a
+href="https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7607.md">https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7607.md</a></li>
+<li>viem and ethers documentation for building clients; Foundry Book for
+gas reports and cheatcodes: <a
+href="https://book.getfoundry.sh">https://book.getfoundry.sh</a></li>
+<li>Flashbots documentation for private transaction submission: <a
+href="https://docs.flashbots.net">https://docs.flashbots.net</a></li>
+<li>Roughgarden, <em>Transaction Fee Mechanism Design for the Ethereum
+Blockchain</em> (the economic analysis of EIP-1559).</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>A transaction's lifecycle (pending, included, confirmed, safe,
+finalized, replaced, reorged) is the real interface; design for
+at-least-once and reversible-until-finalized.</li>
+<li>Gas bounds work and defends the network; storage dominates cost, and
+the schedule changes with forks.</li>
+<li>Nonce management is a single-writer problem; persist intents and
+track state per transaction.</li>
+<li>Optimize only measured hot paths, and weigh each optimization
+against audit risk.</li>
+<li>Set confirmation and fee policies by value, and monitor stuck
+transactions and low balances.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

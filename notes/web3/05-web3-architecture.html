@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Web3 Architecture</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/web3/05-web3-architecture.html">
+  <meta property="og:title" content="Web3 Architecture">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/web3/05-web3-architecture.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Web3 Architecture</h1>
+<h2 id="web3-architecture-1">Web3 Architecture</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>A Web3 product is a hybrid system: a few contracts on a public chain,
+plus clients, wallets, RPC providers, indexers, backends, storage,
+oracles, and operational infrastructure. Its architecture is defined by
+where each responsibility lives and which party must be trusted for it.
+At Staff and Principal scope you are expected to:</p>
+<ul>
+<li>draw the whole system, including off-chain components and third
+parties, and mark each trust boundary and each single point of
+failure;</li>
+<li>decide what goes on-chain (expensive, public, irreversible) and what
+does not (see <code
+class="verbatim">09_on-chain-and-off-chain.org</code>);</li>
+<li>make decentralization claims precise: who can pause, upgrade,
+censor, or steal, and how users exit;</li>
+<li>apply ordinary software architecture discipline (boundaries,
+contracts, evolution, review) to a system where mistakes are
+irreversible.</li>
+</ul>
+<p>Companion files: <code
+class="verbatim">09_on-chain-and-off-chain.org</code>, <code
+class="verbatim">13_indexing-and-data-access.org</code>, <code
+class="verbatim">15_deployment-and-upgrades.org</code>, <code
+class="verbatim">18_architecture-decisions.org</code>. In the Software
+Architecture notes: styles, boundaries, patterns, quality attributes,
+and reviews.</p>
+<h3 id="the-layers-of-a-typical-dapp">1. The layers of a typical
+dApp</h3>
+<pre class="text"><code>Users and wallets  --signing--&gt;  Frontend (web, mobile)  --reads/writes--&gt;  RPC providers / nodes
+                                      |                                            |
+                                      v                                            v
+                             Backend services (APIs,                      Smart contracts on L1 / L2
+                             relayers, keepers, bots)  &lt;--events/state--   (core protocol logic and assets)
+                                      |                                            ^
+                                      v                                            |
+                                Indexer + database  &lt;--- chain data ---------------+
+                                      |
+                             Off-chain storage (IPFS, object stores), oracles, analytics, monitoring
+</code></pre>
+<ul>
+<li><strong>Contracts</strong>: the minimal set of rules that must be
+enforced without trust: asset custody, accounting, access control,
+settlement.</li>
+<li><strong>Wallets and keys</strong>: where users (and operators) hold
+keys and sign; the user's root of trust (see <code
+class="verbatim">08_wallets-and-cryptography.org</code>).</li>
+<li><strong>Frontend</strong>: the interface; often hosted
+traditionally, sometimes on content-addressed storage with ENS. A
+compromised frontend can trick users into signing malicious
+transactions, so frontend integrity is a security control, not a
+convenience.</li>
+<li><strong>RPC and node infrastructure</strong>: how clients read state
+and submit transactions; commercial providers, self-hosted nodes, or
+both; the largest shared dependency of most dApps.</li>
+<li><strong>Indexers and data stores</strong>: convert raw logs and
+state into queryable data (see <code
+class="verbatim">13_indexing-and-data-access.org</code>).</li>
+<li><strong>Backend services</strong>: APIs, notification, relayers
+(sponsor gas or submit transactions), keepers (trigger time- or
+condition-based actions such as liquidations), bots, risk engines, and
+KYC or compliance services where required.</li>
+<li><strong>Storage</strong>: content-addressed (IPFS, Arweave,
+Filecoin) or conventional object storage for metadata and large
+data.</li>
+<li><strong>Oracles and cross-chain messaging</strong>: bring external
+data and messages (see <code
+class="verbatim">10_oracles-and-mev.org</code>, <code
+class="verbatim">11_layer-2-and-cross-chain.org</code>).</li>
+<li><strong>Operations</strong>: monitoring, alerting, incident
+response, key management, deployment pipelines (see files 15 and
+17).</li>
+</ul>
+<h3 id="trust-boundaries-and-the-decentralization-spectrum">2. Trust
+boundaries and the decentralization spectrum</h3>
+<ul>
+<li><strong>Make a trust table</strong> for the system: for each
+function (custody, execution, ordering, upgrades, pausing, price data,
+data availability, frontend, RPC), who is trusted, what can they do, and
+what can users do if they misbehave? Include <em>admin powers</em>
+explicitly: an upgradeable contract controlled by a multisig is a
+trusted party with a time delay, not a trustless system.</li>
+<li><strong>Spectrum</strong>: fully centralized service with a token,
+centralized operator with on-chain settlement, upgradeable protocol with
+governance and timelocks, immutable core with minimal governance, fully
+immutable and permissionless. Each step trades flexibility and
+compliance ability for trust minimization.</li>
+<li><strong>Progressive decentralization</strong>: launch with training
+wheels (caps, pausing, upgradeability, allowlists), publish the plan and
+criteria, and remove powers as the system matures and audits accumulate.
+State the schedule and keep the promises.</li>
+<li><strong>Walkaway test</strong>: if the team disappears, can users
+still exit with their assets and can the system keep running? Provide
+escape hatches (forced withdrawals, emergency exit modes) where
+feasible.</li>
+<li><strong>Credible neutrality and permissionlessness</strong>: who may
+use or build on the protocol without permission? Gatekeeping
+(allowlists, blacklists) has regulatory and trust consequences.</li>
+<li><strong>Honest claims</strong>: do not describe a system as
+trustless or decentralized if admin keys, a single sequencer, a single
+RPC, or a single frontend can censor or steal. Users and auditors will
+test the claim.</li>
+</ul>
+<h3 id="architectural-patterns">3. Architectural patterns</h3>
+<ul>
+<li><strong>Minimal on-chain core</strong>: keep contracts small,
+simple, and stable; push computation, matching, ranking, and storage
+off-chain with verifiable settlement on-chain.</li>
+<li><strong>Factory and clones</strong>: deploy many instances cheaply
+with minimal proxies (EIP-1167) behind a factory; useful for per-user
+vaults or per-market contracts; each instance shares code, so a bug is
+replicated everywhere.</li>
+<li><strong>Modular and plugin architectures</strong>: a core with
+registries and modules (modules as separately audited units, with
+permissions); powerful, and a source of complexity and privilege
+escalation risk. The diamond pattern (EIP-2535) multiplexes many
+implementations behind one address and increases review burden.</li>
+<li><strong>Registry and router patterns</strong>: address books,
+routers that call vetted adapters; keep adapters isolated and
+bounded.</li>
+<li><strong>Meta-transactions and sponsored gas</strong>: users sign
+messages and a relayer submits them (ERC-2771 trusted forwarders), or
+smart accounts with paymasters (ERC-4337); EIP-7702 lets an EOA delegate
+to contract code (see <code
+class="verbatim">08_wallets-and-cryptography.org</code>). Each adds a
+trusted component and new failure modes (relayer downtime, abuse,
+replay).</li>
+<li><strong>Commit-reveal and batching</strong>: hide choices until
+revealed; amortize costs by posting Merkle roots and letting users claim
+with proofs.</li>
+<li><strong>Event-driven back ends</strong>: derive application state
+from chain events with reorg-aware processors (see <code
+class="verbatim">13_indexing-and-data-access.org</code>).</li>
+<li><strong>Outbox and idempotent submitters</strong> for
+transaction-sending services (see <code
+class="verbatim">12_distributed-systems.org</code>).</li>
+<li><strong>Multi-chain deployments</strong>: the same contracts on
+several chains with consistent addresses (CREATE2 or CREATE3 factories)
+and carefully chosen messaging between them (see <code
+class="verbatim">11_layer-2-and-cross-chain.org</code>). Each chain has
+its own security, fee, and finality properties.</li>
+<li><strong>Account abstraction architectures</strong>: smart accounts
+for users with social recovery, spending limits, session keys, and
+batched actions.</li>
+<li><strong>Custody architectures for operators</strong>: EOA, multisig
+(for example Safe) with a signer policy, MPC or threshold signing, and
+HSM or KMS-backed keys; combine with timelocks and role separation.</li>
+<li><strong>Compliance-aware designs</strong>: allowlists, pausing,
+freezes for regulated assets (ERC-3643-like permissioned tokens),
+screening of addresses, and data-protection rules for off-chain personal
+data. Involve legal counsel early; this note is not legal advice.</li>
+</ul>
+<h3 id="non-functional-requirements-specific-to-web3">4. Non-functional
+requirements specific to Web3</h3>
+<ul>
+<li><strong>Finality and latency</strong>: block time, inclusion
+latency, finality delay, and L2 confirmation levels determine UX and
+risk policy (see <code
+class="verbatim">06_transactions-and-gas.org</code>).</li>
+<li><strong>Availability</strong>: dependence on RPC providers,
+sequencers, bridges, oracles, indexers, and frontends; design redundancy
+for each (multi-provider RPC, fallback frontends, alternative data
+sources).</li>
+<li><strong>Cost</strong>: gas per user action, L1 data costs for
+rollups, infrastructure costs, and oracle fees; model cost per action at
+expected volume and at gas spikes.</li>
+<li><strong>Security</strong>: assets, keys, admin powers, supply chain;
+the cost of failure is permanent.</li>
+<li><strong>Privacy</strong>: public chain data links activity to
+addresses; off-chain systems and compliance needs interact with
+this.</li>
+<li><strong>Composability</strong>: other protocols will integrate
+yours; your interfaces and token behaviors become dependencies for
+them.</li>
+<li><strong>Maintainability and evolution</strong>: contracts are hard
+to change; use upgrade strategies, versioned interfaces, and feature
+flags in off-chain code (see <code
+class="verbatim">15_deployment-and-upgrades.org</code>).</li>
+<li><strong>Observability</strong>: on-chain events, indexers, metrics,
+and alerts (see <code
+class="verbatim">17_reliability-and-monitoring.org</code>).</li>
+<li><strong>Regulatory and operational constraints</strong>:
+jurisdictional restrictions, sanctions screening, record keeping.</li>
+</ul>
+<h3 id="selecting-chains-and-infrastructure">5. Selecting chains and
+infrastructure</h3>
+<ul>
+<li><strong>Chain selection criteria</strong>: security model and
+decentralization stage (for L2s, see the stages framework in file 11),
+liquidity and users, tooling and wallet support, fee levels and
+predictability, finality, EVM compatibility, data availability,
+ecosystem and counterparty risk, regulatory posture, exit options
+(bridges, withdrawal delays), and maturity of the client and
+infrastructure ecosystem.</li>
+<li><strong>RPC and node strategy</strong>: multiple providers with
+failover and quorum reads for critical data; self-hosted nodes for
+control, with the operational cost; rate limits and costs; dedicated
+endpoints for bots.</li>
+<li><strong>Build versus buy</strong>: indexing, oracle, custody,
+monitoring, and relaying can be bought; evaluate vendor risk, lock-in,
+data portability, and what happens if the vendor fails.</li>
+<li><strong>Dependency risk for integrated protocols</strong>: treat
+each integrated protocol (a DEX, a lending market, a bridge, an oracle)
+as a third-party dependency with its own admin keys, upgrade rights, and
+failure modes; list them in a dependency register with owners and
+monitoring.</li>
+</ul>
+<h3 id="reference-architecture-sketch-a-vault-protocol">6. Reference
+architecture sketch: a vault protocol</h3>
+<ul>
+<li><strong>Contracts</strong>: a vault (ERC-4626 style), a strategy
+adapter layer with allowlisted external protocols, a price-source
+adapter (oracle with staleness checks), a parameter and role manager, a
+timelock and multisig for administration, and an emergency pause with
+narrowly scoped powers.</li>
+<li><strong>Off-chain</strong>: an indexer producing positions and
+history; a keeper for harvests and rebalances with idempotent, simulated
+transactions; a risk monitor watching oracle deviation, utilization, and
+external protocol health; alerting and runbooks.</li>
+<li><strong>Frontend and wallet integration</strong>: reads via
+multicall and an indexer, optimistic UI backed by transaction tracking,
+simulation before signing, clear signing for approvals.</li>
+<li><strong>Controls</strong>: deposit caps, a guarded launch, audits
+and a bounty, upgrade through timelock with public notice, and a
+decentralization roadmap.</li>
+<li><strong>Failure modes planned</strong>: oracle failure (fallback and
+pause), external protocol failure (withdraw to idle), RPC failure
+(multi-provider), chain halt or reorg (confirmation policy), key
+compromise (role separation, rotation), and frontend compromise
+(integrity checks, alternative interfaces).</li>
+</ul>
+<h3 id="architecture-review-for-web3-systems">7. Architecture review for
+Web3 systems</h3>
+<p>Use the review method of the Software Architecture notes with
+Web3-specific questions:</p>
+<ul>
+<li>Who can move funds, change rules, or stop the system, and what
+constrains them?</li>
+<li>What are the upgrade and pause paths, and how are keys held?</li>
+<li>What happens if each external dependency lies, stalls, or disappears
+(oracle, bridge, sequencer, RPC)?</li>
+<li>What is the worst-case loss in one transaction, and what caps
+it?</li>
+<li>Which invariants hold across all states, and who tests them?</li>
+<li>How do users exit if the team is gone or hostile?</li>
+<li>What are the chain-level assumptions (finality, reorg depth, fee
+spikes)?</li>
+<li>How does the design evolve: new tokens, new chains, new oracle
+sources, contract migrations?</li>
+<li>Which parts are irreversible, and what decision records justify
+them?</li>
+</ul>
+<h3 id="self-check">8. Self-check</h3>
+<ol>
+<li>Draw the architecture of a dApp you know and mark every party that
+can censor, freeze, or alter user funds or data.</li>
+<li>Explain why an upgradeable contract governed by a multisig is not
+"trustless", and what you would publish to make its trust model
+clear.</li>
+<li>A product wants to run its matching engine off-chain with on-chain
+settlement. What are the trust assumptions and failure modes, and how do
+users protect themselves?</li>
+<li>Compare a relayer-based gasless design with an ERC-4337 smart
+account design.</li>
+<li>Which dependencies would you place in a dependency register for a
+lending market integration?</li>
+<li>What does a walkaway test look like for your system?</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: produce a trust table for an existing protocol from its
+public documentation and contracts; verify admin powers by reading the
+contracts on a block explorer.</li>
+<li>Core: design the architecture of a simple NFT marketplace (listing,
+buying, royalties), choosing what is on-chain, what is off-chain, and
+how orders are signed and settled; list failure modes.</li>
+<li>Core: write an architecture document (context, containers, trust
+boundaries, failure modes, decisions) for a vault protocol, using the C4
+and ADR practices of the Software Architecture notes.</li>
+<li>Core: design the multi-provider RPC strategy for a service,
+including health checks, failover, and quorum reads for critical
+calls.</li>
+<li>Stretch: design a progressive decentralization roadmap for a
+protocol with specific powers removed at specific milestones, with
+measurable criteria.</li>
+<li>Stretch: threat-model a frontend supply chain (dependencies,
+hosting, DNS, wallet prompts) and propose controls.</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>ethereum.org developer documentation (the Ethereum stack, nodes and
+clients, scaling, storage): <a
+href="https://ethereum.org/en/developers/docs/">https://ethereum.org/en/developers/docs/</a></li>
+<li>Account abstraction: EIP-4337 / ERC-4337, EIP-7702, and ERC-2771
+documents: <a
+href="https://eips.ethereum.org">https://eips.ethereum.org</a></li>
+<li>L2BEAT: risk analysis of rollups and bridges (useful for the
+dependency and trust analysis): <a
+href="https://l2beat.com">https://l2beat.com</a></li>
+<li>Vitalik Buterin's essays on trust models, "credible neutrality", and
+the "walkaway" idea; Haseeb Qureshi and others on protocol design; the
+documentation of the protocols you integrate.</li>
+<li>Software Architecture notes in this repository: styles, modularity
+and boundaries, patterns, quality attributes, decision records,
+evolution, and reviews.</li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>A dApp is a hybrid system; the architecture is defined by trust
+boundaries and by what the chain enforces.</li>
+<li>Put the minimum on-chain, and make every admin power, dependency,
+and single point of failure explicit.</li>
+<li>Decentralization claims must match the actual powers of keys,
+sequencers, RPCs, and frontends.</li>
+<li>Plan for failure of every external dependency, and for users to
+exit.</li>
+<li>Apply normal architecture discipline, and weigh irreversibility
+heavily.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

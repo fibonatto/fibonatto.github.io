@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Discrete Mathematics for Engineers</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/01-discrete-mathematics.html">
+  <meta property="og:title" content="Discrete Mathematics for Engineers">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/01-discrete-mathematics.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Discrete Mathematics for Engineers</h1>
+<h2 id="discrete-mathematics-for-engineers-1">Discrete Mathematics for
+Engineers</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Discrete mathematics is the vocabulary behind algorithms, databases,
+distributed systems, cryptography, and capacity planning. At Staff scope
+the goal is not to solve contest problems but to:</p>
+<ul>
+<li>turn a vague engineering question ("will two ids ever collide?",
+"how many replicas survive two failures?") into a counting or
+probability statement you can compute;</li>
+<li>recognize when a problem is secretly a graph, a partial order, or a
+modular-arithmetic problem;</li>
+<li>estimate orders of magnitude quickly and defend the estimate;</li>
+<li>read the proofs in design documents and papers well enough to spot
+an unstated assumption.</li>
+</ul>
+<p>Companion texts: Mathematics for Computer Science (Lehman, Leighton,
+Meyer; free from MIT OpenCourseWare) and Discrete Mathematics: An Open
+Introduction (Levin; free online). See the resource list at the end.</p>
+<h3 id="sets-relations-and-functions">1. Sets, relations, and
+functions</h3>
+<ul>
+<li>A <em>set</em> is a collection with no duplicates and no order.
+Operations: union, intersection, difference, complement, product, power
+set (size 2<sup>n</sup> for n elements).</li>
+<li>A <em>relation</em> on a set A is a subset of A x A. Properties:
+reflexive, symmetric, antisymmetric, transitive.
+<ul>
+<li><strong>Equivalence relation</strong> (reflexive, symmetric,
+transitive) partitions the set into classes: "same hash bucket", "same
+connected component", "equal modulo n".</li>
+<li><strong>Partial order</strong> (reflexive, antisymmetric,
+transitive): "depends on", "is a prefix of", "happens before". A
+<em>total order</em> adds comparability of any two elements.</li>
+</ul></li>
+<li>A <em>function</em> f: A -&gt; B assigns one output per input.
+<strong>Injective</strong> (one-to-one), <strong>surjective</strong>
+(onto), <strong>bijective</strong> (both). A bijection implies equal
+cardinality, which is how counting arguments work.</li>
+<li><strong>Pigeonhole principle</strong>: putting n+1 items into n
+boxes forces a box with two items. It proves that any lossless
+compression has inputs it cannot shrink, and that hash collisions are
+unavoidable when the key space exceeds the table.</li>
+</ul>
+<p>Engineering uses: relational databases are sets and relations; build
+systems are partial orders (dependency DAGs); consistency models are
+orders over operations.</p>
+<h3 id="counting">2. Counting</h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ordered choices, repetition allowed</td>
+<td>n<sup>k</sup></td>
+</tr>
+<tr>
+<td>Arrangements of k from n, no repetition</td>
+<td>n! / (n-k)!</td>
+</tr>
+<tr>
+<td>Subsets of size k (unordered)</td>
+<td>C(n, k) = n! / (k! (n-k)!)</td>
+</tr>
+<tr>
+<td>Multisets of size k from n kinds</td>
+<td>C(n+k-1, k)</td>
+</tr>
+<tr>
+<td>Permutations of n items</td>
+<td>n!</td>
+</tr>
+<tr>
+<td>Subsets of an n-set</td>
+<td>2<sup>n</sup></td>
+</tr>
+</tbody>
+</table>
+<p>Tools worth owning:</p>
+<ul>
+<li><strong>Rule of sum and product</strong>, and the habit of counting
+the complement ("at least one" = total minus "none").</li>
+<li><strong>Inclusion-exclusion</strong>: |A union B| = |A| + |B| - |A
+intersect B|, generalized with alternating signs.</li>
+<li><strong>Double counting</strong>: count one set two ways and equate
+(handshake lemma: the sum of degrees is twice the number of edges).</li>
+<li><strong>Stirling's approximation</strong>: ln n! is about n ln n -
+n. It explains why sorting by comparisons needs about n log2 n
+comparisons: there are n! orderings, and each comparison at best halves
+the possibilities, so at least log2(n!) comparisons are required.</li>
+<li><strong>Binomial theorem</strong>: (x + y)^n = sum over k of C(n,k)
+x<sup>k</sup> y<sup>(n-k)</sup>.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Derangements (permutations with no fixed point) via inclusion-exclusion.</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> derangements(n):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">sum</span>((<span class="op">-</span><span class="dv">1</span>) <span class="op">**</span> k <span class="op">*</span> math.factorial(n) <span class="op">//</span> math.factorial(k) <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(n <span class="op">+</span> <span class="dv">1</span>))</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> [derangements(n) <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">6</span>)] <span class="op">==</span> [<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">9</span>, <span class="dv">44</span>]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> math.comb(<span class="dv">52</span>, <span class="dv">5</span>) <span class="op">==</span> <span class="dv">2598960</span>            <span class="co"># poker hands</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> math.log2(math.factorial(<span class="dv">10</span>)) <span class="op">&lt;</span> <span class="dv">22</span>     <span class="co"># at least ~22 comparisons to sort 10 items</span></span></code></pre></div>
+<h3 id="number-theory-and-modular-arithmetic">3. Number theory and
+modular arithmetic</h3>
+<p>Modular arithmetic is arithmetic on a clock: a is congruent to b
+modulo m when m divides a - b. It underlies hashing, checksums, cyclic
+buffers, cryptography, and random number generation.</p>
+<ul>
+<li><strong>gcd and the Euclidean algorithm</strong>: gcd(a, b) = gcd(b,
+a mod b); takes O(log min(a, b)) steps. The <em>extended</em> algorithm
+finds x, y with ax + by = gcd(a, b).</li>
+<li><strong>Modular inverse</strong>: a has an inverse modulo m iff
+gcd(a, m) = 1; compute it with the extended algorithm.</li>
+<li><strong>Fast exponentiation</strong> (square-and-multiply):
+a<sup>e</sup> mod m in O(log e) multiplications.</li>
+<li><strong>Fermat's little theorem</strong>: if p is prime and p does
+not divide a, then a<sup>(p-1)</sup> is congruent to 1 modulo p.
+<strong>Euler's theorem</strong> generalizes it with phi(m).</li>
+<li><strong>Chinese remainder theorem</strong>: congruences modulo
+pairwise coprime moduli combine into one congruence modulo their
+product.</li>
+<li><strong>Primality</strong>: trial division is exponential in the
+number of digits; Miller-Rabin is a fast randomized test (deterministic
+for fixed base sets below a bound).</li>
+<li><strong>RSA in one paragraph</strong>: choose primes p, q; n = pq;
+pick e coprime to phi(n); d is the inverse of e modulo phi(n); encrypt c
+= m<sup>e</sup> mod n; decrypt m = c<sup>d</sup> mod n. Security rests
+on the apparent difficulty of factoring n. Do not implement cryptography
+yourself for production: use vetted libraries.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> egcd(a, b):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Return (g, x, y) with a*x + b*y == g == gcd(a, b).&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> b <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (a, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    g, x, y <span class="op">=</span> egcd(b, a <span class="op">%</span> b)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (g, y, x <span class="op">-</span> (a <span class="op">//</span> b) <span class="op">*</span> y)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> modinv(a, m):</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    g, x, _ <span class="op">=</span> egcd(a <span class="op">%</span> m, m)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> g <span class="op">!=</span> <span class="dv">1</span>:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;no inverse&quot;</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">%</span> m</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> modpow(base, exp, mod):</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    result, base <span class="op">=</span> <span class="dv">1</span>, base <span class="op">%</span> mod</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> exp <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> exp <span class="op">&amp;</span> <span class="dv">1</span>:</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            result <span class="op">=</span> result <span class="op">*</span> base <span class="op">%</span> mod</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        base <span class="op">=</span> base <span class="op">*</span> base <span class="op">%</span> mod</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        exp <span class="op">&gt;&gt;=</span> <span class="dv">1</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> crt(rems, mods):</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    x, m <span class="op">=</span> <span class="dv">0</span>, <span class="dv">1</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> r, mi <span class="kw">in</span> <span class="bu">zip</span>(rems, mods):</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        t <span class="op">=</span> (r <span class="op">-</span> x) <span class="op">*</span> modinv(m, mi) <span class="op">%</span> mi</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        x <span class="op">+=</span> m <span class="op">*</span> t</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        m <span class="op">*=</span> mi</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">%</span> m</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> is_prime(n):</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="op">&lt;</span> <span class="dv">2</span>:</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    small <span class="op">=</span> (<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>, <span class="dv">11</span>, <span class="dv">13</span>, <span class="dv">17</span>, <span class="dv">19</span>, <span class="dv">23</span>, <span class="dv">29</span>, <span class="dv">31</span>, <span class="dv">37</span>)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> p <span class="kw">in</span> small:</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> n <span class="op">%</span> p <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> n <span class="op">==</span> p</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    d, s <span class="op">=</span> n <span class="op">-</span> <span class="dv">1</span>, <span class="dv">0</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> d <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        d <span class="op">//=</span> <span class="dv">2</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        s <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> a <span class="kw">in</span> small:                       <span class="co"># deterministic for n &lt; 3.3e24</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="bu">pow</span>(a, d, n)</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> x <span class="kw">in</span> (<span class="dv">1</span>, n <span class="op">-</span> <span class="dv">1</span>):</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(s <span class="op">-</span> <span class="dv">1</span>):</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> x <span class="op">*</span> x <span class="op">%</span> n</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> x <span class="op">==</span> n <span class="op">-</span> <span class="dv">1</span>:</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> egcd(<span class="dv">240</span>, <span class="dv">46</span>)[<span class="dv">0</span>] <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> modinv(<span class="dv">3</span>, <span class="dv">11</span>) <span class="op">==</span> <span class="dv">4</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> modpow(<span class="dv">2</span>, <span class="dv">10</span>, <span class="dv">1000</span>) <span class="op">==</span> <span class="dv">24</span> <span class="kw">and</span> modpow(<span class="dv">7</span>, <span class="dv">560</span>, <span class="dv">561</span>) <span class="op">==</span> <span class="dv">1</span>   <span class="co"># 561 is a Carmichael number</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> crt([<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">2</span>], [<span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>]) <span class="op">==</span> <span class="dv">23</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> [p <span class="cf">for</span> p <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">30</span>) <span class="cf">if</span> is_prime(p)] <span class="op">==</span> [<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>, <span class="dv">11</span>, <span class="dv">13</span>, <span class="dv">17</span>, <span class="dv">19</span>, <span class="dv">23</span>, <span class="dv">29</span>]</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> is_prime(<span class="dv">2</span><span class="op">**</span><span class="dv">61</span> <span class="op">-</span> <span class="dv">1</span>) <span class="kw">and</span> <span class="kw">not</span> is_prime(<span class="dv">561</span>)</span></code></pre></div>
+<h3 id="graph-theory">4. Graph theory</h3>
+<p>A graph G = (V, E) has vertices and edges (directed or undirected,
+possibly weighted). Vocabulary every engineer should own: path, cycle,
+connected component, degree, tree (connected and acyclic; n-1 edges),
+forest, DAG, bipartite graph, subgraph, spanning tree, clique,
+independent set, matching, coloring.</p>
+<p>Facts worth memorizing:</p>
+<ul>
+<li>A graph is <strong>bipartite</strong> iff it has no odd cycle
+(two-colorable).</li>
+<li>An undirected graph has an <strong>Eulerian circuit</strong> iff it
+is connected (ignoring isolated vertices) and every vertex has even
+degree. Finding a <strong>Hamiltonian</strong> cycle, by contrast, is
+NP-complete (see <code class="verbatim">04_complexity.org</code>).</li>
+<li>A directed graph has a <strong>topological order</strong> iff it is
+a DAG. Dependency resolution, build ordering, and task scheduling all
+reduce to this.</li>
+<li>A tree on n vertices has n-1 edges; adding any edge creates exactly
+one cycle.</li>
+<li><strong>Hall's theorem</strong>: a bipartite graph has a matching
+saturating one side iff every subset S of that side has at least |S|
+neighbors. It explains assignment problems (tasks to workers) and when
+they are infeasible.</li>
+<li>Planar graphs satisfy Euler's formula V - E + F = 2 (connected
+case); 4 colors suffice.</li>
+</ul>
+<p>Where graphs hide in practice: package and module dependency graphs,
+call graphs, network topology, social/knowledge graphs, state machines
+(states and transitions), the happens-before relation in concurrent
+traces, data lineage, and Kubernetes-style resource graphs. Algorithms
+on graphs are in <code class="verbatim">06_algorithms.org</code>;
+representation choices are in <code
+class="verbatim">05_data-structures.org</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> deque</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> is_bipartite(adj):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    color <span class="op">=</span> {}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> s <span class="kw">in</span> adj:</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> s <span class="kw">in</span> color:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        color[s] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> deque([s])</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> q:</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            u <span class="op">=</span> q.popleft()</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> v <span class="kw">in</span> adj[u]:</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> v <span class="kw">not</span> <span class="kw">in</span> color:</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                    color[v] <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> color[u]</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                    q.append(v)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>                <span class="cf">elif</span> color[v] <span class="op">==</span> color[u]:</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>square <span class="op">=</span> {<span class="dv">0</span>: [<span class="dv">1</span>, <span class="dv">3</span>], <span class="dv">1</span>: [<span class="dv">0</span>, <span class="dv">2</span>], <span class="dv">2</span>: [<span class="dv">1</span>, <span class="dv">3</span>], <span class="dv">3</span>: [<span class="dv">2</span>, <span class="dv">0</span>]}</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>triangle <span class="op">=</span> {<span class="dv">0</span>: [<span class="dv">1</span>, <span class="dv">2</span>], <span class="dv">1</span>: [<span class="dv">0</span>, <span class="dv">2</span>], <span class="dv">2</span>: [<span class="dv">0</span>, <span class="dv">1</span>]}</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> is_bipartite(square) <span class="kw">and</span> <span class="kw">not</span> is_bipartite(triangle)</span></code></pre></div>
+<h3 id="probability">5. Probability</h3>
+<p>Probability turns uncertainty into numbers you can reason about:
+failure rates, collision odds, sampling error, randomized
+algorithms.</p>
+<ul>
+<li>A <em>probability space</em> has outcomes, events, and a measure P.
+<strong>Conditional probability</strong>: P(A | B) = P(A and B) / P(B).
+<strong>Bayes' rule</strong>: P(A | B) = P(B | A) P(A) / P(B).
+Neglecting the base rate P(A) is the classic mistake in alerting and
+diagnostics: a test with 99% accuracy for a 1-in-10,000 event is mostly
+false positives.</li>
+<li><strong>Independence</strong>: P(A and B) = P(A) P(B). Failures of
+replicas are often <em>not</em> independent (shared rack, shared bug,
+shared deployment), which is why "three nines times three replicas"
+estimates are optimistic.</li>
+<li><strong>Random variable</strong>, <strong>expectation</strong>, and
+<strong>variance</strong>. <strong>Linearity of expectation</strong>
+holds even without independence and is the most powerful single tool:
+the expected number of fixed points of a random permutation is 1, for
+every n.</li>
+<li>Common distributions: Bernoulli, binomial, geometric (waiting time),
+Poisson (rare events per interval), uniform, exponential (memoryless
+waiting), normal (sums of many small effects). Latency distributions are
+usually heavy-tailed: do not average them (see the percentile discussion
+in <code class="verbatim">12_concurrency.org</code>).</li>
+<li><strong>Tail bounds</strong>: Markov (P(X &gt;= a) &lt;= E[X] / a),
+Chebyshev (deviation by k standard deviations has probability at most
+1/k<sup>2</sup>), and Chernoff-style bounds (exponentially small tails
+for sums of independent bounded variables) justify why sampling and
+randomized load balancing work.</li>
+<li><strong>Birthday paradox</strong>: with n items thrown uniformly
+into d slots, the collision probability is roughly 1 - exp(-n(n-1) /
+2d). Collisions become likely around n = sqrt(d). For 64-bit random ids,
+expect a collision after about 2<sup>32</sup> ids, not
+2<sup>64</sup>.</li>
+<li><strong>Coupon collector</strong>: collecting all n types takes
+about n H<sub>n</sub> draws (H<sub>n</sub> is the harmonic number, about
+ln n + 0.577).</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math, random</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> p_collision(n, d):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        p <span class="op">*=</span> (d <span class="op">-</span> i) <span class="op">/</span> d</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span> <span class="op">-</span> p</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>(p_collision(<span class="dv">23</span>, <span class="dv">365</span>) <span class="op">-</span> <span class="fl">0.5073</span>) <span class="op">&lt;</span> <span class="fl">1e-3</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>((<span class="dv">1</span> <span class="op">-</span> math.exp(<span class="op">-</span><span class="dv">23</span> <span class="op">*</span> <span class="dv">22</span> <span class="op">/</span> (<span class="dv">2</span> <span class="op">*</span> <span class="dv">365</span>))) <span class="op">-</span> <span class="fl">0.5</span>) <span class="op">&lt;</span> <span class="fl">0.01</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Linearity of expectation: expected fixed points of a random permutation is 1.</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">1</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>trials, total <span class="op">=</span> <span class="dv">20000</span>, <span class="dv">0</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(trials):</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    perm <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="dv">10</span>))</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    random.shuffle(perm)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    total <span class="op">+=</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> i, x <span class="kw">in</span> <span class="bu">enumerate</span>(perm) <span class="cf">if</span> i <span class="op">==</span> x)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>(total <span class="op">/</span> trials <span class="op">-</span> <span class="fl">1.0</span>) <span class="op">&lt;</span> <span class="fl">0.05</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Coupon collector for n = 6 (a die): expected rolls = 6 * H_6 = 14.7</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>h6 <span class="op">=</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="op">/</span> k <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">7</span>))</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">abs</span>(<span class="dv">6</span> <span class="op">*</span> h6 <span class="op">-</span> <span class="fl">14.7</span>) <span class="op">&lt;</span> <span class="fl">1e-9</span></span></code></pre></div>
+<h3 id="sums-series-and-recurrences">6. Sums, series, and
+recurrences</h3>
+<p>You need these to analyze loops and recursion (see <code
+class="verbatim">04_complexity.org</code> for solving recurrences).</p>
+<ul>
+<li>Arithmetic series: 1 + 2 + … + n = n(n+1)/2. Geometric series: 1 + r
++ … + r<sup>(n-1)</sup> = (r<sup>n</sup> - 1)/(r - 1); for r = 2 the
+last term outweighs all earlier ones combined, the reason dynamic-array
+doubling is amortized O(1).</li>
+<li>Harmonic series: H<sub>n</sub> = 1 + 1/2 + … + 1/n is about ln n. It
+appears in quicksort's analysis, coupon collecting, and
+sieve-of-Eratosthenes complexity.</li>
+<li><strong>Recurrences</strong> define sequences from earlier terms:
+Fibonacci F(n) = F(n-1) + F(n-2) grows like phi<sup>n</sup> with phi
+about 1.618; solving by guess-and-verify (induction), by recursion
+trees, or by characteristic equations.</li>
+<li><strong>Induction</strong> proves statements about all natural
+numbers or recursive structures (see <code
+class="verbatim">02_logic-and-proofs.org</code>).</li>
+</ul>
+<h3 id="just-enough-linear-algebra-and-calculus">7. Just enough linear
+algebra and calculus</h3>
+<p>Not covered here in depth, but know the following exist and where
+they matter:</p>
+<ul>
+<li>Matrices as linear maps; matrix multiplication cost O(n<sup>3</sup>)
+naively; powers of an adjacency matrix count paths; eigenvectors
+underlie PageRank and spectral clustering; ML and graphics are linear
+algebra.</li>
+<li>Derivatives and gradients for optimization (gradient descent);
+integrals for expected values of continuous variables; Big-O is a
+statement about limits.</li>
+</ul>
+<p>The CS2023 curriculum report treats mathematics as increasingly
+central to computer science, including probability, statistics, and
+linear algebra.</p>
+<h3 id="self-check">8. Self-check</h3>
+<p>You should be able to answer without notes:</p>
+<ol>
+<li>How many 64-bit random ids can you generate before the collision
+probability reaches 1 in a million? (Hint: use the birthday
+approximation and solve for n.)</li>
+<li>Prove that any comparison sort needs at least log2(n!) comparisons
+in the worst case.</li>
+<li>Given a build graph with 10,000 nodes, what property guarantees a
+valid build order, and how do you detect a violation?</li>
+<li>A health check has a 1% false-positive rate and the true failure
+rate is 1 in 10,000. If it alarms, what is the probability a failure is
+real?</li>
+<li>Why can independence assumptions make an availability estimate wrong
+by orders of magnitude?</li>
+<li>Compute 7<sup>(10<sup>18</sup>)</sup> mod 13 by hand using Fermat's
+little theorem.</li>
+</ol>
+<h3 id="exercises">9. Exercises</h3>
+<ul>
+<li>Warm-up: implement <code class="verbatim">nCk</code> mod a prime
+using the modular inverse; check against <code
+class="verbatim">math.comb</code>.</li>
+<li>Core: implement a Bloom filter false-positive estimator and compare
+it with measurement (see <code
+class="verbatim">05_data-structures.org</code>).</li>
+<li>Core: write a program that, given a dependency graph, outputs a
+topological order or a cycle (see <code
+class="verbatim">06_algorithms.org</code>).</li>
+<li>Stretch: implement RSA with tiny primes using only the functions
+above, then break it by factoring and see why key size matters.</li>
+<li>Stretch: work through two chapters of the MIT text (counting and
+probability) with all exercises.</li>
+</ul>
+<h3 id="resources">10. Resources</h3>
+<ul>
+<li>Lehman, Leighton, Meyer, <em>Mathematics for Computer Science</em>
+(free PDF): <a
+href="https://ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-spring-2015/resources/mit6_042js15_textbook_pdf/">https://ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-spring-2015/resources/mit6_042js15_textbook_pdf/</a>
+. The OCW course page for the Fall 2010 offering lists the chapters
+(proofs, graph theory, number theory, counting, probability): <a
+href="https://www.ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-fall-2010/pages/readings">https://www.ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-fall-2010/pages/readings</a></li>
+<li>Levin, <em>Discrete Mathematics: An Open Introduction</em> (free,
+interactive, with exercises and solutions): <a
+href="https://discrete.openmathbooks.org/">https://discrete.openmathbooks.org/</a></li>
+<li>Erickson, <em>Algorithms</em> (free) uses these tools throughout: <a
+href="https://jeffe.cs.illinois.edu/teaching/algorithms/">https://jeffe.cs.illinois.edu/teaching/algorithms/</a></li>
+<li>Knuth, Graham, Patashnik, <em>Concrete Mathematics</em> (book) for
+sums, recurrences, and generating functions.</li>
+<li>ACM/IEEE-CS/AAAI, <em>Computer Science Curricula 2023</em> for how
+the field frames its mathematical foundations: <a
+href="https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf">https://csed.acm.org/wp-content/uploads/2024/05/The-Report.pdf</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>Count the complement; use linearity of expectation; use the birthday
+bound for collisions; use Bayes for diagnostics.</li>
+<li>Modular arithmetic: gcd, inverses, fast exponentiation, CRT.</li>
+<li>Graph vocabulary is a shared language for dependency, ordering, and
+flow problems.</li>
+<li>Independence assumptions are where probability estimates quietly go
+wrong.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

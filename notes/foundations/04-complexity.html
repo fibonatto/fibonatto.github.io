@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Complexity and Analysis of Algorithms</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/foundations/04-complexity.html">
+  <meta property="og:title" content="Complexity and Analysis of Algorithms">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/foundations/04-complexity.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Complexity and Analysis of Algorithms</h1>
+<h2 id="complexity-and-analysis-of-algorithms-1">Complexity and Analysis
+of Algorithms</h2>
+<h3 id="staff-level-lens">0. Staff-level lens</h3>
+<p>Complexity is how you predict, before building, whether a design
+survives 100x growth. At Staff scope you are expected to:</p>
+<ul>
+<li>state the cost model behind a claim ("O(1) lookups" assumes what
+about the hash function and memory?);</li>
+<li>recognize a disguised NP-hard problem early and pick a pragmatic
+strategy (relax, approximate, restrict, use a solver) instead of
+promising an exact fast algorithm;</li>
+<li>know when asymptotics lie: constants, cache behavior, and queueing
+effects often dominate at realistic sizes;</li>
+<li>reason about cost across a whole system (network round trips, tail
+latency, I/O) and not just inside one function.</li>
+</ul>
+<h3 id="asymptotic-notation">1. Asymptotic notation</h3>
+<p>For functions f, g of n:</p>
+<ul>
+<li>f is O(g): f grows at most as fast as g (an <em>upper bound</em>):
+there are constants c, n0 with f(n) &lt;= c g(n) for n &gt;= n0.</li>
+<li>f is Omega(g): at least as fast (lower bound). f is Theta(g): both
+(a tight bound).</li>
+<li>o(g) and omega(g) mean strictly slower and strictly faster.</li>
+</ul>
+<p>Misconceptions to unlearn:</p>
+<ul>
+<li>O does not mean "worst case". Worst, average, and best case are
+about <em>inputs</em>; O, Omega, Theta are about <em>functions</em>. You
+can say "the worst-case time is Theta(n<sup>2</sup>)".</li>
+<li>Constants and lower-order terms disappear in the notation but not in
+practice: 100 n is O(n) and slower than n log n for any n you will ever
+see.</li>
+<li>log bases only differ by a constant, so O(log n) needs no base.</li>
+<li>Polynomial is not necessarily practical (n<sup>10</sup>), and
+exponential is not necessarily useless (2<sup>n</sup> for n = 30 is
+fine).</li>
+</ul>
+<p>Growth, assuming about 10<sup>9</sup> simple operations per
+second:</p>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>n = 10<sup>3</sup></th>
+<th>n = 10<sup>6</sup></th>
+<th>n = 10<sup>9</sup></th>
+<th>Typical source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>log n</td>
+<td>10</td>
+<td>20</td>
+<td>30</td>
+<td>binary search, tree lookup</td>
+</tr>
+<tr>
+<td>n</td>
+<td>10<sup>3</sup></td>
+<td>10<sup>6</sup> (1 ms)</td>
+<td>10<sup>9</sup> (1 s)</td>
+<td>single scan</td>
+</tr>
+<tr>
+<td>n log n</td>
+<td>10<sup>4</sup></td>
+<td>2 x 10<sup>7</sup> (20 ms)</td>
+<td>3 x 10<sup>10</sup> (30 s)</td>
+<td>good sorting</td>
+</tr>
+<tr>
+<td>n<sup>2</sup></td>
+<td>10<sup>6</sup></td>
+<td>10<sup>12</sup> (17 min)</td>
+<td>10<sup>18</sup> (31 years)</td>
+<td>nested loops</td>
+</tr>
+<tr>
+<td>2<sup>n</sup></td>
+<td>astronomical beyond n = 60</td>
+<td></td>
+<td></td>
+<td>brute-force subsets</td>
+</tr>
+</tbody>
+</table>
+<p>The 17-minute and 31-year entries are why "it worked in the test with
+1,000 rows" is not evidence.</p>
+<h3 id="models-of-computation">2. Models of computation</h3>
+<p>Every bound is relative to a model:</p>
+<ul>
+<li><strong>RAM / word-RAM</strong>: constant-time arithmetic and memory
+access on words of Theta(log n) bits. The default for algorithm courses.
+It hides cache effects and treats array indexing as O(1).</li>
+<li><strong>Comparison model</strong>: only comparisons of keys are
+allowed; the basis of the Omega(n log n) sorting bound. Non-comparison
+methods (counting, radix, bucket sort) beat it by using key
+structure.</li>
+<li><strong>External-memory (I/O) model</strong>: cost counts block
+transfers between slow and fast storage; explains B-trees and
+merge-based external sorting.</li>
+<li><strong>Cache-oblivious model</strong>: algorithms that are
+efficient for every cache size without knowing it.</li>
+<li><strong>Parallel and distributed models</strong>: PRAM (work and
+span), BSP, message-passing with communication cost. Work W and span
+(critical path) S bound the running time on p processors from below by
+max(W/p, S).</li>
+<li><strong>Streaming and sublinear models</strong>: one pass, small
+memory.</li>
+</ul>
+<p>Hash tables are "O(1)" only <em>in expectation</em>, under
+assumptions about the hash function and load factor; an adversary who
+knows the function can force O(n) (see hash-flooding in <code
+class="verbatim">05_data-structures.org</code>).</p>
+<h3 id="recurrences">3. Recurrences</h3>
+<p>Divide-and-conquer algorithms give recurrences T(n) = a T(n/b) +
+f(n): a subproblems of size n/b plus f(n) work to split and combine.</p>
+<p><strong>Master theorem</strong> (for f(n) = Theta(n<sup>d</sup>)),
+with c = log<sub>b</sub> a:</p>
+<ul>
+<li>if d &lt; c: T(n) = Theta(n<sup>c</sup>) (leaves dominate);</li>
+<li>if d = c: T(n) = Theta(n<sup>d</sup> log n) (every level contributes
+equally);</li>
+<li>if d &gt; c: T(n) = Theta(n<sup>d</sup>) (the root dominates).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Recurrence</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Binary search</td>
+<td>T(n) = T(n/2) + 1</td>
+<td>Theta(log n)</td>
+</tr>
+<tr>
+<td>Merge sort</td>
+<td>T(n) = 2 T(n/2) + n</td>
+<td>Theta(n log n)</td>
+</tr>
+<tr>
+<td>Karatsuba multiplication</td>
+<td>T(n) = 3 T(n/2) + n</td>
+<td>Theta(n<sup>1</sup>.585)</td>
+</tr>
+<tr>
+<td>Strassen matrix multiplication</td>
+<td>T(n) = 7 T(n/2) + n<sup>2</sup></td>
+<td>Theta(n<sup>2</sup>.807)</td>
+</tr>
+<tr>
+<td>Naive Fibonacci</td>
+<td>T(n) = T(n-1) + T(n-2)</td>
+<td>Theta(phi<sup>n</sup>)</td>
+</tr>
+<tr>
+<td>Quickselect (expected)</td>
+<td>T(n) = T(n/2) + n</td>
+<td>Theta(n)</td>
+</tr>
+</tbody>
+</table>
+<p>For recurrences the master theorem does not cover, draw the
+<strong>recursion tree</strong>: sum the cost per level and the number
+of levels; or guess and verify by induction; or use the Akra-Bazzi
+generalization.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math, random</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> master(a, b, d):</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;T(n) = a T(n/b) + Theta(n^d)&quot;&quot;&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> math.log(a, b)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> d <span class="op">&lt;</span> c <span class="op">-</span> <span class="fl">1e-12</span>:</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&quot;Theta(n^</span><span class="sc">{</span>c<span class="sc">:.3g}</span><span class="ss">)&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">abs</span>(d <span class="op">-</span> c) <span class="op">&lt;</span> <span class="fl">1e-12</span>:</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&quot;Theta(n^</span><span class="sc">{</span>d<span class="sc">:g}</span><span class="ss"> log n)&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&quot;Theta(n^</span><span class="sc">{</span>d<span class="sc">:g}</span><span class="ss">)&quot;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> master(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>) <span class="op">==</span> <span class="st">&quot;Theta(n^1 log n)&quot;</span>          <span class="co"># merge sort</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> master(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>) <span class="op">==</span> <span class="st">&quot;Theta(n^0 log n)&quot;</span>          <span class="co"># binary search: log n</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> master(<span class="dv">7</span>, <span class="dv">2</span>, <span class="dv">2</span>).startswith(<span class="st">&quot;Theta(n^2.81&quot;</span>)     <span class="co"># Strassen</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> merge_sort_count(xs):</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(xs) <span class="op">&lt;=</span> <span class="dv">1</span>:</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> xs, <span class="dv">0</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    mid <span class="op">=</span> <span class="bu">len</span>(xs) <span class="op">//</span> <span class="dv">2</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    l, cl <span class="op">=</span> merge_sort_count(xs[:mid])</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    r, cr <span class="op">=</span> merge_sort_count(xs[mid:])</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    out, i, j, c <span class="op">=</span> [], <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> i <span class="op">&lt;</span> <span class="bu">len</span>(l) <span class="kw">and</span> j <span class="op">&lt;</span> <span class="bu">len</span>(r):</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        c <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> l[i] <span class="op">&lt;=</span> r[j]:</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>            out.append(l[i])<span class="op">;</span> i <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>            out.append(r[j])<span class="op">;</span> j <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    out <span class="op">+=</span> l[i:] <span class="op">+</span> r[j:]</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out, cl <span class="op">+</span> cr <span class="op">+</span> c</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">3</span>)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>xs <span class="op">=</span> random.sample(<span class="bu">range</span>(<span class="dv">10</span><span class="op">**</span><span class="dv">6</span>), <span class="dv">4096</span>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>s, comparisons <span class="op">=</span> merge_sort_count(xs)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> s <span class="op">==</span> <span class="bu">sorted</span>(xs) <span class="kw">and</span> comparisons <span class="op">&lt;=</span> <span class="dv">4096</span> <span class="op">*</span> math.log2(<span class="dv">4096</span>)</span></code></pre></div>
+<h3 id="amortized-analysis">4. Amortized analysis</h3>
+<p>Amortized cost is the average cost per operation over a worst-case
+<em>sequence</em> (no probability involved). Three methods: aggregate
+(total cost over n operations divided by n), accounting (charge credits
+to cheap operations to pay for expensive ones), and potential (a
+function of the data-structure state that rises on cheap operations and
+drops on expensive ones).</p>
+<p>Standard results:</p>
+<ul>
+<li>Dynamic array with doubling: n appends cost O(n) in total, so
+amortized O(1) each. Growth factors between 1.5 and 2 are common; a
+smaller factor wastes less memory and may let the allocator reuse freed
+blocks, a larger one copies less.</li>
+<li>Union-find with union by rank and path compression: amortized
+O(alpha(n)) per operation, where alpha is the inverse Ackermann function
+(at most 4 for any physical n).</li>
+<li>Splay trees, Fibonacci heaps, and many lock-free structures have
+amortized bounds, not per-operation ones.</li>
+</ul>
+<p>Caveat for latency-sensitive systems: an amortized bound hides the
+occasional expensive operation (a resize, a rehash, a GC pause). If the
+tail latency matters, you want worst-case bounds or incremental
+rehashing.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> append_costs(n, factor<span class="op">=</span><span class="dv">2</span>):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cap, size, copies <span class="op">=</span> <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> size <span class="op">==</span> cap:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            copies <span class="op">+=</span> size                  <span class="co"># copy everything on resize</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>            cap <span class="op">*=</span> factor</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        size <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> copies</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">100000</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> append_costs(n) <span class="op">&lt;</span> <span class="dv">2</span> <span class="op">*</span> n              <span class="co"># doubling: total copies &lt; 2n</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> append_costs(n, <span class="fl">1.5</span>) <span class="op">&lt;</span> <span class="dv">3</span> <span class="op">*</span> n         <span class="co"># growth 1.5: total copies &lt; 3n</span></span></code></pre></div>
+<h3 id="randomized-and-expected-case-analysis">5. Randomized and
+expected-case analysis</h3>
+<ul>
+<li><strong>Las Vegas</strong> algorithms always return the correct
+answer, with random running time (randomized quicksort: expected O(n log
+n) for every input). <strong>Monte Carlo</strong> algorithms run within
+a fixed time but may err with small probability (Miller-Rabin, Bloom
+filters, Karger's min-cut).</li>
+<li>Expected time is over the algorithm's own coin flips, so it holds
+for adversarial inputs; "average case" assumes a distribution over
+inputs and may fail in production when real data differs.</li>
+<li>Failure probabilities can be amplified: repeating a one-sided-error
+test k times drives the error down exponentially.</li>
+<li>Concentration bounds (Chernoff) turn expectations into "with high
+probability" statements.</li>
+</ul>
+<h3 id="complexity-classes">6. Complexity classes</h3>
+<p>A <em>decision problem</em> asks a yes/no question. Classes defined
+by Turing machine resources (see <code
+class="verbatim">07_theory-of-computation.org</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L, NL</td>
+<td>Logarithmic space (deterministic / nondeterministic)</td>
+</tr>
+<tr>
+<td>P</td>
+<td>Decidable in polynomial time: the usual notion of "efficiently
+solvable"</td>
+</tr>
+<tr>
+<td>NP</td>
+<td>A proposed yes-answer can be verified in polynomial time (a
+certificate exists)</td>
+</tr>
+<tr>
+<td>co-NP</td>
+<td>No-answers have short certificates</td>
+</tr>
+<tr>
+<td>BPP</td>
+<td>Polynomial time with bounded two-sided randomized error</td>
+</tr>
+<tr>
+<td>PSPACE</td>
+<td>Polynomial space (includes many two-player game problems)</td>
+</tr>
+<tr>
+<td>EXP</td>
+<td>Exponential time</td>
+</tr>
+</tbody>
+</table>
+<p>Known: L is contained in NL, which is contained in P, which is
+contained in NP, which is contained in PSPACE, which is contained in
+EXP; P is contained in BPP; P is strictly smaller than EXP (time
+hierarchy theorem). Whether P = NP is open, as is whether P =
+PSPACE.</p>
+<p><strong>Reductions</strong>: A reduces to B (polynomial-time
+many-one, or Karp) if there is a polynomial algorithm converting
+instances of A into instances of B preserving the answer. If B is easy,
+A is easy; if A is hard, B is hard. <strong>NP-hard</strong>: at least
+as hard as everything in NP. <strong>NP-complete</strong>: NP-hard and
+in NP. <strong>Cook-Levin theorem</strong>: SAT is NP-complete; Karp
+showed 21 natural problems NP-complete in 1972, and thousands are
+known.</p>
+<p>Frequently met NP-complete decision problems: SAT and 3-SAT; Clique;
+Vertex Cover; Independent Set; Hamiltonian Cycle; Traveling Salesman
+(decision form); 3-Coloring; Subset Sum and Partition (weakly
+NP-complete); Bin Packing; Set Cover; Integer Linear Programming;
+Job-Shop Scheduling; Longest Path (in a general graph). In contrast,
+these are in P: shortest path, minimum spanning tree, matching in
+general graphs, linear programming, 2-SAT, Eulerian circuit, primality
+(AKS).</p>
+<p><strong>Numbers matter</strong>: a problem solvable in time
+polynomial in the <em>numeric value</em> of the input (knapsack in
+O(nW)) is <em>pseudo-polynomial</em>, because the value W is exponential
+in its bit length; <em>strongly</em> NP-hard problems stay hard even
+with small numbers.</p>
+<h3 id="coping-with-hardness">7. Coping with hardness</h3>
+<p>When the business problem turns out NP-hard, do not give up; choose a
+strategy deliberately.</p>
+<ol>
+<li><strong>Check the real instance sizes and structure.</strong>
+Worst-case hardness is about all inputs; actual ones may be tiny,
+sparse, tree-like, or have small width.</li>
+<li><strong>Exploit special structure.</strong> Planar graphs, trees,
+bounded treewidth, and bounded degree make many NP-hard problems
+polynomial.</li>
+<li><strong>Parameterize</strong> (fixed-parameter tractable
+algorithms): exponential only in a small parameter k, for example vertex
+cover in O(2<sup>k</sup> n).</li>
+<li><strong>Approximate with a guarantee.</strong> Vertex cover: a
+maximal matching gives a 2-approximation. Metric TSP: Christofides gives
+1.5. Set cover: the greedy algorithm gives about ln n. Knapsack has a
+fully polynomial-time approximation scheme. Some problems resist
+approximation unless P = NP (general TSP).</li>
+<li><strong>Use a solver.</strong> SAT, SMT, ILP, and
+constraint-programming solvers solve very large structured instances.
+Encode your problem and benefit from decades of engineering.</li>
+<li><strong>Heuristics and local search</strong> (simulated annealing,
+genetic algorithms, greedy plus repair) with measured quality and a
+fallback.</li>
+<li><strong>Exact exponential algorithms</strong> (dynamic programming
+over subsets in O(2<sup>n</sup> n<sup>2</sup>), branch and bound) when n
+is around 20 to 40.</li>
+<li><strong>Change the requirement.</strong> Ask whether "optimal" is
+needed, whether the answer may be approximate, or whether the constraint
+set can be relaxed.</li>
+</ol>
+<p>Hardness disguised in engineering: dependency/version resolution
+(NP-complete in general), bin packing in scheduling and cluster
+placement, register allocation (graph coloring), timetabling and
+rostering, optimal query planning, test-suite minimization, minimum-cost
+network design.</p>
+<h3 id="lower-bounds-and-hardness-assumptions">8. Lower bounds and
+hardness assumptions</h3>
+<ul>
+<li><strong>Information-theoretic bounds</strong>: sorting n items by
+comparisons needs at least log2(n!) which is about n log2 n
+comparisons.</li>
+<li><strong>Fine-grained complexity</strong> ties improvements to
+conjectures: the Exponential Time Hypothesis (3-SAT needs exponential
+time) and its strong form; the 3SUM conjecture; the all-pairs shortest
+paths conjecture. They justify why no faster algorithm is expected for
+edit distance, longest common subsequence, and many other problems.</li>
+<li><strong>Cryptography</strong> assumes certain problems (factoring,
+discrete logarithm, lattice problems) are hard on average, which is
+stronger than worst-case NP-hardness.</li>
+<li><strong>Communication complexity</strong> gives lower bounds on
+distributed protocols (how many bits must machines exchange?).</li>
+</ul>
+<h3 id="when-asymptotics-mislead">9. When asymptotics mislead</h3>
+<ul>
+<li><strong>Constants and memory</strong>: a pointer-chasing O(n)
+linked-list scan can be slower than an O(n<sup>2</sup>) array loop for
+moderate n because of cache misses; a sorted vector often beats a
+balanced tree for small or read-mostly sets.</li>
+<li><strong>Hidden factors</strong>: string concatenation in a loop
+(O(n<sup>2</sup>) in languages with immutable strings), N+1 queries,
+accidental quadratic behavior in "just a contains() check on a
+list".</li>
+<li><strong>System-level costs</strong>: network round trips (roughly
+10<sup>6</sup> to 10<sup>8</sup> CPU cycles), serialization, locks, and
+GC often dominate algorithmic cost; count them first.</li>
+<li><strong>Distribution shapes</strong>: p99 and p999 latencies matter
+more than means; fan-out multiplies tail probability (a request calling
+100 services is slow when any one is slow).</li>
+<li><strong>Throughput versus latency</strong>: parallelism improves
+throughput, rarely single-request latency (Amdahl's law, in <code
+class="verbatim">12_concurrency.org</code>).</li>
+<li><strong>Measure</strong>: profile before optimizing; benchmark with
+representative data; compare against a simple baseline; track growth
+with input size by plotting, not by guessing.</li>
+</ul>
+<h3 id="self-check">10. Self-check</h3>
+<ol>
+<li>A teammate says "this is O(n), so it is fast". What follow-up
+questions do you ask?</li>
+<li>Derive the running time of T(n) = 4 T(n/2) + n<sup>2</sup> and T(n)
+= 2 T(n/2) + n log n (the master theorem does not apply to the second
+directly).</li>
+<li>Prove that a dynamic array with growth factor 1.5 still has
+amortized O(1) appends.</li>
+<li>Show that Independent Set reduces to Vertex Cover, and explain what
+that tells you about each.</li>
+<li>You must schedule 5,000 jobs onto 40 machines minimizing makespan.
+The problem is NP-hard; list three strategies and what guarantee each
+gives.</li>
+<li>Why is "polynomial" a reasonable but imperfect proxy for
+"feasible"?</li>
+</ol>
+<h3 id="exercises">11. Exercises</h3>
+<ul>
+<li>Warm-up: measure running time of <code
+class="verbatim">sorted</code> on inputs of size 10<sup>3</sup> through
+10<sup>7</sup> and plot against n log n; find the constant.</li>
+<li>Core: implement merge sort, heap sort, and quicksort; count
+comparisons and compare with log2(n!).</li>
+<li>Core: implement a 2-approximation for vertex cover via maximal
+matching and compare to an exact solution on small graphs.</li>
+<li>Core: formulate a dependency-resolution toy problem as SAT and solve
+it with a SAT library; then show how a small instance becomes
+large.</li>
+<li>Stretch: prove 3-SAT reduces to Clique (Erickson's NP-hardness
+chapter is a good guide).</li>
+<li>Stretch: implement a simple CDCL SAT solver by extending the DPLL in
+<code class="verbatim">02_logic-and-proofs.org</code> with clause
+learning.</li>
+</ul>
+<h3 id="resources">12. Resources</h3>
+<ul>
+<li>MIT 6.006 <em>Introduction to Algorithms</em>, Spring 2020 (lecture
+notes, videos, problem sets; Lecture 19 covers complexity): <a
+href="https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/pages/lecture-notes">https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/pages/lecture-notes</a></li>
+<li>Erickson, <em>Algorithms</em> (free; the final chapter covers
+NP-hardness and reductions; the book assumes the prerequisite
+data-structures and discrete-math background): <a
+href="https://jeffe.cs.illinois.edu/teaching/algorithms/">https://jeffe.cs.illinois.edu/teaching/algorithms/</a></li>
+<li>MIT 18.404J <em>Theory of Computation</em> (Sipser; time and space
+complexity, hierarchy theorems, completeness): <a
+href="https://ocw.mit.edu/courses/mathematics/18-404j-theory-of-computation-fall-2020/">https://ocw.mit.edu/courses/mathematics/18-404j-theory-of-computation-fall-2020/</a></li>
+<li>Arora and Barak, <em>Computational Complexity: A Modern
+Approach</em> (a draft of the book is available online): <a
+href="https://theory.cs.princeton.edu/complexity">https://theory.cs.princeton.edu/complexity</a></li>
+<li>Cormen, Leiserson, Rivest, Stein, <em>Introduction to
+Algorithms</em>, 4th edition (MIT Press); Garey and Johnson,
+<em>Computers and Intractability</em> (the classic catalog of
+NP-complete problems); Sipser, <em>Introduction to the Theory of
+Computation</em>.</li>
+<li>Drepper, <em>What Every Programmer Should Know About Memory</em> for
+the constants behind the asymptotics: <a
+href="http://people.redhat.com/drepper/cpumemory.pdf">http://people.redhat.com/drepper/cpumemory.pdf</a></li>
+</ul>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>O, Omega, Theta describe functions; worst/average/best describe
+inputs.</li>
+<li>Solve recurrences with the master theorem or a recursion tree; state
+the model of computation.</li>
+<li>Amortized bounds hide spikes; hash-table O(1) is expected, not
+guaranteed.</li>
+<li>NP-hardness is a signal to change strategy (structure,
+approximation, solvers), not to stop.</li>
+<li>Asymptotics rank algorithms; constants, caches, and the network
+decide real systems.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

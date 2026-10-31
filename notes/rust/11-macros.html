@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rust Macros</title>
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/rust/11-macros.html">
+  <meta property="og:title" content="Rust Macros">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/rust/11-macros.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>Rust Macros</h1>
+<h2 id="rust-macros-1">Rust Macros</h2>
+<h3 id="what-a-macro-does">1. What a macro does</h3>
+<p>A function receives evaluated values. A macro receives
+<em>tokens</em> (pieces of source code) and expands into other code,
+which the compiler then type-checks. Macros run at compile time, before
+type checking, and are invoked with a <code class="verbatim">!</code>
+(<code class="verbatim">println!</code>, <code
+class="verbatim">vec!</code>, <code
+class="verbatim">my_macro!</code>).</p>
+<p>This is why macros can take a variable number of arguments, accept
+custom syntax, and generate items such as functions and impls, none of
+which an ordinary function can do.</p>
+<p>Rust has two families:</p>
+<ul>
+<li><strong>Declarative macros</strong> (<code
+class="verbatim">macro_rules!</code>): pattern matching on tokens. This
+file covers them in detail.</li>
+<li><strong>Procedural macros</strong>: Rust functions that transform a
+token stream (derive, attribute, and function-like). Section 8 sketches
+them.</li>
+</ul>
+<h3 id="a-simple-macro">2. A simple macro</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> square <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>x<span class="op">:</span>expr) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="op">$</span>x <span class="op">*</span> <span class="op">$</span>x</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">square!</span>(<span class="dv">3</span>)<span class="op">;</span>          <span class="co">// 9</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">square!</span>(<span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span>)<span class="op">;</span>      <span class="co">// 9, not 5</span></span></code></pre></div>
+<p>A macro is a list of rules: <code
+class="verbatim">(pattern) =&gt; { expansion }</code>. The first rule
+whose pattern matches is used. <code class="verbatim">$x:expr</code>
+binds the matched <em>expression</em> to <code
+class="verbatim">$x</code>. Because <code class="verbatim">$x</code> is
+a parsed expression, not raw text, <code class="verbatim">1 + 2</code>
+keeps its grouping; this avoids the precedence problem of C macros.</p>
+<p>It still evaluates the expression twice. Bind it once:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> square <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>x<span class="op">:</span>expr) <span class="op">=&gt;</span> <span class="op">{{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> v <span class="op">=</span> <span class="op">$</span>x<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        v <span class="op">*</span> v</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}};</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The doubled braces make the expansion a block expression, so the
+<code class="verbatim">let</code> stays inside it.</p>
+<h3 id="fragment-specifiers">3. Fragment specifiers</h3>
+<table>
+<thead>
+<tr>
+<th>Specifier</th>
+<th>Matches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">expr</code></td>
+<td>an expression</td>
+</tr>
+<tr>
+<td><code class="verbatim">ident</code></td>
+<td>an identifier or keyword</td>
+</tr>
+<tr>
+<td><code class="verbatim">ty</code></td>
+<td>a type</td>
+</tr>
+<tr>
+<td><code class="verbatim">pat</code></td>
+<td>a pattern</td>
+</tr>
+<tr>
+<td><code class="verbatim">stmt</code></td>
+<td>a statement</td>
+</tr>
+<tr>
+<td><code class="verbatim">block</code></td>
+<td>a <code class="verbatim">{ ... }</code> block</td>
+</tr>
+<tr>
+<td><code class="verbatim">item</code></td>
+<td>an item (fn, struct, impl, …)</td>
+</tr>
+<tr>
+<td><code class="verbatim">literal</code></td>
+<td>a literal such as <code class="verbatim">1</code> or <code
+class="verbatim">"a"</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">path</code></td>
+<td>a path such as <code class="verbatim">std::vec::Vec</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">tt</code></td>
+<td>a single token tree: the most flexible</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> make_fn <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>name<span class="op">:</span>ident<span class="op">,</span> <span class="op">$</span>ret<span class="op">:</span>ty<span class="op">,</span> <span class="op">$</span>value<span class="op">:</span>expr) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">fn</span> $name() <span class="op">-&gt;</span> <span class="op">$</span>ret <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>            <span class="op">$</span>value</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="pp">make_fn!</span>(answer<span class="op">,</span> <span class="dt">i32</span><span class="op">,</span> <span class="dv">42</span>)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>answer()<span class="op">;</span>        <span class="co">// 42</span></span></code></pre></div>
+<h3 id="repetition">4. Repetition</h3>
+<p><code class="verbatim">$( ... ) sep rep</code> matches a pattern
+repeatedly, where <code class="verbatim">rep</code> is <code
+class="verbatim">*</code> (zero or more), <code
+class="verbatim">+</code> (one or more), or <code
+class="verbatim">?</code> (zero or one).</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> hashmap <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>(<span class="op">$</span>k<span class="op">:</span>expr <span class="op">=&gt;</span> <span class="op">$</span>v<span class="op">:</span>expr)<span class="op">,*</span> <span class="op">$</span>(<span class="op">,</span>)<span class="op">?</span>) <span class="op">=&gt;</span> <span class="op">{{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> m <span class="op">=</span> <span class="pp">::std::collections::HashMap::</span>new()<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">$</span>( m<span class="op">.</span>insert(<span class="op">$</span>k<span class="op">,</span> <span class="op">$</span>v)<span class="op">;</span> )<span class="op">*</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        m</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}};</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> m <span class="op">=</span> <span class="pp">hashmap!</span> <span class="op">{</span> <span class="st">&quot;a&quot;</span> <span class="op">=&gt;</span> <span class="dv">1</span><span class="op">,</span> <span class="st">&quot;b&quot;</span> <span class="op">=&gt;</span> <span class="dv">2</span><span class="op">,</span> <span class="op">};</span>   <span class="co">// trailing comma allowed</span></span></code></pre></div>
+<p>The same <code class="verbatim">$( ... )*</code> syntax in the
+expansion repeats the code once per match.</p>
+<h3 id="recursive-macros">5. Recursive macros</h3>
+<p>A rule can call the macro itself on the remaining tokens.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> max <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>x<span class="op">:</span>expr) <span class="op">=&gt;</span> (<span class="op">$</span>x)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>x<span class="op">:</span>expr<span class="op">,</span> <span class="op">$</span>(<span class="op">$</span>rest<span class="op">:</span>expr)<span class="op">,+</span>) <span class="op">=&gt;</span> <span class="op">{{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> a <span class="op">=</span> <span class="op">$</span>x<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> b <span class="op">=</span> <span class="pp">max!</span>(<span class="op">$</span>(<span class="op">$</span>rest)<span class="op">,+</span>)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> a <span class="op">&gt;</span> b <span class="op">{</span> a <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> b <span class="op">}</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}};</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="pp">max!</span>(<span class="dv">1</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span>      <span class="co">// 5</span></span></code></pre></div>
+<p>Rules are tried in order, so put the more specific or terminating
+rule where it matches correctly. The compiler limits recursion depth
+(default 128, adjustable with <code
+class="verbatim">#![recursion_limit = "..."]</code>).</p>
+<h3 id="hygiene">6. Hygiene</h3>
+<p>Rust's <code class="verbatim">macro_rules!</code> is partially
+hygienic. A local variable introduced by a macro cannot collide with, or
+capture, a variable at the call site:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> using_a <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>e<span class="op">:</span>expr) <span class="op">=&gt;</span> <span class="op">{{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> a <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">$</span>e</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}};</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> four <span class="op">=</span> <span class="pp">using_a!</span>(a <span class="op">/</span> <span class="dv">10</span>)<span class="op">;</span>     <span class="co">// error: `a` in the argument does not see the macro&#39;s `a`</span></span></code></pre></div>
+<p>This is the problem C's <code class="verbatim">SWAP</code> macro has;
+here it does not occur for local variables. Hygiene covers local
+variables and labels only. Items (functions, types, statics) and names
+resolved at the call site are not protected, so use absolute paths
+(<code class="verbatim">::std::collections::HashMap</code>) inside
+macros that may be used in other crates.</p>
+<h3 id="standard-macros-worth-knowing">7. Standard macros worth
+knowing</h3>
+<table>
+<thead>
+<tr>
+<th>Macro</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">println!</code>, <code
+class="verbatim">format!</code></td>
+<td>Formatted output and strings (checked at compile time)</td>
+</tr>
+<tr>
+<td><code class="verbatim">vec!</code></td>
+<td>Build a <code class="verbatim">Vec</code></td>
+</tr>
+<tr>
+<td><code class="verbatim">assert!</code>, <code
+class="verbatim">assert_eq!=| Check conditions; panic with a message               | | =dbg!</code></td>
+<td>Print an expression and its value to stderr, return it</td>
+</tr>
+<tr>
+<td><code class="verbatim">matches!</code></td>
+<td>Test a value against a pattern</td>
+</tr>
+<tr>
+<td><code class="verbatim">todo!</code>, <code
+class="verbatim">unimplemented!</code>, <code
+class="verbatim">unreachable!</code></td>
+<td>Placeholders that panic</td>
+</tr>
+<tr>
+<td><code class="verbatim">write!</code>, <code
+class="verbatim">writeln!</code></td>
+<td>Formatted write to any writer</td>
+</tr>
+<tr>
+<td><code class="verbatim">include_str!</code></td>
+<td>Embed a file's text at compile time</td>
+</tr>
+<tr>
+<td><code class="verbatim">cfg!</code>, <code
+class="verbatim">env!</code></td>
+<td>Compile-time configuration and environment</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">matches!</span>(x<span class="op">,</span> <span class="cn">Some</span>(n) <span class="cf">if</span> n <span class="op">&gt;</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">assert_eq!</span>(add(<span class="dv">2</span><span class="op">,</span> <span class="dv">2</span>)<span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="st">&quot;math broke: {}&quot;</span><span class="op">,</span> add(<span class="dv">2</span><span class="op">,</span> <span class="dv">2</span>))<span class="op">;</span></span></code></pre></div>
+<h3 id="derive-attribute-and-function-like-procedural-macros">8. Derive,
+attribute, and function-like procedural macros</h3>
+<p>Procedural macros are compiled Rust functions that take and return a
+<code class="verbatim">TokenStream</code>. They must live in a crate
+with <code class="verbatim">proc-macro = true</code> in <code
+class="verbatim">Cargo.toml</code>. They are usually written with the
+<code class="verbatim">syn</code> (parsing) and <code
+class="verbatim">quote</code> (code generation) crates.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="pp">serde::</span>Serialize<span class="at">)]</span>     <span class="co">// derive macros generate trait impls</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> User <span class="op">{</span> name<span class="op">:</span> <span class="dt">String</span> <span class="op">}</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">tokio::</span>main<span class="at">]</span>                                <span class="co">// attribute macro rewrites an item</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> main() <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> q <span class="op">=</span> <span class="pp">sqlx::query!</span>(<span class="st">&quot;SELECT 1&quot;</span>)<span class="op">;</span>             <span class="co">// function-like macro with custom syntax</span></span></code></pre></div>
+<p>You will use these long before you write one. <code
+class="verbatim">#[derive(Debug)]</code> is the first procedural macro
+most people meet.</p>
+<h3 id="inspecting-expansion">9. Inspecting expansion</h3>
+<ul>
+<li><code class="verbatim">cargo expand</code> (the <code
+class="verbatim">cargo-expand</code> tool) prints the code after macro
+expansion.</li>
+<li><code class="verbatim">rust-analyzer</code> in many editors offers
+an "expand macro recursively" command.</li>
+<li>On nightly: <code
+class="verbatim">rustc -Zunpretty=expanded src/main.rs</code>.</li>
+<li>A <code class="verbatim">compile_error!</code> invocation in a rule
+gives a clear message when no pattern matches.</li>
+</ul>
+<p>Inspect expansions when learning or debugging a macro. Error messages
+from macro-generated code point at the call site and can be
+confusing.</p>
+<h3 id="when-to-write-a-macro">10. When to write a macro</h3>
+<p>Prefer a function (or a generic function, or a trait) when you need
+to compute a result from values. A closure already solves delayed
+evaluation.</p>
+<p>Consider a macro when you need to:</p>
+<ul>
+<li>accept a variable number of arguments or custom syntax (<code
+class="verbatim">hashmap!</code>);</li>
+<li>generate repetitive items such as impls for many types;</li>
+<li>avoid writing the same pattern many times when generics cannot
+express it;</li>
+<li>control evaluation or inspect the source of an argument (<code
+class="verbatim">assert!</code>, <code
+class="verbatim">dbg!</code>).</li>
+</ul>
+<p>Do not write a macro just to avoid a function call. Macros are harder
+to read, to document, and to debug.</p>
+<h3 id="recommended-learning-sequence">11. Recommended learning
+sequence</h3>
+<ol>
+<li>Use <code class="verbatim">println!</code>, <code
+class="verbatim">vec!</code>, <code class="verbatim">assert!</code>, and
+<code class="verbatim">matches!</code> until their behavior is
+familiar.</li>
+<li>Write a small <code class="verbatim">macro_rules!</code> with one
+rule and an <code class="verbatim">expr</code> fragment.</li>
+<li>Add repetition (<code class="verbatim">$(...),*</code>) and build a
+<code class="verbatim">hashmap!</code>.</li>
+<li>Learn hygiene and why you bind <code class="verbatim">$x</code>
+once.</li>
+<li>Install <code class="verbatim">cargo expand</code> and read the
+expansions.</li>
+<li>Write a recursive macro such as <code
+class="verbatim">max!</code>.</li>
+<li>Explore procedural macros only when a project needs them.</li>
+</ol>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>

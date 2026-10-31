@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Concurrency</title>
+  <meta name="description" content="A practical reference to concurrency in C, covering POSIX threads and C11 threads, thread creation and lifecycle, mutexes, condition variables, atomic operations, compare-and-swap, memory ordering, thread-local storage, one-time initialization, and synchronization hazards. Explains data races, deadlocks, lost wakeups, false sharing, signal safety, and safe ownership patterns, with examples of concurrent queues, debugging tools, ThreadSanitizer, and Helgrind. Distinguishes ISO C concurrency facilities from POSIX interfaces and emphasizes correctness, minimizing shared mutable state, and diagnosing concurrency bugs.">
+  <meta name="author" content="Sergio Bonatto">
+  <link rel="canonical" href="https://fibonatto.github.io/notes/c/11-concurrency.html">
+  <meta property="og:title" content="C Concurrency">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bonatto">
+  <meta property="og:url" content="https://fibonatto.github.io/notes/c/11-concurrency.html">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg">
+  <style>
+html {
+  color: #4A505E;
+  background: #FAF5E5;
+}
+
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main { flex: 1; }
+a { color: #BD7948; }
+pre {
+  max-width: 100%;
+  margin: 1.5em 0;
+  padding: 0.9em 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  background: rgba(74, 80, 94, 0.07);
+  border: 1px solid rgba(74, 80, 94, 0.18);
+  border-radius: 4px;
+}
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  white-space: inherit;
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: rgba(74, 80, 94, 0.09);
+  border-radius: 3px;
+}
+div.sourceCode { margin: 1.5em 0; }
+div.sourceCode pre { margin: 0; }
+
+code span.kw, code span.cf { color: #9A4F26; font-weight: bold; }
+code span.dt { color: #3E6E8E; }
+code span.dv, code span.bn, code span.fl, code span.cn { color: #8A5FA0; }
+code span.st, code span.ch, code span.vs, code span.ss, code span.sc { color: #5E7D3A; }
+code span.co, code span.do, code span.an, code span.cv, code span.in { color: #77776F; font-style: italic; }
+code span.fu, code span.bu, code span.ex { color: #2F6F73; }
+code span.pp, code span.im { color: #A0522D; }
+code span.op, code span.ot { color: #4A505E; }
+code span.er, code span.al { color: #B3261E; font-weight: bold; }
+
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block math;
+  margin: 1.2em 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+table {
+  display: block;
+  max-width: 100%;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #8E8E88;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: rgba(74, 80, 94, 0.08);
+  font-weight: bold;
+}
+pre code { white-space: inherit; }
+img, svg { max-width: 100%; height: auto; }
+footer {
+  margin-top: 3em;
+  color: #8E8E88;
+  font-size: 0.85em;
+  text-align: center;
+}
+.notes-list { padding-left: 1.4em; }
+.notes-list li { margin: 0.15em 0; }
+.category { margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+
+<nav aria-label="Primary navigation">
+  <a href="/">Home</a>
+  <a href="/notes/">Notes</a>
+  <a href="/rss.xml">RSS</a>
+</nav>
+
+<main>
+  <article>
+    <h1>C Concurrency</h1>
+<h2 id="c-concurrency-1">C Concurrency</h2>
+<h3 id="concepts">1. Concepts</h3>
+<ul>
+<li>A <em>process</em> has its own address space. <em>Threads</em> in
+one process share memory, which makes communication cheap and mistakes
+easy.</li>
+<li>Two threads accessing the same object, at least one writing, without
+synchronization is a <em>data race</em>: <strong>undefined
+behavior</strong>, not just a stale value.</li>
+<li>Concurrency (tasks overlapping in time) and parallelism (tasks
+running simultaneously) are different; threads give you both and the
+bugs of both.</li>
+</ul>
+<p>C11 added a memory model, <code
+class="verbatim">&lt;threads.h&gt;</code>, and <code
+class="verbatim">&lt;stdatomic.h&gt;</code>. In practice most code on
+Unix uses POSIX threads (<code
+class="verbatim">&lt;pthread.h&gt;</code>); <code
+class="verbatim">&lt;threads.h&gt;</code> exists in glibc 2.28+ and musl
+but is missing on some platforms (check <code
+class="verbatim">__STDC_NO_THREADS__</code> or <code
+class="verbatim">__has_include(&lt;threads.h&gt;)</code>). Compile with
+<code class="verbatim">-pthread</code>.</p>
+<h3 id="creating-and-joining-threads">2. Creating and joining
+threads</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> job <span class="op">{</span> <span class="dt">int</span> id<span class="op">;</span> <span class="dt">long</span> result<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> <span class="op">*</span>work<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>arg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> job <span class="op">*</span>j <span class="op">=</span> arg<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    j<span class="op">-&gt;</span>result <span class="op">=</span> <span class="op">(</span><span class="dt">long</span><span class="op">)</span>j<span class="op">-&gt;</span>id <span class="op">*</span> j<span class="op">-&gt;</span>id<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> NULL<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    pthread_t th<span class="op">[</span><span class="dv">4</span><span class="op">];</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> job jobs<span class="op">[</span><span class="dv">4</span><span class="op">];</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        jobs<span class="op">[</span>i<span class="op">].</span>id <span class="op">=</span> i<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>pthread_create<span class="op">(&amp;</span>th<span class="op">[</span>i<span class="op">],</span> NULL<span class="op">,</span> work<span class="op">,</span> <span class="op">&amp;</span>jobs<span class="op">[</span>i<span class="op">])</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> <span class="co">/* handle error */</span> <span class="op">}</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        pthread_join<span class="op">(</span>th<span class="op">[</span>i<span class="op">],</span> NULL<span class="op">);</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        printf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st"> -&gt; </span><span class="sc">%ld\n</span><span class="st">&quot;</span><span class="op">,</span> jobs<span class="op">[</span>i<span class="op">].</span>id<span class="op">,</span> jobs<span class="op">[</span>i<span class="op">].</span>result<span class="op">);</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Pass data through a pointer to a struct, and make sure it outlives
+the thread: do not pass the address of a loop variable or of a local
+that returns first.</li>
+<li>Every thread must be joined (<code
+class="verbatim">pthread_join</code>) or detached (<code
+class="verbatim">pthread_detach</code>), otherwise its resources
+leak.</li>
+<li>The pthread functions return an error number (not <code
+class="verbatim">-1</code> and <code
+class="verbatim">errno</code>).</li>
+</ul>
+<p>The C11 equivalent:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;threads.h&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">int</span> work<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>arg<span class="op">)</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>thrd_t t<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>thrd_create<span class="op">(&amp;</span>t<span class="op">,</span> work<span class="op">,</span> <span class="op">&amp;</span>data<span class="op">);</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> res<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>thrd_join<span class="op">(</span>t<span class="op">,</span> <span class="op">&amp;</span>res<span class="op">);</span></span></code></pre></div>
+<h3 id="mutexes">3. Mutexes</h3>
+<p>A mutex gives mutual exclusion over a critical section.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">long</span> counter<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> pthread_mutex_t lock <span class="op">=</span> PTHREAD_MUTEX_INITIALIZER<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> <span class="op">*</span>incr<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>arg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span>arg<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">100000</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        pthread_mutex_lock<span class="op">(&amp;</span>lock<span class="op">);</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        counter<span class="op">++;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        pthread_mutex_unlock<span class="op">(&amp;</span>lock<span class="op">);</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> NULL<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">/* four threads running incr leave counter == 400000 */</span></span></code></pre></div>
+<p>Without the mutex, <code class="verbatim">counter++</code> is a
+read-modify-write that threads interleave, and the total is wrong (and
+the program is undefined).</p>
+<p>Rules:</p>
+<ul>
+<li>Protect every access to shared data with the same mutex, reads
+included.</li>
+<li>Unlock on every path, including early returns and error branches
+(use <code class="verbatim">goto cleanup</code>).</li>
+<li>Keep critical sections short; do not hold a lock across blocking I/O
+or calls into unknown code.</li>
+<li><strong>Avoid deadlock</strong> by acquiring multiple locks in one
+global order, or by holding one lock at a time.</li>
+<li>A thread must not lock a non-recursive mutex it already holds.</li>
+</ul>
+<p>C11 spelling: <code class="verbatim">mtx_t</code>, <code
+class="verbatim">mtx_init(&amp;m, mtx_plain)</code>, <code
+class="verbatim">mtx_lock</code>, <code
+class="verbatim">mtx_unlock</code>, <code
+class="verbatim">mtx_destroy</code>.</p>
+<h3 id="condition-variables">4. Condition variables</h3>
+<p>A condition variable lets a thread sleep until another thread changes
+some state. It is always paired with a mutex and a predicate on shared
+data.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define QCAP </span><span class="dv">8</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> items<span class="op">[</span>QCAP<span class="op">];</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> head<span class="op">,</span> tail<span class="op">,</span> count<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    pthread_mutex_t mu<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    pthread_cond_t not_empty<span class="op">,</span> not_full<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> Queue<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> queue_init<span class="op">(</span>Queue <span class="op">*</span>q<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    q<span class="op">-&gt;</span>head <span class="op">=</span> q<span class="op">-&gt;</span>tail <span class="op">=</span> q<span class="op">-&gt;</span>count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    pthread_mutex_init<span class="op">(&amp;</span>q<span class="op">-&gt;</span>mu<span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    pthread_cond_init<span class="op">(&amp;</span>q<span class="op">-&gt;</span>not_empty<span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    pthread_cond_init<span class="op">(&amp;</span>q<span class="op">-&gt;</span>not_full<span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> queue_push<span class="op">(</span>Queue <span class="op">*</span>q<span class="op">,</span> <span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    pthread_mutex_lock<span class="op">(&amp;</span>q<span class="op">-&gt;</span>mu<span class="op">);</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>q<span class="op">-&gt;</span>count <span class="op">==</span> QCAP<span class="op">)</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        pthread_cond_wait<span class="op">(&amp;</span>q<span class="op">-&gt;</span>not_full<span class="op">,</span> <span class="op">&amp;</span>q<span class="op">-&gt;</span>mu<span class="op">);</span>       <span class="co">/* releases mu while waiting */</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    q<span class="op">-&gt;</span>items<span class="op">[</span>q<span class="op">-&gt;</span>tail<span class="op">]</span> <span class="op">=</span> x<span class="op">;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    q<span class="op">-&gt;</span>tail <span class="op">=</span> <span class="op">(</span>q<span class="op">-&gt;</span>tail <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">%</span> QCAP<span class="op">;</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    q<span class="op">-&gt;</span>count<span class="op">++;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    pthread_cond_signal<span class="op">(&amp;</span>q<span class="op">-&gt;</span>not_empty<span class="op">);</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    pthread_mutex_unlock<span class="op">(&amp;</span>q<span class="op">-&gt;</span>mu<span class="op">);</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> queue_pop<span class="op">(</span>Queue <span class="op">*</span>q<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    pthread_mutex_lock<span class="op">(&amp;</span>q<span class="op">-&gt;</span>mu<span class="op">);</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>q<span class="op">-&gt;</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        pthread_cond_wait<span class="op">(&amp;</span>q<span class="op">-&gt;</span>not_empty<span class="op">,</span> <span class="op">&amp;</span>q<span class="op">-&gt;</span>mu<span class="op">);</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> x <span class="op">=</span> q<span class="op">-&gt;</span>items<span class="op">[</span>q<span class="op">-&gt;</span>head<span class="op">];</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    q<span class="op">-&gt;</span>head <span class="op">=</span> <span class="op">(</span>q<span class="op">-&gt;</span>head <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">%</span> QCAP<span class="op">;</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    q<span class="op">-&gt;</span>count<span class="op">--;</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    pthread_cond_signal<span class="op">(&amp;</span>q<span class="op">-&gt;</span>not_full<span class="op">);</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    pthread_mutex_unlock<span class="op">(&amp;</span>q<span class="op">-&gt;</span>mu<span class="op">);</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x<span class="op">;</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Always wait in a <code class="verbatim">while</code> loop that
+re-checks the predicate: <code class="verbatim">pthread_cond_wait</code>
+can return spuriously, and another thread may have consumed the item
+before you reacquired the lock. Signal while holding the lock or after
+changing the state, never before. <code
+class="verbatim">pthread_cond_broadcast</code> wakes all waiters (for
+shutdown flags, for example).</p>
+<h3 id="atomics">5. Atomics</h3>
+<p>For a single shared variable, an atomic is lighter than a mutex.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdatomic.h&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> atomic_long counter<span class="op">;</span>                       <span class="co">/* or: _Atomic long counter; */</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> <span class="op">*</span>incr<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>arg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)</span>arg<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">100000</span><span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        atomic_fetch_add<span class="op">(&amp;</span>counter<span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> NULL<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> v <span class="op">=</span> atomic_load<span class="op">(&amp;</span>counter<span class="op">);</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>atomic_store<span class="op">(&amp;</span>counter<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span></code></pre></div>
+<p>Atomic operations are indivisible and free of data races, but they
+protect only that one object. Invariants across several variables still
+need a mutex.</p>
+<p>A compare-and-swap loop builds other read-modify-write
+operations:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> atomic_int maxv<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> update_max<span class="op">(</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> cur <span class="op">=</span> atomic_load<span class="op">(&amp;</span>maxv<span class="op">);</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>x <span class="op">&gt;</span> cur <span class="op">&amp;&amp;</span> <span class="op">!</span>atomic_compare_exchange_weak<span class="op">(&amp;</span>maxv<span class="op">,</span> <span class="op">&amp;</span>cur<span class="op">,</span> x<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">/* on failure, cur is refreshed with the current value; retry */</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="memory-ordering">6. Memory ordering</h3>
+<p>Compilers and CPUs reorder memory operations. Atomics take a
+<em>memory order</em> argument controlling what other threads may
+observe.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="verbatim">memory_order_seq_cst</code></td>
+<td>Default: all threads agree on one total order of such
+operations</td>
+</tr>
+<tr>
+<td><code class="verbatim">memory_order_acquire</code></td>
+<td>A load; later reads/writes in this thread are not moved before
+it</td>
+</tr>
+<tr>
+<td><code class="verbatim">memory_order_release</code></td>
+<td>A store; earlier reads/writes in this thread are not moved after
+it</td>
+</tr>
+<tr>
+<td><code class="verbatim">memory_order_acq_rel</code></td>
+<td>Both, for read-modify-write</td>
+</tr>
+<tr>
+<td><code class="verbatim">memory_order_relaxed</code></td>
+<td>Atomicity only; no ordering with other data</td>
+</tr>
+</tbody>
+</table>
+<p>The standard publication pattern uses release on the writer and
+acquire on the reader:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> data<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>atomic_bool ready<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* producer */</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>atomic_store_explicit<span class="op">(&amp;</span>ready<span class="op">,</span> <span class="kw">true</span><span class="op">,</span> memory_order_release<span class="op">);</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">/* consumer */</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(!</span>atomic_load_explicit<span class="op">(&amp;</span>ready<span class="op">,</span> memory_order_acquire<span class="op">))</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">;</span>                                   <span class="co">/* spin */</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>use<span class="op">(</span>data<span class="op">);</span>                              <span class="co">/* guaranteed to see 42 */</span></span></code></pre></div>
+<p>Use the default <code class="verbatim">seq_cst</code> unless you can
+prove a weaker order is correct; use <code
+class="verbatim">relaxed</code> only for independent counters and
+statistics. Lock-free code is hard: subtle bugs (such as the ABA
+problem) hide from tests. Prefer mutexes until a profile shows they are
+the bottleneck.</p>
+<h3 id="volatile-is-not-synchronization">7. volatile is not
+synchronization</h3>
+<p><code class="verbatim">volatile</code> prevents the compiler from
+caching a value in a register and from removing accesses, but it gives
+no atomicity and no ordering between threads. A <code
+class="verbatim">volatile int</code> flag shared between threads is
+still a data race. Use atomics or mutexes. <code
+class="verbatim">volatile</code> is for memory-mapped hardware and, with
+<code class="verbatim">sig_atomic_t</code>, for signal handlers.</p>
+<h3 id="thread-local-storage-and-one-time-init">8. Thread-local storage
+and one-time init</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="kw">_Thread_local</span> <span class="dt">int</span> errors<span class="op">;</span>             <span class="co">/* each thread has its own copy */</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> pthread_once_t once <span class="op">=</span> PTHREAD_ONCE_INIT<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span> <span class="co">/* runs exactly once, even with many callers */</span> <span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>pthread_once<span class="op">(&amp;</span>once<span class="op">,</span> init<span class="op">);</span>                   <span class="co">/* C11: call_once(&amp;flag, init) */</span></span></code></pre></div>
+<h3 id="common-hazards">9. Common hazards</h3>
+<table>
+<thead>
+<tr>
+<th>Hazard</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data race</td>
+<td>Unsynchronized shared access; undefined behavior</td>
+</tr>
+<tr>
+<td>Deadlock</td>
+<td>Threads waiting for each other's locks; fix with a lock order</td>
+</tr>
+<tr>
+<td>Lost wakeup</td>
+<td>Signaling before the waiter waits; fix by checking a predicate under
+the lock</td>
+</tr>
+<tr>
+<td>Dangling argument</td>
+<td>Passing a pointer to a stack variable that goes away</td>
+</tr>
+<tr>
+<td>False sharing</td>
+<td>Unrelated variables on one cache line slow each other down; pad with
+<code class="verbatim">_Alignas(64)</code></td>
+</tr>
+<tr>
+<td>Non-reentrant libc</td>
+<td><code class="verbatim">strtok</code>, <code
+class="verbatim">localtime</code>, <code class="verbatim">rand</code>,
+<code class="verbatim">strerror</code> keep static state; use <code
+class="verbatim">_r</code> variants</td>
+</tr>
+<tr>
+<td>Fork in a threaded program</td>
+<td>Only the calling thread exists in the child; locks held by others
+stay locked; call only async-signal-safe functions before <code
+class="verbatim">exec</code></td>
+</tr>
+<tr>
+<td>Signals</td>
+<td>Handlers run asynchronously; use a flag or a dedicated signal
+thread</td>
+</tr>
+</tbody>
+</table>
+<h3 id="designing-for-less-sharing">10. Designing for less sharing</h3>
+<ul>
+<li>Prefer <strong>ownership transfer</strong> (hand a message or work
+item to one thread) over shared mutable state.</li>
+<li>Partition data so each thread works on its own slice, then merge
+results after joining.</li>
+<li>Use a queue (as above) between stages, a thread pool for many small
+tasks, and read-only shared data (needs no lock) when possible.</li>
+<li>Make one thread own each resource (a socket, a file, a data
+structure) and talk to it through a queue.</li>
+</ul>
+<h3 id="tools">11. Tools</h3>
+<div class="sourceCode" id="cb9" data-org-language="sh"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cc</span> <span class="at">-g</span> <span class="at">-O1</span> <span class="at">-fsanitize</span><span class="op">=</span>thread <span class="at">-pthread</span> prog.c <span class="at">-o</span> prog <span class="kw">&amp;&amp;</span> <span class="ex">./prog</span>     <span class="co"># ThreadSanitizer: reports data races</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--tool</span><span class="op">=</span>helgrind ./prog                                   <span class="co"># race and lock-order checker</span></span></code></pre></div>
+<p>In gdb: <code class="verbatim">info threads</code>, <code
+class="verbatim">thread N</code>, <code
+class="verbatim">thread apply all bt</code> (backtrace of every thread;
+the first command for a hung program). ThreadSanitizer finds races that
+did occur in the run; a clean run does not prove their absence, so run
+stress tests.</p>
+<h3 id="what-to-remember">What to remember</h3>
+<ul>
+<li>A data race is undefined behavior: protect all shared mutable state
+with a mutex or make it atomic.</li>
+<li>Wait on condition variables in a loop that re-checks the
+predicate.</li>
+<li>Lock multiple mutexes in a consistent order; keep critical sections
+short.</li>
+<li>Atomics protect one variable; default to <code
+class="verbatim">seq_cst</code>; acquire/release for publication.</li>
+<li><code class="verbatim">volatile</code> is not a synchronization
+tool.</li>
+<li>Join or detach every thread; keep arguments alive.</li>
+<li>Share less, and run ThreadSanitizer.</li>
+</ul>
+  </article>
+</main>
+
+<footer>
+  © 2026 <a href="/">Bonatto</a> • Vim powered • <a href="https://github.com/fiBonatto" target="_blank" rel="noopener noreferrer">GitHub</a>
+</footer>
+
+</body>
+</html>
